@@ -6,6 +6,7 @@ import { useEvents } from '../lib/eventsource.js'
 import { useMembers } from '../lib/members.jsx'
 import { addDays, startOfWeek, isSameDay, timeOfDay } from '../lib/time.js'
 import { VIEWS, DOW, rangeFor, eventsOn, stepAnchor, periodTitle } from '../lib/calendar.js'
+import DayPopover from '../wall/DayPopover.jsx'
 
 function AgendaRow({ ev }) {
   const { colorFor } = useMembers()
@@ -69,7 +70,7 @@ function WeekView({ events, anchor }) {
   )
 }
 
-function MonthView({ events, anchor }) {
+function MonthView({ events, anchor, onDayClick }) {
   const { colorFor } = useMembers()
   const { from, monthFirst } = rangeFor('month', anchor)
   const cells = Array.from({ length: 42 }, (_, i) => addDays(from, i))
@@ -88,7 +89,7 @@ function MonthView({ events, anchor }) {
           const inMonth = day.getMonth() === curMonth
           const isToday = isSameDay(day, today)
           return (
-            <div key={i} style={{ minHeight: 62, borderRadius: 8, padding: 4, background: isToday ? C.tealTint : 'transparent', opacity: inMonth ? 1 : 0.35, display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden' }}>
+            <button key={i} type="button" onClick={() => onDayClick(day)} style={{ all: 'unset', cursor: 'pointer', minHeight: 62, borderRadius: 8, padding: 4, background: isToday ? C.tealTint : 'transparent', opacity: inMonth ? 1 : 0.35, display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden', boxSizing: 'border-box' }}>
               <div style={{ fontSize: 12, fontWeight: isToday ? 800 : 600, textAlign: 'right' }}>{day.getDate()}</div>
               {list.slice(0, 3).map((ev) => (
                 <div key={ev.id} title={ev.title} style={{ fontSize: 10, lineHeight: 1.2, padding: '1px 4px', borderRadius: 4, background: colorFor(ev.person_key), color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -96,7 +97,7 @@ function MonthView({ events, anchor }) {
                 </div>
               ))}
               {list.length > 3 && <div style={{ fontSize: 10, color: C.muted }}>+{list.length - 3}</div>}
-            </div>
+            </button>
           )
         })}
       </div>
@@ -110,6 +111,7 @@ export default function Calendar() {
   const range = useMemo(() => rangeFor(view, anchor), [view, anchor])
   const { events, loading } = useEvents(range.from, range.to)
   const { members } = useMembers()
+  const [selectedDay, setSelectedDay] = useState(null)
   const legend = [...members.map((m) => [m.name, m.color]), ['Family', C.ink]]
 
   return (
@@ -140,7 +142,9 @@ export default function Calendar() {
 
       {view === 'day' && <DayView events={events} anchor={anchor} />}
       {view === 'week' && <WeekView events={events} anchor={anchor} />}
-      {view === 'month' && <MonthView events={events} anchor={anchor} />}
+      {view === 'month' && <MonthView events={events} anchor={anchor} onDayClick={setSelectedDay} />}
+
+      <DayPopover day={selectedDay} events={events} onClose={() => setSelectedDay(null)} />
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, fontSize: 12, color: C.muted, paddingTop: 4 }}>
         {legend.map(([name, color]) => (

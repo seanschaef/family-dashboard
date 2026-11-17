@@ -22,7 +22,7 @@ export default function Hub() {
       {/* Header: greeting + clock + date, and the weather card */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 160 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 30, fontWeight: 600, color: C.rust }}>{greeting(now)}, {familyName}</div>
+          <div style={{ fontSize: 30, fontWeight: 600, color: C.rust }}>{greeting(now)}, {familyName}!</div>
           <div style={{ fontSize: 104, fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
           <div style={{ fontSize: 26, color: C.muted }}>{formatLongDate(now)}</div>
         </div>
@@ -44,7 +44,7 @@ export default function Hub() {
       {/* Photo (step 4; crossfade placeholder for now) */}
       <div
         style={{
-          height: 430,
+          height: 380,
           borderRadius: 36,
           background: C.border,
           border: '10px solid #FFFFFF',
@@ -58,7 +58,7 @@ export default function Hub() {
       </div>
 
       {/* Family calendar: everyone's calendars combined, Day/Week/Month switch */}
-      <CalendarBlock title="Family calendar" height={430} />
+      <CalendarBlock title="Family calendar" height={470} todaySummary />
 
       {/* Dinner tonight */}
       <Link

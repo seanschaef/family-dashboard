@@ -5,6 +5,7 @@ import { useEvents } from '../lib/eventsource.js'
 import { useMembers } from '../lib/members.jsx'
 import { addDays, startOfWeek, isSameDay, timeOfDay } from '../lib/time.js'
 import { VIEWS, DOW, rangeFor, eventsOn, stepAnchor, cycleView, periodTitle } from '../lib/calendar.js'
+import DayPopover from './DayPopover.jsx'
 
 const SWIPE = 50
 
@@ -43,7 +44,7 @@ function RoundBtn({ children, onClick, label }) {
   )
 }
 
-function MonthView({ events, anchor }) {
+function MonthView({ events, anchor, onDayClick }) {
   const { colorFor } = useMembers()
   const { from, monthFirst } = rangeFor('month', anchor)
   const cells = Array.from({ length: 42 }, (_, i) => addDays(from, i))
@@ -63,9 +64,14 @@ function MonthView({ events, anchor }) {
             const inMonth = day.getMonth() === curMonth
             const isToday = isSameDay(day, today)
             return (
-              <div
+              <button
                 key={i}
+                type="button"
+                aria-label={`${day.toLocaleDateString('en-CA', { month: 'long', day: 'numeric' })}, ${list.length} events`}
+                onClick={() => onDayClick(day)}
                 style={{
+                  all: 'unset',
+                  cursor: 'pointer',
                   borderRadius: 16,
                   padding: 10,
                   background: isToday ? C.tealTint : C.card,
@@ -75,6 +81,7 @@ function MonthView({ events, anchor }) {
                   flexDirection: 'column',
                   gap: 4,
                   overflow: 'hidden',
+                  boxSizing: 'border-box',
                 }}
               >
                 <div style={{ fontSize: 22, fontWeight: isToday ? 800 : 600, textAlign: 'right' }}>{day.getDate()}</div>
@@ -84,7 +91,7 @@ function MonthView({ events, anchor }) {
                   </div>
                 ))}
                 {list.length > 4 && <div style={{ fontSize: 15, color: C.muted }}>+{list.length - 4} more</div>}
-              </div>
+              </button>
             )
           })}
         </div>
@@ -155,6 +162,7 @@ function DayView({ events, anchor }) {
 export default function Calendar() {
   const [view, setView] = useState('month')
   const [anchor, setAnchor] = useState(() => new Date())
+  const [selectedDay, setSelectedDay] = useState(null)
   const range = useMemo(() => rangeFor(view, anchor), [view, anchor])
   const { events } = useEvents(range.from, range.to)
 
@@ -204,10 +212,12 @@ export default function Calendar() {
       </div>
 
       <div onPointerDown={onDown} onPointerUp={onUp} style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', touchAction: 'none' }}>
-        {view === 'month' && <MonthView events={events} anchor={anchor} />}
+        {view === 'month' && <MonthView events={events} anchor={anchor} onDayClick={setSelectedDay} />}
         {view === 'week' && <WeekView events={events} anchor={anchor} />}
         {view === 'day' && <DayView events={events} anchor={anchor} />}
       </div>
+
+      <DayPopover day={selectedDay} events={events} onClose={() => setSelectedDay(null)} />
     </>
   )
 }

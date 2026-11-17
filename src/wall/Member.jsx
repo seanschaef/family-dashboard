@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { C, card } from '../theme.js'
 import Icon, { StarIcon } from '../components/Icon.jsx'
-import { Clock, EventRow, CheckItem } from './parts.jsx'
+import { Clock, CheckItem } from './parts.jsx'
+import CalendarBlock from './CalendarBlock.jsx'
 import { formatLongDate, birthdayCountdown, useNow } from '../lib/time.js'
 import { useParams } from 'react-router-dom'
 import { useMembers } from '../lib/members.jsx'
-import { memberData, nextDays } from '../data/sample.js'
+import { memberData } from '../data/sample.js'
 
 function Header({ person }) {
   const now = useNow()
@@ -34,34 +35,6 @@ function Header({ person }) {
         </div>
       </div>
       <Clock />
-    </div>
-  )
-}
-
-function TodayCard({ person, events, height, big }) {
-  return (
-    <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: big ? 14 : 12, height })}>
-      <div style={{ fontSize: big ? 30 : 26, fontWeight: 800 }}>Today</div>
-      {events.map((e, i) => (
-        <EventRow key={i} time={e.time} title={e.title} sub={e.sub} color={person.color} />
-      ))}
-    </div>
-  )
-}
-
-function NextDays() {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16, height: 230 }}>
-      {nextDays.map((d, i) => (
-        <div key={i} style={card({ borderRadius: 24, padding: 20, display: 'flex', flexDirection: 'column', gap: 10 })}>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>{d.label}</div>
-          {d.lines.map((l, j) => (
-            <div key={j} style={{ fontSize: j === 0 ? 20 : 18, color: j === 0 ? C.ink : C.muted }}>
-              {l}
-            </div>
-          ))}
-        </div>
-      ))}
     </div>
   )
 }
@@ -202,7 +175,7 @@ export default function Member() {
     return (
       <>
         <Header person={person} />
-        <TodayCard person={person} events={data.today} height={380} big />
+        <CalendarBlock personKey={person.key} includeWork todaySummary title="Calendar" height={430} />
         <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 18, height: 560 })}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: 30, fontWeight: 800 }}>My jobs</div>
@@ -233,8 +206,7 @@ export default function Member() {
     return (
       <>
         <Header person={person} />
-        <TodayCard person={person} events={data.today} height={400} />
-        <NextDays />
+        <CalendarBlock personKey={person.key} includeWork todaySummary title="Calendar" height={630} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 24, height: 400 }}>
           <ChoresCard person={person} chores={data.chores} pointsFooter />
           <ListCard title="Homework and reminders" items={data.homework} />
@@ -250,8 +222,7 @@ export default function Member() {
   return (
     <>
       <Header person={person} />
-      <TodayCard person={person} events={data.today} height={420} />
-      <NextDays />
+      <CalendarBlock personKey={person.key} includeWork todaySummary title="Calendar" height={640} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 24, height: 380 }}>
         <ChoresCard person={person} chores={data.chores} />
         <ListCard title="My reminders" items={data.reminders} />

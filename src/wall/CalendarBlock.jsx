@@ -4,6 +4,7 @@ import { useEvents } from '../lib/eventsource.js'
 import { useMembers } from '../lib/members.jsx'
 import { addDays, startOfWeek, isSameDay, timeOfDay } from '../lib/time.js'
 import { rangeFor, eventsOn, stepAnchor, periodTitle } from '../lib/calendar.js'
+import DayPopover from './DayPopover.jsx'
 
 // An embeddable calendar that combines everyone's calendars (colour-coded) with
 // a Day / Week / Month switch. Used in the hub's calendar block. Pass
@@ -32,23 +33,29 @@ function Seg({ active, children, onClick }) {
   )
 }
 
-export default function CalendarBlock({ personKey = null, includeWork = false, title = 'Family calendar', height = 500 }) {
+export default function CalendarBlock({ personKey = null, includeWork = false, title = 'Family calendar', height = 500, todaySummary = false }) {
   const { colorFor } = useMembers()
   const [view, setView] = useState('week')
   const [anchor, setAnchor] = useState(() => new Date())
+  const [selectedDay, setSelectedDay] = useState(null)
+
+  // Fetch a wide enough window that the Today summary works in any view.
   const range = useMemo(() => rangeFor(view, anchor), [view, anchor])
   const { events } = useEvents(range.from, range.to)
+  const today = new Date()
+  const todayRange = useMemo(() => rangeFor('day', today), [today.toDateString()])
+  const { events: todayEvents } = useEvents(todayRange.from, todayRange.to)
 
-  const scoped = events.filter((e) => {
+  const scopeFilter = (e) => {
     if (!includeWork && e.kind === 'work') return false
     if (!personKey) return true
     return e.person_key === personKey || e.person_key === 'family'
-  })
-
-  const today = new Date()
+  }
+  const scoped = events.filter(scopeFilter)
+  const todayList = eventsOn(todayEvents.filter(scopeFilter), today)
 
   return (
-    <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 14, height })}>
+    <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height })}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>{title}</div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -61,11 +68,33 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
           <button type="button" aria-label="Next" onClick={() => setAnchor((a) => stepAnchor(view, a, 1))} style={arrowBtn}>›</button>
         </div>
       </div>
-      <div style={{ fontSize: 20, color: C.muted, marginTop: -6 }}>{periodTitle(view, anchor)}</div>
+
+      {todaySummary && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+          <span style={{ fontSize: 18, fontWeight: 800, color: C.muted, letterSpacing: 1 }}>TODAY</span>
+          {todayList.length ? (
+            todayList.map((ev) => (
+              <span key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: C.cream, borderRadius: 999, padding: '6px 14px' }}>
+                <span style={{ width: 9, height: 9, borderRadius: 5, background: colorFor(ev.person_key) }} />
+                <span style={{ fontSize: 19 }}>
+                  <span style={{ color: C.muted }}>{ev.all_day ? '' : timeOfDay(ev.starts_at) + ' '}</span>
+                  {ev.title}
+                </span>
+              </span>
+            ))
+          ) : (
+            <span style={{ fontSize: 19, color: C.muted }}>Nothing scheduled.</span>
+          )}
+        </div>
+      )}
+
+      <div style={{ fontSize: 20, color: C.muted }}>{periodTitle(view, anchor)}</div>
 
       {view === 'day' && <DayView events={scoped} anchor={anchor} colorFor={colorFor} />}
       {view === 'week' && <WeekView events={scoped} anchor={anchor} colorFor={colorFor} today={today} />}
-      {view === 'month' && <MonthView events={scoped} anchor={anchor} colorFor={colorFor} today={today} />}
+      {view === 'month' && <MonthView events={scoped} anchor={anchor} colorFor={colorFor} today={today} onDayClick={setSelectedDay} />}
+
+      <DayPopover day={selectedDay} events={scoped} onClose={() => setSelectedDay(null)} />
     </div>
   )
 }
@@ -117,7 +146,7 @@ function WeekView({ events, anchor, colorFor, today }) {
   )
 }
 
-function MonthView({ events, anchor, colorFor, today }) {
+function MonthView({ events, anchor, colorFor, today, onDayClick }) {
   const { from, monthFirst } = rangeFor('month', anchor)
   const cells = Array.from({ length: 42 }, (_, i) => addDays(from, i))
   const curMonth = monthFirst.getMonth()
@@ -135,14 +164,20 @@ function MonthView({ events, anchor, colorFor, today }) {
             const inMonth = day.getMonth() === curMonth
             const isToday = isSameDay(day, today)
             return (
-              <div key={i} style={{ borderRadius: 8, padding: '4px 6px', background: isToday ? C.tealTint : C.cream, opacity: inMonth ? 1 : 0.4, display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden' }}>
+              <button
+                key={i}
+                type="button"
+                aria-label={`${day.toLocaleDateString('en-CA', { month: 'long', day: 'numeric' })}, ${list.length} events`}
+                onClick={() => onDayClick(day)}
+                style={{ all: 'unset', cursor: 'pointer', borderRadius: 8, padding: '4px 6px', background: isToday ? C.tealTint : C.cream, opacity: inMonth ? 1 : 0.4, display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden', boxSizing: 'border-box' }}
+              >
                 <div style={{ fontSize: 15, fontWeight: isToday ? 800 : 600 }}>{day.getDate()}</div>
                 <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                   {list.slice(0, 4).map((ev) => (
                     <span key={ev.id} title={ev.title} style={{ width: 9, height: 9, borderRadius: 5, background: colorFor(ev.person_key) }} />
                   ))}
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>
