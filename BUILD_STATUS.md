@@ -77,6 +77,26 @@ personal data. Git history was squashed to a single commit for the same reason.
 - [ ] Vercel: I can create the project and set the env vars; linking it to the
       new repo for auto-deploy needs the repo to exist first.
 
+## Steps 2–6 — done in code
+
+- **Step 2 (chores, points, reminders, pet):** chores (daily/weekly/once),
+  tap-to-complete on wall and phone, weekly points + rewards, shared reminders,
+  pet log. Migrations 0006. Live realtime; generic sample fallback.
+- **Step 3 (groceries, meals):** weekly dinner planner, sectioned grocery list,
+  push a week's ingredients to groceries. Migration 0007.
+- **Step 4 (photos):** NAS-backed wall slideshow. `photo_collections`
+  (migration 0008) route a NAS folder per member, month (theme) and/or hour.
+  Pi reads the mounted folder via `pi/photos-agent.mjs` and serves it locally;
+  phone curates collections. **Needs you:** mount the NAS share + run the photo
+  agent on the Pi (pi/README.md).
+- **Step 5 (weather, birthdays):** SVG condition icons, 3-day Open-Meteo
+  forecast, richer hub weather card, household birthdays card on the hub.
+- **Step 6 (smart home):** wall Home page controls Home Assistant on the LAN
+  (`VITE_HA_URL` + `VITE_HA_TOKEN`, wall build only); auto-discovers scenes,
+  lights, thermostat, locks. Nest/Google via HA's Nest integration. Sample home
+  until connected. **Needs you:** stand up Home Assistant + add a long-lived
+  token (pi/README.md). Untested against a live HA so far.
+
 ## Open items from the brief (still to confirm)
 
 - Work event titles vs "Busy" on the work-calendar owner's page (confidentiality). Modelled; final

@@ -176,6 +176,40 @@ changes live.
 If a device has no NAS agent (any phone, or the wall before step 2), it shows a
 hint instead of photos. Only the Pi with the mount shows the real images.
 
+## Smart home (Home Assistant)
+
+The wall's Home page controls Home Assistant on your LAN. Only the wall talks to
+it (a phone off the network, and the public HTTPS site, can't reach a local
+device). Google/Nest devices show up here too once you add Home Assistant's
+**Nest integration** — this one panel then covers both.
+
+Until it's connected the page shows a sample home so it isn't blank.
+
+1. In Home Assistant, create a **long-lived access token**: your profile
+   (bottom-left) → Security → Long-lived access tokens → Create. Copy it.
+2. Add both to the wall's `~/family-dashboard/.env.local` (use the Pi's LAN
+   address for HA, with its port):
+   ```
+   VITE_HA_URL=http://homeassistant.local:8123
+   VITE_HA_TOKEN=eyJ...your-token...
+   ```
+   If `homeassistant.local` doesn't resolve, use the HA box's IP
+   (e.g. `http://192.168.1.50:8123`).
+3. Rebuild and restart the wall:
+   ```bash
+   cd ~/family-dashboard && npm run build
+   systemctl --user restart family-wall.service
+   ```
+
+The page auto-discovers your entities: `scene.*` as scenes, `light.*`/`switch.*`
+as toggles, `climate.*` as the thermostat, and `lock.*`/`cover.*` as doors and
+locks. It refreshes every 15 seconds. The token is only ever in the Pi's local
+build, never in the public repo or the Vercel deployment.
+
+If the page says "Can't reach Home Assistant", check HA is running and the URL
+and token are right (`curl -H "Authorization: Bearer $TOKEN" $VITE_HA_URL/api/`
+from the Pi should return `{"message":"API running."}`).
+
 ## Updating
 
 The Pi pulls new code from the repo:
