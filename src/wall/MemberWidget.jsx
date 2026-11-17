@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { C, card } from '../theme.js'
+import WeatherIcon from '../components/WeatherIcon.jsx'
 import { useWeather } from '../lib/weather.js'
 import { useEvents } from '../lib/eventsource.js'
 import { startOfDay, addDays, timeOfDay } from '../lib/time.js'
@@ -38,7 +39,8 @@ function Title({ children }) {
 }
 
 function WeatherWidget({ shell }) {
-  const { data, error } = useWeather()
+  const { data, forecast, error } = useWeather()
+  const next = forecast.slice(1, 4)
   return shell(
     <>
       <Title>Weather</Title>
@@ -46,13 +48,25 @@ function WeatherWidget({ shell }) {
         <div style={{ fontSize: 24, color: C.muted }}>{error ? 'Weather unavailable' : 'Loading…'}</div>
       ) : (
         <>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <WeatherIcon code={data.code} size={72} />
             <div style={{ fontSize: 88, fontWeight: 800, lineHeight: 1 }}>{data.temp}°</div>
             <div style={{ fontSize: 28, color: C.muted }}>{data.conditions}</div>
           </div>
           <div style={{ fontSize: 22, color: C.muted }}>
             High {data.high}° · Low {data.low}° · Edmonton
           </div>
+          {next.length > 0 && (
+            <div style={{ display: 'flex', gap: 26, marginTop: 6 }}>
+              {next.map((d) => (
+                <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: C.muted }}>{d.label}</span>
+                  <WeatherIcon code={d.code} size={28} />
+                  <span style={{ fontSize: 20 }}><span style={{ fontWeight: 700 }}>{d.high}°</span> <span style={{ color: C.muted }}>{d.low}°</span></span>
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
     </>,

@@ -97,3 +97,12 @@ export function birthdayCountdown(isoBirthday, from = new Date()) {
   const turning = next.getFullYear() - by
   return { days, turning }
 }
+
+// Household birthdays, soonest first. Each row carries the member plus the
+// countdown (days until, age turning).
+export function upcomingBirthdays(members, from = new Date()) {
+  return members
+    .filter((m) => m.birthday)
+    .map((m) => ({ member: m, ...birthdayCountdown(m.birthday, from) }))
+    .sort((a, b) => a.days - b.days)
+}

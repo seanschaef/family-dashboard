@@ -4,9 +4,9 @@ import Icon from '../components/Icon.jsx'
 import { Clock, LiveCheck, ProgressRow } from './parts.jsx'
 import CalendarBlock from './CalendarBlock.jsx'
 import PhotoFrame from './PhotoFrame.jsx'
-import { formatClock, formatLongDate, greeting, useNow } from '../lib/time.js'
+import WeatherCard from './WeatherCard.jsx'
+import { formatClock, formatLongDate, greeting, useNow, upcomingBirthdays } from '../lib/time.js'
 import { useMembers } from '../lib/members.jsx'
-import { useWeather } from '../lib/weather.js'
 import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone } from '../lib/chores.js'
 import { useReminders, usePetLog, PET_TASKS, petDone, petBy, togglePet } from '../lib/household.js'
@@ -16,7 +16,6 @@ import { petName } from '../data/sample.js'
 export default function Hub() {
   const now = useNow()
   const { members, nameFor, familyName } = useMembers()
-  const { data: weather } = useWeather()
   const T = todayISO()
   const { rows: chores } = useChores()
   const { rows: logs } = useChoreLogs()
@@ -26,6 +25,7 @@ export default function Hub() {
 
   const familyReminders = reminders.filter((r) => r.member_key === null && !r.done)
   const dinner = mealFor(meals, T)?.title
+  const birthdays = upcomingBirthdays(members).slice(0, 3)
 
   return (
     <>
@@ -35,10 +35,7 @@ export default function Hub() {
           <div style={{ fontSize: 104, fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
           <div style={{ fontSize: 26, color: C.muted }}>{formatLongDate(now)}</div>
         </div>
-        <div style={card({ borderRadius: 28, padding: '24px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 })}>
-          <div style={{ fontSize: 60, fontWeight: 800 }}>{weather ? `${weather.temp}°` : '—'}</div>
-          <div style={{ fontSize: 22, color: C.muted }}>{weather ? weather.conditions : 'Edmonton'}</div>
-        </div>
+        <WeatherCard />
       </div>
 
       <PhotoFrame height={380} />
@@ -84,6 +81,21 @@ export default function Hub() {
               )
             })}
           </div>
+
+          {birthdays.length > 0 && (
+            <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 12 })}>
+              <div style={{ fontSize: 26, fontWeight: 800 }}>Birthdays</div>
+              {birthdays.map((b) => (
+                <div key={b.member.key} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 22 }}>
+                  <span style={{ width: 16, height: 16, borderRadius: 8, background: b.member.color, flexShrink: 0 }} />
+                  <span style={{ fontWeight: 600 }}>{b.member.name}</span>
+                  <span style={{ color: C.muted, marginLeft: 'auto' }}>
+                    {b.days === 0 ? `turns ${b.turning} today!` : `${b.days} ${b.days === 1 ? 'day' : 'days'} · turns ${b.turning}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 10, flexGrow: 1 })}>
             <div style={{ fontSize: 26, fontWeight: 800 }}>Reminders</div>
