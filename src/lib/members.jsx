@@ -7,10 +7,10 @@ import { C } from '../theme.js'
 // the public demo), it falls back to a generic placeholder family so the UI
 // still renders — no real people in the source.
 export const SAMPLE_MEMBERS = [
-  { key: 'm1', name: 'Alex', color: C.violet, role: 'parent', birthday: null, sort_order: 1, widget_type: 'weather', widget_config: {} },
-  { key: 'm2', name: 'Sam', color: C.rust, role: 'parent', birthday: null, sort_order: 2, widget_type: 'countdown', widget_config: { label: 'Trip to the mountains', date: '2027-03-14' } },
-  { key: 'm3', name: 'Jordan', color: C.green, role: 'teen', birthday: '2012-05-14', sort_order: 3, widget_type: 'none', widget_config: {} },
-  { key: 'm4', name: 'Riley', color: C.blue, role: 'child', birthday: '2016-10-02', sort_order: 4, widget_type: 'none', widget_config: {} },
+  { id: 'sm1', key: 'm1', name: 'Alex', color: C.violet, role: 'parent', birthday: null, sort_order: 1, widget_type: 'weather', widget_config: {} },
+  { id: 'sm2', key: 'm2', name: 'Sam', color: C.rust, role: 'parent', birthday: null, sort_order: 2, widget_type: 'countdown', widget_config: { label: 'Trip to the mountains', date: '2027-03-14' } },
+  { id: 'sm3', key: 'm3', name: 'Jordan', color: C.green, role: 'teen', birthday: '2012-05-14', sort_order: 3, widget_type: 'none', widget_config: {} },
+  { id: 'sm4', key: 'm4', name: 'Riley', color: C.blue, role: 'child', birthday: '2016-10-02', sort_order: 4, widget_type: 'none', widget_config: {} },
 ]
 
 const MembersContext = createContext(null)
@@ -18,21 +18,27 @@ const MembersContext = createContext(null)
 export function MembersProvider({ children }) {
   const [members, setMembers] = useState(isSupabaseConfigured ? [] : SAMPLE_MEMBERS)
   const [familyName, setFamilyName] = useState('family') // generic until loaded
+  const [myMemberId, setMyMemberId] = useState(isSupabaseConfigured ? null : 'sm2')
   const [loading, setLoading] = useState(isSupabaseConfigured)
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
     let active = true
     async function load() {
-      const [{ data, error }, fam] = await Promise.all([
-        supabase.from('members').select('key, name, color, role, birthday, sort_order, widget_type, widget_config').order('sort_order', { ascending: true }),
+      const [{ data, error }, fam, { data: userData }] = await Promise.all([
+        supabase.from('members').select('id, key, name, color, role, birthday, sort_order, widget_type, widget_config').order('sort_order', { ascending: true }),
         supabase.from('families').select('name').limit(1).maybeSingle(),
+        supabase.auth.getUser(),
       ])
       if (!active) return
       // Fall back to placeholders only if the query failed (e.g. signed out).
       if (error || !data) setMembers(SAMPLE_MEMBERS)
       else if (data.length) setMembers(data)
       if (fam?.data?.name) setFamilyName(fam.data.name)
+      if (userData?.user) {
+        const { data: prof } = await supabase.from('profiles').select('member_id').eq('id', userData.user.id).maybeSingle()
+        if (active) setMyMemberId(prof?.member_id ?? null)
+      }
       setLoading(false)
     }
     load()
@@ -49,9 +55,22 @@ export function MembersProvider({ children }) {
   const byKey = (key) => members.find((m) => m.key === key)
   const colorFor = (key) => (key === 'family' ? C.ink : byKey(key)?.color || C.muted)
   const nameFor = (key) => (key === 'family' ? 'Family' : byKey(key)?.name || '')
+  const me = members.find((m) => m.id === myMemberId) ?? null
+
+  // Link the signed-in account to a household member (one-time "who are you").
+  async function setMe(memberId) {
+    if (!isSupabaseConfigured) {
+      setMyMemberId(memberId)
+      return
+    }
+    const { data: userData } = await supabase.auth.getUser()
+    if (!userData?.user) return
+    await supabase.from('profiles').update({ member_id: memberId }).eq('id', userData.user.id)
+    setMyMemberId(memberId)
+  }
 
   return (
-    <MembersContext.Provider value={{ members, familyName, loading, byKey, colorFor, nameFor }}>
+    <MembersContext.Provider value={{ members, familyName, loading, byKey, colorFor, nameFor, me, setMe }}>
       {children}
     </MembersContext.Provider>
   )

@@ -77,6 +77,40 @@ export function CheckItem({ label, sub, done = false, color = C.ink, size = 44, 
   )
 }
 
+// Controlled tap-to-check row (parent owns `done`, from the database).
+export function LiveCheck({ label, sub, done = false, color = C.ink, size = 44, fontSize = 23, onToggle }) {
+  return (
+    <button
+      type="button"
+      aria-label={`Mark ${label} ${done ? 'not done' : 'done'}`}
+      aria-pressed={done}
+      onClick={() => onToggle && onToggle(!done)}
+      style={{ all: 'unset', display: 'flex', gap: 14, alignItems: 'center', cursor: 'pointer' }}
+    >
+      <span
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          boxSizing: 'border-box',
+          background: done ? color : 'transparent',
+          border: done ? 'none' : `3px solid ${color}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {done && <Icon name="check" size={size * 0.46} color="#FFFFFF" strokeWidth={3} />}
+      </span>
+      <span style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize, color: done ? C.muted : C.ink, textDecoration: done ? 'line-through' : 'none' }}>{label}</span>
+        {sub && <span style={{ fontSize: fontSize - 6, color: C.muted }}>{sub}</span>}
+      </span>
+    </button>
+  )
+}
+
 // Per-person progress bar on the hub.
 export function ProgressRow({ name, done, total, color }) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0

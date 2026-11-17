@@ -1,91 +1,66 @@
 import { Link } from 'react-router-dom'
 import { C, card } from '../theme.js'
 import Icon from '../components/Icon.jsx'
-import { Clock, CheckItem, ProgressRow } from './parts.jsx'
+import { Clock, LiveCheck, ProgressRow } from './parts.jsx'
 import CalendarBlock from './CalendarBlock.jsx'
 import { formatClock, formatLongDate, greeting, useNow } from '../lib/time.js'
 import { useMembers } from '../lib/members.jsx'
-import {
-  weather,
-  dinnerTonight,
-  choreProgress,
-  petLog,
-  petName,
-  familyReminders,
-} from '../data/sample.js'
+import { useWeather } from '../lib/weather.js'
+import { todayISO } from '../lib/db.js'
+import { useChores, useChoreLogs, dueChores, isDone } from '../lib/chores.js'
+import { useReminders, usePetLog, PET_TASKS, petDone, petBy, togglePet } from '../lib/household.js'
+import { useMeals, mealFor } from '../lib/kitchen.js'
+import { petName } from '../data/sample.js'
 
 export default function Hub() {
   const now = useNow()
-  const { colorFor, nameFor, familyName } = useMembers()
+  const { members, nameFor, familyName } = useMembers()
+  const { data: weather } = useWeather()
+  const T = todayISO()
+  const { rows: chores } = useChores()
+  const { rows: logs } = useChoreLogs()
+  const { rows: reminders } = useReminders()
+  const { rows: petLogs } = usePetLog()
+  const { rows: meals } = useMeals()
+
+  const familyReminders = reminders.filter((r) => r.member_key === null && !r.done)
+  const dinner = mealFor(meals, T)?.title
+
   return (
     <>
-      {/* Header: greeting + clock + date, and the weather card */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 160 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ fontSize: 30, fontWeight: 600, color: C.rust }}>{greeting(now)}, {familyName}!</div>
           <div style={{ fontSize: 104, fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
           <div style={{ fontSize: 26, color: C.muted }}>{formatLongDate(now)}</div>
         </div>
-        <div
-          style={card({
-            borderRadius: 28,
-            padding: '24px 32px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-          })}
-        >
-          <div style={{ fontSize: 60, fontWeight: 800 }}>{weather.temp}°</div>
-          <div style={{ fontSize: 22, color: C.muted }}>{weather.conditions}</div>
+        <div style={card({ borderRadius: 28, padding: '24px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 })}>
+          <div style={{ fontSize: 60, fontWeight: 800 }}>{weather ? `${weather.temp}°` : '—'}</div>
+          <div style={{ fontSize: 22, color: C.muted }}>{weather ? weather.conditions : 'Edmonton'}</div>
         </div>
       </div>
 
-      {/* Photo (step 4; crossfade placeholder for now) */}
-      <div
-        style={{
-          height: 380,
-          borderRadius: 36,
-          background: C.border,
-          border: '10px solid #FFFFFF',
-          boxSizing: 'border-box',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+      <div style={{ height: 380, borderRadius: 36, background: C.border, border: '10px solid #FFFFFF', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ fontSize: 26, color: C.muted }}>Photo · full-HD crossfade</div>
       </div>
 
-      {/* Family calendar: everyone's calendars combined, Day/Week/Month switch */}
       <CalendarBlock title="Family calendar" height={470} todaySummary />
 
-      {/* Dinner tonight */}
-      <Link
-        to="/wall/meals"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: C.tealTint,
-          borderRadius: 16,
-          padding: '16px 22px',
-          color: C.ink,
-        }}
-      >
+      <Link to="/wall/meals" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.tealTint, borderRadius: 16, padding: '16px 22px', color: C.ink }}>
         <span style={{ fontSize: 24 }}>
-          <span style={{ fontWeight: 800 }}>Dinner tonight:</span> {dinnerTonight}
+          <span style={{ fontWeight: 800 }}>Dinner tonight:</span> {dinner || 'Not planned yet'}
         </span>
         <span style={{ fontSize: 20, color: C.tealText, fontWeight: 700 }}>Meals ›</span>
       </Link>
 
-      {/* Bottom grid: chores | (pet + reminders) */}
       <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 24 }}>
         <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16 })}>
           <div style={{ fontSize: 26, fontWeight: 800 }}>Chores today</div>
-          {choreProgress.map((p) => (
-            <ProgressRow key={p.key} name={nameFor(p.key)} done={p.done} total={p.total} color={colorFor(p.key)} />
-          ))}
+          {members.map((m) => {
+            const due = dueChores(chores, logs, m.key, T)
+            const done = due.filter((c) => isDone(logs, c.id, T)).length
+            return <ProgressRow key={m.key} name={m.name} done={done} total={due.length} color={m.color} />
+          })}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -94,25 +69,30 @@ export default function Hub() {
               <Icon name="paw" size={32} color={C.ink} />
               <div style={{ fontSize: 26, fontWeight: 800 }}>{petName}</div>
             </div>
-            {petLog.map((r) => (
-              <CheckItem
-                key={r.key}
-                label={r.byKey ? `${r.label} · ${nameFor(r.byKey)} ${r.at}` : r.label}
-                done={r.done}
-                color={C.home}
-                size={40}
-                fontSize={21}
-              />
-            ))}
+            {PET_TASKS.map((task) => {
+              const done = petDone(petLogs, task, T)
+              const by = petBy(petLogs, task, T)
+              return (
+                <LiveCheck
+                  key={task}
+                  label={done && by ? `${task[0].toUpperCase() + task.slice(1)} · ${nameFor(by)}` : task[0].toUpperCase() + task.slice(1)}
+                  done={done}
+                  color={C.home}
+                  size={40}
+                  fontSize={21}
+                  onToggle={() => togglePet(task, T, done, null)}
+                />
+              )
+            })}
           </div>
 
           <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 10, flexGrow: 1 })}>
             <div style={{ fontSize: 26, fontWeight: 800 }}>Reminders</div>
-            {familyReminders.map((r, i) => (
-              <div key={i} style={{ fontSize: 22 }}>
-                {r}
-              </div>
-            ))}
+            {familyReminders.length ? (
+              familyReminders.map((r) => <div key={r.id} style={{ fontSize: 22 }}>{r.text}</div>)
+            ) : (
+              <div style={{ fontSize: 22, color: C.muted }}>All clear</div>
+            )}
           </div>
         </div>
       </div>
