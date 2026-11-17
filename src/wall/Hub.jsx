@@ -1,14 +1,13 @@
 import { Link } from 'react-router-dom'
 import { C, card } from '../theme.js'
 import Icon from '../components/Icon.jsx'
-import { Clock, EventRow, CheckItem, ProgressRow } from './parts.jsx'
+import { Clock, CheckItem, ProgressRow } from './parts.jsx'
+import CalendarBlock from './CalendarBlock.jsx'
 import { formatClock, formatLongDate, greeting, useNow } from '../lib/time.js'
 import { useMembers } from '../lib/members.jsx'
 import {
   weather,
   dinnerTonight,
-  hubEvents,
-  hubUpcoming,
   choreProgress,
   petLog,
   petName,
@@ -17,13 +16,13 @@ import {
 
 export default function Hub() {
   const now = useNow()
-  const { colorFor, nameFor } = useMembers()
+  const { colorFor, nameFor, familyName } = useMembers()
   return (
     <>
       {/* Header: greeting + clock + date, and the weather card */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 160 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 30, fontWeight: 600, color: C.rust }}>{greeting(now)}, family</div>
+          <div style={{ fontSize: 30, fontWeight: 600, color: C.rust }}>{greeting(now)}, {familyName}</div>
           <div style={{ fontSize: 104, fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
           <div style={{ fontSize: 26, color: C.muted }}>{formatLongDate(now)}</div>
         </div>
@@ -58,31 +57,27 @@ export default function Hub() {
         <div style={{ fontSize: 26, color: C.muted }}>Photo · full-HD crossfade</div>
       </div>
 
-      {/* Today, everyone */}
-      <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 12, height: 500 })}>
-        <div style={{ fontSize: 26, fontWeight: 800 }}>Today, everyone</div>
-        {hubEvents.map((e, i) => (
-          <EventRow key={i} time={e.time} title={e.title} sub={nameFor(e.memberKey)} color={colorFor(e.memberKey)} />
-        ))}
-        <Link
-          to="/wall/meals"
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            background: C.tealTint,
-            borderRadius: 16,
-            padding: '14px 18px',
-            color: C.ink,
-          }}
-        >
-          <span style={{ fontSize: 24 }}>
-            <span style={{ fontWeight: 800 }}>Dinner tonight:</span> {dinnerTonight}
-          </span>
-          <span style={{ fontSize: 20, color: C.tealText, fontWeight: 700 }}>Meals ›</span>
-        </Link>
-        <div style={{ fontSize: 21, color: C.muted }}>{hubUpcoming}</div>
-      </div>
+      {/* Family calendar: everyone's calendars combined, Day/Week/Month switch */}
+      <CalendarBlock title="Family calendar" height={430} />
+
+      {/* Dinner tonight */}
+      <Link
+        to="/wall/meals"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          background: C.tealTint,
+          borderRadius: 16,
+          padding: '16px 22px',
+          color: C.ink,
+        }}
+      >
+        <span style={{ fontSize: 24 }}>
+          <span style={{ fontWeight: 800 }}>Dinner tonight:</span> {dinnerTonight}
+        </span>
+        <span style={{ fontSize: 20, color: C.tealText, fontWeight: 700 }}>Meals ›</span>
+      </Link>
 
       {/* Bottom grid: chores | (pet + reminders) */}
       <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 24 }}>

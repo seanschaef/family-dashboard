@@ -17,20 +17,22 @@ const MembersContext = createContext(null)
 
 export function MembersProvider({ children }) {
   const [members, setMembers] = useState(isSupabaseConfigured ? [] : SAMPLE_MEMBERS)
+  const [familyName, setFamilyName] = useState('family') // generic until loaded
   const [loading, setLoading] = useState(isSupabaseConfigured)
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
     let active = true
     async function load() {
-      const { data, error } = await supabase
-        .from('members')
-        .select('key, name, color, role, birthday, sort_order')
-        .order('sort_order', { ascending: true })
+      const [{ data, error }, fam] = await Promise.all([
+        supabase.from('members').select('key, name, color, role, birthday, sort_order').order('sort_order', { ascending: true }),
+        supabase.from('families').select('name').limit(1).maybeSingle(),
+      ])
       if (!active) return
       // Fall back to placeholders only if the query failed (e.g. signed out).
       if (error || !data) setMembers(SAMPLE_MEMBERS)
       else if (data.length) setMembers(data)
+      if (fam?.data?.name) setFamilyName(fam.data.name)
       setLoading(false)
     }
     load()
@@ -49,7 +51,7 @@ export function MembersProvider({ children }) {
   const nameFor = (key) => (key === 'family' ? 'Family' : byKey(key)?.name || '')
 
   return (
-    <MembersContext.Provider value={{ members, loading, byKey, colorFor, nameFor }}>
+    <MembersContext.Provider value={{ members, familyName, loading, byKey, colorFor, nameFor }}>
       {children}
     </MembersContext.Provider>
   )
