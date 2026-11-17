@@ -3,6 +3,7 @@ import { C, card } from '../theme.js'
 import Icon from '../components/Icon.jsx'
 import { Clock, LiveCheck, ProgressRow } from './parts.jsx'
 import CalendarBlock from './CalendarBlock.jsx'
+import PhotoFrame from './PhotoFrame.jsx'
 import { formatClock, formatLongDate, greeting, useNow } from '../lib/time.js'
 import { useMembers } from '../lib/members.jsx'
 import { useWeather } from '../lib/weather.js'
@@ -40,9 +41,7 @@ export default function Hub() {
         </div>
       </div>
 
-      <div style={{ height: 380, borderRadius: 36, background: C.border, border: '10px solid #FFFFFF', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: 26, color: C.muted }}>Photo · full-HD crossfade</div>
-      </div>
+      <PhotoFrame height={380} />
 
       <CalendarBlock title="Family calendar" height={470} todaySummary />
 

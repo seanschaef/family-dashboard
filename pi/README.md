@@ -103,6 +103,79 @@ Run `crontab -e` as the desktop user (not root) so it has display access.
 mode just sleeps the output; "power" mode also sends CEC standby so a TV fully
 powers down. Test it directly: `bash pi/display.sh off` then `... on`.
 
+## Photos from your NAS
+
+The wall slideshow reads photos straight off your home NAS. Nothing is uploaded
+to the cloud: the Pi mounts a NAS folder read-only, a small local agent serves
+the images to Chromium, and you curate everything from the phone app (Photos
+tab) as named **collections** you can route per person, per season, or per time
+of day.
+
+### 1. On the Synology
+
+1. Make a shared folder for wall photos, e.g. `WallPhotos`, with subfolders like
+   `Family`, `Christmas`, `Kids/Jordan`. The subfolder path is what you type into
+   a collection on the phone.
+2. Create a **read-only** user for the Pi (Control Panel → User). Give it
+   read-only access to `WallPhotos` only. Do not use your admin login.
+3. Make sure **SMB** is on (Control Panel → File Services → SMB).
+4. Drop photos into the folders. Use JPG/PNG/WebP (HEIC will not display on the
+   wall; Synology Photos can convert, or save as JPG).
+
+### 2. On the Pi
+
+1. Install the SMB client:
+   ```bash
+   sudo apt install -y cifs-utils
+   ```
+2. Store the NAS credentials so they are not in fstab:
+   ```bash
+   sudo install -m 600 /dev/null /etc/family-wall-nas.cred
+   sudoedit /etc/family-wall-nas.cred
+   # file contents:
+   #   username=wallphotos
+   #   password=...
+   ```
+3. Mount the share read-only at boot. Create the mount point and add an fstab
+   line (replace host/share and uid with the Pi user's, `id -u`):
+   ```bash
+   sudo mkdir -p /mnt/wallphotos
+   echo '//NAS-HOST/WallPhotos /mnt/wallphotos cifs credentials=/etc/family-wall-nas.cred,ro,uid=1000,gid=1000,iocharset=utf8,vers=3.0,nofail,x-systemd.automount 0 0' | sudo tee -a /etc/fstab
+   sudo systemctl daemon-reload
+   sudo mount -a
+   ls /mnt/wallphotos    # should list your folders
+   ```
+   `nofail` means the Pi still boots if the NAS is off; the slideshow just shows
+   a gentle hint until it is reachable.
+4. Tell the app where the mount is, and run the photo agent:
+   ```bash
+   mkdir -p ~/.config/family-wall
+   echo /mnt/wallphotos > ~/.config/family-wall/photos.conf
+   cp ~/family-dashboard/pi/family-photos.service ~/.config/systemd/user/
+   systemctl --user daemon-reload
+   systemctl --user enable --now family-photos.service
+   curl -s localhost:8787/health   # {"ok":true,"root":"/mnt/wallphotos","exists":true}
+   ```
+5. Point the wall build at the agent, then rebuild. In
+   `~/family-dashboard/.env.local` add:
+   ```
+   VITE_PHOTO_AGENT_URL=http://localhost:8787
+   ```
+   ```bash
+   cd ~/family-dashboard && npm run build
+   systemctl --user restart family-wall.service
+   ```
+
+### 3. On the phone
+
+Open the app → Photos. Add a collection: give it a name, type the NAS subfolder
+(e.g. `Christmas` or `Kids/Jordan`), and choose where it shows (the hub, or a
+member's page), optionally limited to certain months or hours. The wall picks up
+changes live.
+
+If a device has no NAS agent (any phone, or the wall before step 2), it shows a
+hint instead of photos. Only the Pi with the mount shows the real images.
+
 ## Updating
 
 The Pi pulls new code from the repo:

@@ -4,11 +4,13 @@ import Icon, { StarIcon } from '../components/Icon.jsx'
 import { Clock, LiveCheck } from './parts.jsx'
 import CalendarBlock from './CalendarBlock.jsx'
 import MemberWidget from './MemberWidget.jsx'
+import PhotoFrame from './PhotoFrame.jsx'
 import { formatLongDate, birthdayCountdown, useNow } from '../lib/time.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone, toggleChore, pointsThisWeek } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
+import { usePhotoCollections, activeCollectionsFor } from '../lib/photos.js'
 
 function Header({ person }) {
   const now = useNow()
@@ -97,12 +99,14 @@ export default function Member() {
   const { rows: chores } = useChores()
   const { rows: logs } = useChoreLogs()
   const { rows: reminders } = useReminders()
+  const { rows: photoCollections } = usePhotoCollections()
   const person = byKey(memberKey)
   if (!person) return null
 
   const due = dueChores(chores, logs, person.key, T).sort((a, b) => a.title.localeCompare(b.title))
   const myReminders = reminders.filter((r) => r.member_key === person.key)
   const points = pointsThisWeek(logs, person.key)
+  const hasPhotos = activeCollectionsFor(photoCollections, { memberKey: person.key }).length > 0
 
   // ---- Child layout: big tiles + stars ----
   if (person.role === 'child') {
@@ -143,8 +147,9 @@ export default function Member() {
           <ChoresCard person={person} due={due} logs={logs} T={T} points={points} />
           <ReminderCard title="Homework and reminders" reminders={myReminders} />
         </div>
-        <div style={{ flexGrow: 1, display: 'flex' }}>
+        <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: hasPhotos ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: 24 }}>
           <BirthdayCountdown person={person} />
+          {hasPhotos && <PhotoFrame memberKey={person.key} height="100%" radius={28} />}
         </div>
       </>
     )
@@ -160,6 +165,11 @@ export default function Member() {
         <ReminderCard title="My reminders" reminders={myReminders} />
       </div>
       <MemberWidget member={person} />
+      {hasPhotos && (
+        <div style={{ flexGrow: 1, display: 'flex' }}>
+          <PhotoFrame memberKey={person.key} height="100%" radius={28} />
+        </div>
+      )}
     </>
   )
 }

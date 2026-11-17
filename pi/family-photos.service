@@ -1,0 +1,18 @@
+# systemd USER service: serve the NAS photo folder to the wall kiosk.
+# Install (as the Pi's desktop user):
+#   cp ~/family-dashboard/pi/family-photos.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now family-photos.service
+# Reads the mount path from ~/.config/family-wall/photos.conf (or PHOTO_DIR).
+[Unit]
+Description=Family Dashboard photo agent (serves the NAS folder to the wall)
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node %h/family-dashboard/pi/photos-agent.mjs
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
