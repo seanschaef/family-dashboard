@@ -85,6 +85,9 @@ export default function Today() {
         <Link to="/app/wall-display" style={{ color: C.tealText, fontWeight: 700 }}>
           Wall display
         </Link>
+        <Link to="/app/widgets" style={{ color: C.tealText, fontWeight: 700 }}>
+          Wall widgets
+        </Link>
         <button type="button" onClick={() => signOut()} style={{ ...linkBtn, color: C.muted, marginLeft: 'auto' }}>
           Sign out
         </button>

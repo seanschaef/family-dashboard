@@ -3,6 +3,7 @@ import { C, card } from '../theme.js'
 import Icon, { StarIcon } from '../components/Icon.jsx'
 import { Clock, CheckItem } from './parts.jsx'
 import CalendarBlock from './CalendarBlock.jsx'
+import MemberWidget from './MemberWidget.jsx'
 import { formatLongDate, birthdayCountdown, useNow } from '../lib/time.js'
 import { useParams } from 'react-router-dom'
 import { useMembers } from '../lib/members.jsx'
@@ -81,26 +82,6 @@ function ListCard({ title, items }) {
           {t}
         </div>
       ))}
-    </div>
-  )
-}
-
-function WidgetSlot({ person }) {
-  return (
-    <div
-      style={card({
-        flexGrow: 1,
-        padding: 28,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderStyle: 'dashed',
-      })}
-    >
-      <div style={{ fontSize: 26, fontWeight: 800 }}>{person.name}'s pick</div>
-      <div style={{ fontSize: 22, color: C.muted }}>[Widget of their choice]</div>
     </div>
   )
 }
@@ -227,7 +208,7 @@ export default function Member() {
         <ChoresCard person={person} chores={data.chores} />
         <ListCard title="My reminders" items={data.reminders} />
       </div>
-      <WidgetSlot person={person} />
+      <MemberWidget member={person} />
     </>
   )
 }

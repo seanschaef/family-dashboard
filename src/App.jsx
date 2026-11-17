@@ -18,6 +18,7 @@ import Chores from './phone/Chores.jsx'
 import Photos from './phone/Photos.jsx'
 import Calendars from './phone/Calendars.jsx'
 import WallDisplay from './phone/WallDisplay.jsx'
+import Widgets from './phone/Widgets.jsx'
 
 // On the Pi we set VITE_DEVICE_MODE=wall so the root boots straight to the wall.
 const DEVICE_MODE = import.meta.env.VITE_DEVICE_MODE
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="photos" element={<Photos />} />
         <Route path="calendars" element={<Calendars />} />
         <Route path="wall-display" element={<WallDisplay />} />
+        <Route path="widgets" element={<Widgets />} />
       </Route>
 
       <Route path="*" element={<Navigate to={HOME_ROUTE} replace />} />

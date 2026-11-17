@@ -7,10 +7,10 @@ import { C } from '../theme.js'
 // the public demo), it falls back to a generic placeholder family so the UI
 // still renders — no real people in the source.
 export const SAMPLE_MEMBERS = [
-  { key: 'm1', name: 'Alex', color: C.violet, role: 'parent', birthday: null, sort_order: 1 },
-  { key: 'm2', name: 'Sam', color: C.rust, role: 'parent', birthday: null, sort_order: 2 },
-  { key: 'm3', name: 'Jordan', color: C.green, role: 'teen', birthday: '2012-05-14', sort_order: 3 },
-  { key: 'm4', name: 'Riley', color: C.blue, role: 'child', birthday: '2016-10-02', sort_order: 4 },
+  { key: 'm1', name: 'Alex', color: C.violet, role: 'parent', birthday: null, sort_order: 1, widget_type: 'weather', widget_config: {} },
+  { key: 'm2', name: 'Sam', color: C.rust, role: 'parent', birthday: null, sort_order: 2, widget_type: 'countdown', widget_config: { label: 'Trip to the mountains', date: '2027-03-14' } },
+  { key: 'm3', name: 'Jordan', color: C.green, role: 'teen', birthday: '2012-05-14', sort_order: 3, widget_type: 'none', widget_config: {} },
+  { key: 'm4', name: 'Riley', color: C.blue, role: 'child', birthday: '2016-10-02', sort_order: 4, widget_type: 'none', widget_config: {} },
 ]
 
 const MembersContext = createContext(null)
@@ -25,7 +25,7 @@ export function MembersProvider({ children }) {
     let active = true
     async function load() {
       const [{ data, error }, fam] = await Promise.all([
-        supabase.from('members').select('key, name, color, role, birthday, sort_order').order('sort_order', { ascending: true }),
+        supabase.from('members').select('key, name, color, role, birthday, sort_order, widget_type, widget_config').order('sort_order', { ascending: true }),
         supabase.from('families').select('name').limit(1).maybeSingle(),
       ])
       if (!active) return
@@ -61,4 +61,14 @@ export function useMembers() {
   const ctx = useContext(MembersContext)
   if (!ctx) throw new Error('useMembers must be used within MembersProvider')
   return ctx
+}
+
+// Save a member's wall widget. Realtime updates the roster for everyone.
+export async function updateMemberWidget(key, widget_type, widget_config) {
+  if (!isSupabaseConfigured) throw new Error('Supabase not configured')
+  const { error } = await supabase
+    .from('members')
+    .update({ widget_type, widget_config })
+    .eq('key', key)
+  if (error) throw error
 }
