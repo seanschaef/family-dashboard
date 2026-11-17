@@ -1,0 +1,20 @@
+# systemd USER service that launches the wall kiosk at login.
+# Install (as the Pi's desktop user, not root):
+#   mkdir -p ~/.config/systemd/user
+#   cp ~/family-dashboard/pi/family-wall.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now family-wall.service
+#   sudo loginctl enable-linger "$USER"   # start at boot without a login
+[Unit]
+Description=Family Dashboard wall (Chromium kiosk)
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/family-dashboard/pi/kiosk.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

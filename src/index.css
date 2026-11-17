@@ -1,0 +1,65 @@
+/* Design system: Style C "warm and family-friendly".
+   Tokens come straight from the approved mockups (design/ in the handoff). */
+:root {
+  /* Surfaces */
+  --cream: #FBF5EC;
+  --card: #FFFFFF;
+  --border: #EFE3D2;
+  --ink: #2B2420;
+  --muted: #6E625A;
+
+  /* Tints used across cards */
+  --track: #F3EADC; /* progress-bar track */
+  --teal-tint: #E3EFEE; /* "dinner tonight", QR, meal highlight */
+  --teal-text: #2F605E;
+  --light-on: #FFF4DD; /* smart-home light on */
+  --toggle-off: #D8CDBE;
+
+  /* Member accent palette */
+  --violet: #7B4B8A;
+  --rust: #B4532A;
+  --green: #4F7A5A;
+  --blue: #2F6A9E;
+  --meals: #3E7C7A;
+  --home: #8A6A2E;
+
+  --star-fill: #D9A441;
+  --star-stroke: #8A6A2E;
+
+  --link: #B4532A;
+  --link-hover: #8A3E1F;
+
+  --font: Outfit, 'Segoe UI', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--cream);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--link-hover); }
+
+button { font-family: inherit; }
+
+/* Kiosk niceties: no text selection, no tap-highlight, no accidental zoom. */
+.kiosk, .kiosk * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hide scrollbars on the wall (touch only, no mouse). */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Respect reduced motion for the few transitions we use. */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

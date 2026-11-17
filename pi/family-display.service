@@ -1,0 +1,20 @@
+# systemd USER service: auto turn the wall monitor on/off on a schedule.
+# Install (as the Pi's desktop user):
+#   cp ~/family-dashboard/pi/family-display.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now family-display.service
+# Needs the kiosk running (kiosk.sh imports the session env so this can reach
+# the display).
+[Unit]
+Description=Family Dashboard wall display scheduler
+After=graphical-session.target family-wall.service
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/family-dashboard/pi/display-watch.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=graphical-session.target
