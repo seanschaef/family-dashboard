@@ -2,11 +2,11 @@
 // to CORS), parses it, and caches events in `calendar_events`.
 //
 // Invoked from the app via supabase.functions.invoke('sync-calendars'), and
-// can also be run on a schedule (Supabase cron) later.
+// every 15 minutes by pg_cron (migration 0014).
 //
 // Deploy: supabase functions deploy sync-calendars
 // Secrets used: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are injected by the
-// platform; no manual secret needed for this function.
+// platform. The scheduler's secret lives in the database vault, not here.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 

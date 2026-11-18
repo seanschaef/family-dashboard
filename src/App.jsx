@@ -8,6 +8,7 @@ import WallCalendar from './wall/Calendar.jsx'
 import WallMember from './wall/Member.jsx'
 import WallMeals from './wall/Meals.jsx'
 import WallHome from './wall/Home.jsx'
+import WallSoccer from './wall/Soccer.jsx'
 
 import PhoneLayout from './phone/PhoneLayout.jsx'
 import Today from './phone/Today.jsx'
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="member/:memberKey" element={<WallMember />} />
         <Route path="meals" element={<WallMeals />} />
         <Route path="home" element={<WallHome />} />
+        <Route path="soccer" element={<WallSoccer />} />
       </Route>
 
       {/* Phone / computer app (installable PWA on Vercel) */}

@@ -9,7 +9,8 @@ const WALL_HEAD = [
 ]
 const WALL_TAIL = [
   { key: 'meals', label: 'Meals', to: '/wall/meals', color: C.meals, icon: 'utensils' },
-  { key: 'home', label: 'Home', to: '/wall/home', color: C.home, icon: 'bulb' },
+  // Smart home (/wall/home) is parked for now; the route still exists.
+  { key: 'soccer', label: 'Soccer', to: '/wall/soccer', color: C.green, icon: 'ball' },
 ]
 
 // Full wall nav: fixed pages with the member pages inserted in the middle.

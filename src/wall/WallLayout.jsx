@@ -12,6 +12,7 @@ const FRAME_H = 1920
 // Minutes of no touches before the wall drifts back to the hub.
 // OPEN ITEM in the brief: confirm this timing. Easy to change.
 const IDLE_RETURN_MS = 120000
+const SOCCER_IDLE_RETURN_MS = 10 * 60 * 1000
 const SWIPE_THRESHOLD = 60 // px
 
 export default function WallLayout() {
@@ -68,9 +69,12 @@ export default function WallLayout() {
     let timer
     const reset = () => {
       clearTimeout(timer)
+      // The soccer page is an embedded site: touches inside it never reach this
+      // window, so give it a longer leash before drifting back to the hub.
+      const wait = location.pathname.startsWith('/wall/soccer') ? SOCCER_IDLE_RETURN_MS : IDLE_RETURN_MS
       timer = setTimeout(() => {
         if (!location.pathname.endsWith('/hub')) navigate('/wall/hub')
-      }, IDLE_RETURN_MS)
+      }, wait)
     }
     const events = ['pointerdown', 'pointermove', 'keydown', 'wheel']
     events.forEach((ev) => window.addEventListener(ev, reset, { passive: true }))
