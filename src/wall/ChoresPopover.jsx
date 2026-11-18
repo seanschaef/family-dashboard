@@ -1,13 +1,16 @@
 import { C } from '../theme.js'
 import { LiveCheck } from './parts.jsx'
 import { todayISO } from '../lib/db.js'
-import { dueChores, isDone, toggleChore, assigneesOf, doneByText, ANYONE } from '../lib/chores.js'
+import { dueChores, isDone, assigneesOf, doneByText, ANYONE } from '../lib/chores.js'
 import { useMembers } from '../lib/members.jsx'
+import { useChoreActions } from '../lib/choreActions.jsx'
+import Hold from '../components/Hold.jsx'
 
 // Tap a person in the hub's Chores card: a pop-up with today's chores for that
 // person, tickable right there. Same look as the calendar's tap-a-day pop-up.
 export default function ChoresPopover({ person, chores, logs, onClose }) {
   const { nameFor } = useMembers()
+  const actions = useChoreActions({ logs, pageKey: person?.key === ANYONE ? null : person?.key, onWall: true, scale: 2 })
   if (!person) return null
   const T = todayISO()
   const due = dueChores(chores, logs, person.key, T).sort((a, b) => a.title.localeCompare(b.title))
@@ -52,19 +55,23 @@ export default function ChoresPopover({ person, chores, logs, onClose }) {
             const others = assigneesOf(c).filter((k) => k !== person.key)
             return (
               <div key={c.id} style={{ background: C.cream, borderRadius: 16, padding: '12px 18px' }}>
+                <Hold onHold={() => actions.askUndo(c, isDone(logs, c, T, person.key), who)}>
                 <LiveCheck
                   label={c.title}
                   sub={[doneByText(logs, c, T, nameFor), others.length ? `with ${others.map(nameFor).join(', ')}` : '', c.points ? `${c.points} pts` : ''].filter(Boolean).join(' · ') || undefined}
                   done={isDone(logs, c, T, person.key)}
                   color={person.color}
-                  onToggle={() => toggleChore(c, T, isDone(logs, c, T, person.key), who)}
+                  onToggle={() => actions.tick(c, isDone(logs, c, T, person.key), who)}
                 />
+                </Hold>
               </div>
             )
           })
         ) : (
           <div style={{ fontSize: 24, color: C.muted }}>Nothing due today.</div>
         )}
+        <div style={{ fontSize: 16, color: C.muted }}>Tap to tick. Press and hold a ticked chore to undo it.</div>
+        {actions.ui}
       </div>
     </div>
   )

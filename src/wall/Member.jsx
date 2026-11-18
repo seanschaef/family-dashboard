@@ -8,13 +8,15 @@ import PhotoFrame from './PhotoFrame.jsx'
 import { formatLongDate, birthdayCountdown, useNow } from '../lib/time.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, toggleChore, pointsThisWeek, doneByText, assigneesOf } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, pointsThisWeek, doneByText, assigneesOf } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import { usePhotoCollections, activeCollectionsFor } from '../lib/photos.js'
 import { normalizePersonLayout, personBlockHeight } from './personLayout.js'
 import { WIDTH_SPAN, MIN_HEIGHT } from './hubLayout.js'
 import Rotator from './Rotator.jsx'
 import { useDragScroll } from './dragScroll.js'
+import { useChoreActions } from '../lib/choreActions.jsx'
+import Hold from '../components/Hold.jsx'
 
 function Header({ person }) {
   const now = useNow()
@@ -34,7 +36,7 @@ function Header({ person }) {
   )
 }
 
-function ChoresCard({ person, due, logs, T, points }) {
+function ChoresCard({ person, due, logs, T, points, actions }) {
   const { nameFor } = useMembers()
   const done = due.filter((c) => isDone(logs, c, T, person.key)).length
   return (
@@ -45,7 +47,9 @@ function ChoresCard({ person, due, logs, T, points }) {
       </div>
       {due.length ? (
         due.map((c) => (
-          <LiveCheck key={c.id} label={c.title} sub={doneByText(logs, c, T, nameFor) || (assigneesOf(c).length ? undefined : 'Anyone')} done={isDone(logs, c, T, person.key)} color={person.color} onToggle={() => toggleChore(c, T, isDone(logs, c, T, person.key), person.key)} />
+          <Hold key={c.id} onHold={() => actions.askUndo(c, isDone(logs, c, T, person.key), person.key)}>
+            <LiveCheck label={c.title} sub={doneByText(logs, c, T, nameFor) || (assigneesOf(c).length ? undefined : 'Anyone')} done={isDone(logs, c, T, person.key)} color={person.color} onToggle={() => actions.tick(c, isDone(logs, c, T, person.key), person.key)} />
+          </Hold>
         ))
       ) : (
         <div style={{ fontSize: 22, color: C.muted }}>Nothing due today</div>
@@ -90,7 +94,7 @@ function BirthdayCountdown({ person, big = true }) {
 function JobTile({ chore, done, color, onToggle }) {
   return (
     <button type="button" aria-label={`Mark ${chore.title} ${done ? 'not done' : 'done'}`} aria-pressed={done} onClick={onToggle}
-      style={{ all: 'unset', cursor: 'pointer', background: done ? color : C.card, color: done ? '#FFFFFF' : C.ink, border: done ? 'none' : `3px dashed ${color}`, borderRadius: 24, padding: 24, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 150, boxSizing: 'border-box' }}>
+      style={{ all: 'unset', flex: 1, cursor: 'pointer', background: done ? color : C.card, color: done ? '#FFFFFF' : C.ink, border: done ? 'none' : `3px dashed ${color}`, borderRadius: 24, padding: 24, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 150, boxSizing: 'border-box' }}>
       {done ? <Icon name="check" size={44} color="#FFFFFF" strokeWidth={3} /> : <span style={{ width: 44, height: 44, borderRadius: 22, border: `3px solid ${color}`, boxSizing: 'border-box' }} />}
       <span style={{ fontSize: 28, fontWeight: 700 }}>{chore.title}</span>
     </button>
@@ -107,6 +111,7 @@ export default function Member() {
   const { rows: photoCollections } = usePhotoCollections()
   const person = byKey(memberKey)
   const jobsDrag = useDragScroll()
+  const actions = useChoreActions({ logs, pageKey: memberKey, onWall: true, scale: 2 })
   if (!person) return null
 
   const due = dueChores(chores, logs, person.key, T).sort((a, b) => a.title.localeCompare(b.title))
@@ -120,7 +125,7 @@ export default function Member() {
   const blocks = {
     header: () => <Header person={person} />,
     calendar: (size) => <CalendarBlock personKey={person.key} includeWork title="Calendar" height={personBlockHeight('calendar', size)} />,
-    chores: () => <ChoresCard person={person} due={due} logs={logs} T={T} points={person.role === 'parent' ? null : points} />,
+    chores: () => <ChoresCard person={person} due={due} logs={logs} T={T} points={person.role === 'parent' ? null : points} actions={actions} />,
     jobs: (size) => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 18, height: personBlockHeight('jobs', size) })}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -133,7 +138,9 @@ export default function Member() {
         <div ref={jobsDrag.ref} {...jobsDrag.handlers} className={jobsDrag.className} style={{ ...jobsDrag.style, flex: '1 1 0', minHeight: 0 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 18 }}>
             {due.map((c) => (
-              <JobTile key={c.id} chore={c} done={isDone(logs, c, T, person.key)} color={person.color} onToggle={() => toggleChore(c, T, isDone(logs, c, T, person.key), person.key)} />
+              <Hold key={c.id} onHold={() => actions.askUndo(c, isDone(logs, c, T, person.key), person.key)} style={{ display: 'flex' }}>
+                <JobTile chore={c} done={isDone(logs, c, T, person.key)} color={person.color} onToggle={() => actions.tick(c, isDone(logs, c, T, person.key), person.key)} />
+              </Hold>
             ))}
             {due.length === 0 && <div style={{ fontSize: 24, color: C.muted }}>No jobs today</div>}
           </div>
@@ -159,6 +166,7 @@ export default function Member() {
           )}
         </div>
       ))}
+      {actions.ui}
     </div>
   )
 }

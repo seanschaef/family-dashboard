@@ -159,9 +159,9 @@ export const widthOptions = widthsFor
 // Fixed heights (px) for blocks that need one, within the 1080x1920 wall.
 const FIXED = {
   header: { s: 160, m: 200, l: 240, xl: 300 },
-  photo: { s: 200, m: 320, l: 300, xl: 440 },
-  calendar: { s: 260, m: 430, l: 430, xl: 560 },
-  today: { s: 160, m: 240, l: 300, xl: 440 },
+  photo: { s: 200, m: 270, l: 300, xl: 440 },
+  calendar: { s: 260, m: 400, l: 430, xl: 560 },
+  today: { s: 160, m: 240, l: 260, xl: 440 },
 }
 export function blockHeight(id, size) {
   return FIXED[id]?.[size]

@@ -22,6 +22,7 @@ export function MembersProvider({ children }) {
   const [familyId, setFamilyId] = useState(null)
   const [petName, setPetName] = useState(isSupabaseConfigured ? '' : SAMPLE_PET)
   const [wallLayout, setWallLayout] = useState(null)
+  const [parentPinHash, setParentPinHash] = useState(null)
   const [myMemberId, setMyMemberId] = useState(isSupabaseConfigured ? null : 'sm2')
   const [isAdmin, setIsAdmin] = useState(!isSupabaseConfigured)
   const [mustChangePassword, setMustChangePassword] = useState(false)
@@ -33,7 +34,7 @@ export function MembersProvider({ children }) {
     async function load() {
       const [{ data, error }, fam, { data: userData }] = await Promise.all([
         supabase.from('members').select('id, key, name, color, role, birthday, sort_order, widget_type, widget_config, page_layout').order('sort_order', { ascending: true }),
-        supabase.from('families').select('id, name, pet_name, wall_layout').limit(1).maybeSingle(),
+        supabase.from('families').select('id, name, pet_name, wall_layout, parent_pin_hash').limit(1).maybeSingle(),
         supabase.auth.getUser(),
       ])
       if (!active) return
@@ -45,6 +46,7 @@ export function MembersProvider({ children }) {
         if (fam.data.name) setFamilyName(fam.data.name)
         setPetName(fam.data.pet_name || '')
         setWallLayout(fam.data.wall_layout || null)
+        setParentPinHash(fam.data.parent_pin_hash || null)
       }
       if (userData?.user) {
         const { data: prof } = await supabase.from('profiles').select('member_id, is_admin, must_change_password').eq('id', userData.user.id).maybeSingle()
@@ -114,6 +116,7 @@ export function MembersProvider({ children }) {
     if (patch.name !== undefined) setFamilyName(patch.name)
     if (patch.pet_name !== undefined) setPetName(patch.pet_name)
     if (patch.wall_layout !== undefined) setWallLayout(patch.wall_layout)
+    if (patch.parent_pin_hash !== undefined) setParentPinHash(patch.parent_pin_hash)
     if (!isSupabaseConfigured || !familyId) return
     await supabase.from('families').update(patch).eq('id', familyId)
   }
@@ -144,7 +147,7 @@ export function MembersProvider({ children }) {
   }
 
   return (
-    <MembersContext.Provider value={{ members, familyName, familyId, petName, wallLayout, loading, byKey, colorFor, nameFor, me, setMe, isAdmin, mustChangePassword, clearMustChangePassword, updateFamily, addMember, updateMember, removeMember }}>
+    <MembersContext.Provider value={{ members, familyName, familyId, petName, wallLayout, parentPinHash, loading, byKey, colorFor, nameFor, me, setMe, isAdmin, mustChangePassword, clearMustChangePassword, updateFamily, addMember, updateMember, removeMember }}>
       {children}
     </MembersContext.Provider>
   )

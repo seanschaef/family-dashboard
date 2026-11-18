@@ -6,7 +6,9 @@ import { useAuth } from '../lib/auth.jsx'
 import { PhoneHeader, Pill, PhoneCard, PhoneToggle } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, toggleChore, assigneesOf, isEachChore, doneByText } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, assigneesOf, isEachChore, doneByText } from '../lib/chores.js'
+import { useChoreActions } from '../lib/choreActions.jsx'
+import Hold from '../components/Hold.jsx'
 import { useReminders, addReminder, toggleReminder, usePetLog, PET_TASKS, petDone, petBy, togglePet } from '../lib/household.js'
 
 function firstName(me, user) {
@@ -28,6 +30,7 @@ export default function Today() {
   const { rows: reminders } = useReminders()
   const { rows: petLogs } = usePetLog()
   const [newReminder, setNewReminder] = useState('')
+  const actions = useChoreActions({ logs })
 
   const meColor = me?.color || C.rust
   const scopeKey = scope === 'me' ? me?.key : null
@@ -96,16 +99,19 @@ export default function Today() {
           <div style={{ fontSize: 15, color: C.muted }}>Nothing due today.</div>
         ) : (
           choreList.map((row) => (
+            <Hold key={row.rowKey} onHold={() => actions.askUndo(row.c, isDone(logs, row.c, T, row.who), row.who)}>
             <PhoneToggle
-              key={row.rowKey}
               label={row.c.title}
               sub={subFor(row)}
               done={isDone(logs, row.c, T, row.who)}
               color={scope === 'family' ? C.meals : meColor}
-              onToggle={() => toggleChore(row.c, T, isDone(logs, row.c, T, row.who), row.who)}
+              onToggle={() => actions.tick(row.c, isDone(logs, row.c, T, row.who), row.who)}
             />
+            </Hold>
           ))
         )}
+        {choreList.length > 0 && <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Press and hold a ticked chore to undo it.</div>}
+        {actions.ui}
       </PhoneCard>
 
       <PhoneCard style={{ gap: 6 }}>
