@@ -15,6 +15,14 @@ Type=simple
 ExecStart=%h/family-dashboard/pi/kiosk.sh
 Restart=always
 RestartSec=5
+# Stop Chromium gracefully: SIGTERM to the browser process only, so it can
+# save its profile (including the rotated Supabase refresh token) before its
+# helper processes go. The default kills every process at once, Chromium came
+# back with an already-rotated token, and Supabase revoked the session as
+# token reuse ("Possible abuse attempt"), signing the wall out on restart.
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=20
 
 [Install]
 WantedBy=graphical-session.target
