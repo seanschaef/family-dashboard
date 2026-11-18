@@ -167,7 +167,7 @@ export default function Settings() {
       <div style={card}>
         <div style={{ fontSize: 16, fontWeight: 800 }}>Wall display</div>
         <Link to="/app/wall-preview" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>See how the wall looks ›</Link>
-        <Link to="/app/arrange" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Arrange the hub windows ›</Link>
+        <Link to="/app/arrange" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Arrange the wall: hub and each person's page ›</Link>
         <Link to="/app/wall-display" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Monitor schedule and night colours ›</Link>
       </div>
 

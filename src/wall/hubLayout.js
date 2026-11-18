@@ -67,12 +67,22 @@ export function normalizeHubLayout(stored) {
   if (!hasToday) {
     stored = stored.flatMap((b) => (b?.id === 'reminders' ? [{ ...b, id: 'today' }, { ...b, visible: false }] : [b]))
   }
-  const known = new Set(Object.keys(HUB_BLOCK_LABELS))
+  // The header (clock/weather) used to be fixed at the top: keep it there.
+  if (!stored.some((b) => b?.id === 'header' || b?.group?.includes('header'))) {
+    stored = [{ ...DEFAULT_HUB_LAYOUT[0] }, ...stored]
+  }
+  return normalizeLayout(stored, { labels: HUB_BLOCK_LABELS, defaults: DEFAULT_HUB_LAYOUT, legacy: fromOldSize })
+}
+
+// The shared part, used by the hub and by each person's page.
+export function normalizeLayout(stored, { labels, defaults, legacy }) {
+  if (!Array.isArray(stored) || !stored.length) return defaults
+  const known = new Set(Object.keys(labels))
   const seen = new Set()
   const out = []
   const sized = (b) => {
     let { size, width } = b
-    if (!width) ({ size, width } = fromOldSize(b.id, size))
+    if (!width && legacy) ({ size, width } = legacy(b.id, size))
     if (!SIZES.some((s) => s.v === size)) size = 'm'
     if (!widthsFor(size).includes(width)) width = widthsFor(size)[0]
     return { size, width, visible: b.visible !== false }
@@ -101,20 +111,15 @@ export function normalizeHubLayout(stored) {
     if (b.id === 'photo') entry.fit = b.fit === 'contain' ? 'contain' : 'cover'
     out.push(entry)
   }
-  // The header (clock/weather) used to be fixed at the top: keep it there.
-  if (!seen.has('header')) {
-    out.unshift({ ...DEFAULT_HUB_LAYOUT[0] })
-    seen.add('header')
-  }
   // Append any block missing from the stored layout (e.g. a newly added feature).
-  for (const d of DEFAULT_HUB_LAYOUT) if (!seen.has(d.id)) out.push({ ...d })
+  for (const d of defaults) if (!seen.has(d.id)) out.push({ ...d })
   return out
 }
 
 // A readable name for an entry (combined windows list their parts).
-export function entryLabel(b) {
-  const short = (id) => HUB_BLOCK_LABELS[id].replace(/ \(.*\)$/, '')
-  return b.group ? b.group.map(short).join(' + ') : HUB_BLOCK_LABELS[b.id]
+export function entryLabel(b, labels = HUB_BLOCK_LABELS) {
+  const short = (id) => labels[id].replace(/ \(.*\)$/, '')
+  return b.group ? b.group.map(short).join(' + ') : labels[b.id]
 }
 
 // Combine entry j into entry i (both may already be combined windows).

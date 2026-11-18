@@ -11,6 +11,10 @@ import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone, toggleChore, pointsThisWeek, doneByText, assigneesOf } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import { usePhotoCollections, activeCollectionsFor } from '../lib/photos.js'
+import { normalizePersonLayout, personBlockHeight } from './personLayout.js'
+import { WIDTH_SPAN, MIN_HEIGHT } from './hubLayout.js'
+import Rotator from './Rotator.jsx'
+import { useDragScroll } from './dragScroll.js'
 
 function Header({ person }) {
   const now = useNow()
@@ -34,7 +38,7 @@ function ChoresCard({ person, due, logs, T, points }) {
   const { nameFor } = useMembers()
   const done = due.filter((c) => isDone(logs, c, T, person.key)).length
   return (
-    <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16 })}>
+    <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16, flexGrow: 1 })}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>My chores</div>
         <div style={{ fontSize: 20, color: C.muted }}>{done} of {due.length}</div>
@@ -58,7 +62,7 @@ function ChoresCard({ person, due, logs, T, points }) {
 
 function ReminderCard({ title, reminders }) {
   return (
-    <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 12 })}>
+    <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 12, flexGrow: 1 })}>
       <div style={{ fontSize: 26, fontWeight: 800 }}>{title}</div>
       {reminders.length ? (
         reminders.map((r) => <div key={r.id} style={{ fontSize: 23, textDecoration: r.done ? 'line-through' : 'none', color: r.done ? C.muted : C.ink }}>{r.text}</div>)
@@ -69,11 +73,11 @@ function ReminderCard({ title, reminders }) {
   )
 }
 
-function BirthdayCountdown({ person, big }) {
+function BirthdayCountdown({ person, big = true }) {
   const bc = birthdayCountdown(person.birthday)
   if (!bc) return null
   return (
-    <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', ...(big ? {} : { flexGrow: 1 }) })}>
+    <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', flexGrow: 1 })}>
       <div style={{ fontSize: 26, fontWeight: 800 }}>Birthday countdown</div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
         <div style={{ fontSize: big ? 96 : 80, fontWeight: 800, color: person.color, lineHeight: 1 }}>{bc.days}</div>
@@ -102,75 +106,59 @@ export default function Member() {
   const { rows: reminders } = useReminders()
   const { rows: photoCollections } = usePhotoCollections()
   const person = byKey(memberKey)
+  const jobsDrag = useDragScroll()
   if (!person) return null
 
   const due = dueChores(chores, logs, person.key, T).sort((a, b) => a.title.localeCompare(b.title))
   const myReminders = reminders.filter((r) => r.member_key === person.key)
   const points = pointsThisWeek(logs, person.key)
   const hasPhotos = activeCollectionsFor(photoCollections, { memberKey: person.key }).length > 0
+  const reminderTitle = person.role === 'teen' ? 'Homework and reminders' : person.role === 'child' ? 'Reminders' : 'My reminders'
 
-  // ---- Child layout: big tiles + stars ----
-  if (person.role === 'child') {
-    return (
-      <>
-        <Header person={person} />
-        <CalendarBlock personKey={person.key} includeWork title="Calendar" height={430} />
-        <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 18, height: 560 })}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: 30, fontWeight: 800 }}>My jobs</div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 30, fontWeight: 800 }}>
-              <StarIcon size={44} />
-              <span>{points} stars</span>
-            </div>
+  // Each window, by id (see personLayout.js). The page is arranged from the
+  // phone (Settings › Arrange); the defaults match the old fixed layouts.
+  const blocks = {
+    header: () => <Header person={person} />,
+    calendar: (size) => <CalendarBlock personKey={person.key} includeWork title="Calendar" height={personBlockHeight('calendar', size)} />,
+    chores: () => <ChoresCard person={person} due={due} logs={logs} T={T} points={person.role === 'parent' ? null : points} />,
+    jobs: (size) => (
+      <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 18, height: personBlockHeight('jobs', size) })}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: 30, fontWeight: 800 }}>My jobs</div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 30, fontWeight: 800 }}>
+            <StarIcon size={44} />
+            <span>{points} stars</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
-            {due.slice(0, 6).map((c) => (
+        </div>
+        <div ref={jobsDrag.ref} {...jobsDrag.handlers} className={jobsDrag.className} style={{ ...jobsDrag.style, flex: '1 1 0', minHeight: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 18 }}>
+            {due.map((c) => (
               <JobTile key={c.id} chore={c} done={isDone(logs, c, T, person.key)} color={person.color} onToggle={() => toggleChore(c, T, isDone(logs, c, T, person.key), person.key)} />
             ))}
             {due.length === 0 && <div style={{ fontSize: 24, color: C.muted }}>No jobs today</div>}
           </div>
         </div>
-        <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 24 }}>
-          <ReminderCard title="Reminders" reminders={myReminders} />
-          <BirthdayCountdown person={person} big />
-        </div>
-      </>
-    )
-  }
-
-  // ---- Teen layout ----
-  if (person.role === 'teen') {
-    return (
-      <>
-        <Header person={person} />
-        <CalendarBlock personKey={person.key} includeWork title="Calendar" height={630} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 24, height: 400 }}>
-          <ChoresCard person={person} due={due} logs={logs} T={T} points={points} />
-          <ReminderCard title="Homework and reminders" reminders={myReminders} />
-        </div>
-        <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: hasPhotos ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: 24 }}>
-          <BirthdayCountdown person={person} />
-          {hasPhotos && <PhotoFrame memberKey={person.key} height="100%" radius={28} />}
-        </div>
-      </>
-    )
-  }
-
-  // ---- Adult layout (parents) ----
-  return (
-    <>
-      <Header person={person} />
-      <CalendarBlock personKey={person.key} includeWork title="Calendar" height={640} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 24, height: 380 }}>
-        <ChoresCard person={person} due={due} logs={logs} T={T} />
-        <ReminderCard title="My reminders" reminders={myReminders} />
       </div>
-      <MemberWidget member={person} />
-      {hasPhotos && (
-        <div style={{ flexGrow: 1, display: 'flex' }}>
-          <PhotoFrame memberKey={person.key} height="100%" radius={28} />
+    ),
+    reminders: () => <ReminderCard title={reminderTitle} reminders={myReminders} />,
+    birthday: () => <BirthdayCountdown person={person} big />,
+    widget: () => <MemberWidget member={person} />,
+    photo: (size, opts) => (hasPhotos ? <PhotoFrame memberKey={person.key} height={personBlockHeight('photo', size)} radius={28} fit={opts?.fit} /> : null),
+  }
+
+  const layout = normalizePersonLayout(person.page_layout, person.role).filter((b) => b.visible && (b.group || blocks[b.id]))
+
+  return (
+    <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row dense', gap: 24, alignContent: 'start' }}>
+      {layout.map((b) => (
+        <div key={b.id} style={{ gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`, minHeight: b.id === 'header' ? undefined : MIN_HEIGHT[b.size], minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          {b.group ? (
+            <Rotator items={b.group.filter((id) => blocks[id]).map((id) => blocks[id](b.size, b))} interval={b.interval} transition={b.transition} />
+          ) : (
+            blocks[b.id](b.size, b)
+          )}
         </div>
-      )}
-    </>
+      ))}
+    </div>
   )
 }
