@@ -109,7 +109,10 @@ function DayView({ events, anchor, colorFor }) {
           <div key={ev.id} style={{ display: 'flex', gap: 16, alignItems: 'center', background: C.cream, borderRadius: 14, padding: '12px 16px' }}>
             <div style={{ width: 8, height: 40, borderRadius: 4, background: colorFor(ev) }} />
             <div style={{ width: 90, fontSize: 22, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
-            <div style={{ fontSize: 24, fontWeight: 600 }}>{ev.title}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 24, fontWeight: 600 }}>{ev.title}</div>
+              {ev.location && <div style={{ fontSize: 19, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.location}</div>}
+            </div>
           </div>
         ))
       ) : (
@@ -133,9 +136,12 @@ function WeekView({ events, anchor, colorFor, today }) {
             {list.slice(0, 5).map((ev) => (
               <div key={ev.id} style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
                 <span style={{ width: 8, height: 8, borderRadius: 4, background: colorFor(ev), flexShrink: 0, alignSelf: 'center' }} />
-                <span style={{ fontSize: 15, lineHeight: 1.2 }}>
+                <span style={{ fontSize: 15, lineHeight: 1.2, minWidth: 0 }}>
                   <span style={{ color: C.muted }}>{ev.all_day ? '' : timeOfDay(ev.starts_at) + ' '}</span>
                   {ev.title}
+                  {ev.location && (
+                    <span style={{ display: 'block', fontSize: 13, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.location}</span>
+                  )}
                 </span>
               </div>
             ))}

@@ -45,6 +45,16 @@ mkdir -p "$PROFILE"
 sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]\+"/"exit_type":"Normal"/' \
   "$PROFILE/Default/Preferences" 2>/dev/null || true
 
+# Chromium crashes (SIGTRAP) if it starts while the monitor is in power-save,
+# e.g. after a reboot or update at night. Wake every output first and leave a
+# marker so pi/display-keeper.py holds off re-sleeping it for a minute while
+# Chromium comes up. (A running Chromium is fine when the monitor sleeps.)
+touch "$PROFILE/kiosk-start"
+if command -v wlopm >/dev/null 2>&1; then
+  wlopm 2>/dev/null | awk '{print $1}' | while read -r o; do wlopm --on "$o" >/dev/null 2>&1 || true; done
+  sleep 2
+fi
+
 exec "$CHROME" \
   --start-maximized \
   --app="$URL" \

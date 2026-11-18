@@ -57,7 +57,10 @@ function WeekView({ events, anchor }) {
                 <div key={ev.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 15 }}>
                   <span style={{ width: 8, height: 8, borderRadius: 4, background: colorFor(ev), flexShrink: 0 }} />
                   <span style={{ color: C.muted, width: 52, flexShrink: 0 }}>{ev.all_day ? '—' : timeOfDay(ev.starts_at)}</span>
-                  <span>{ev.title}</span>
+                  <span style={{ minWidth: 0 }}>
+                    {ev.title}
+                    {ev.location && <span style={{ display: 'block', fontSize: 13, color: C.muted }}>{ev.location}</span>}
+                  </span>
                 </div>
               ))
             ) : (

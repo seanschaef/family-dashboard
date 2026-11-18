@@ -119,6 +119,7 @@ function NextWidget({ shell, personKey }) {
             {next._d.toLocaleDateString('en-CA', { weekday: 'long', month: 'short', day: 'numeric' })}
             {!next.all_day && ` · ${timeOfDay(next.starts_at)}`}
           </div>
+          {next.location && <div style={{ fontSize: 22, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{next.location}</div>}
         </>
       ) : (
         <div style={{ fontSize: 24, color: C.muted }}>Nothing coming up</div>

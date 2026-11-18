@@ -22,6 +22,8 @@ import subprocess
 import time
 
 STATE = os.path.expanduser('~/.config/family-wall/display.state')
+KIOSK_START = os.path.expanduser('~/.config/family-wall/kiosk-start')
+KIOSK_START_GRACE = 60  # seconds
 WAKE_SECONDS = 120
 POLL = 0.25
 # Putting the monitor to sleep makes the touchscreen (powered through it)
@@ -55,6 +57,13 @@ def touch_device():
 
 
 def want_off():
+    # pi/kiosk.sh touches this as it starts Chromium, which crashes if the
+    # monitor is asleep at that moment: stay awake while it comes up.
+    try:
+        if time.time() - os.path.getmtime(KIOSK_START) < KIOSK_START_GRACE:
+            return False
+    except OSError:
+        pass
     try:
         with open(STATE) as f:
             return f.read().strip() == 'off'
