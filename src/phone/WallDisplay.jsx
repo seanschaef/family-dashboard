@@ -51,46 +51,31 @@ export default function WallDisplay() {
 
   return (
     <>
-      <PhoneHeader title="Wall display" subtitle="Monitor on/off and night colours" />
+      <PhoneHeader title="Wall display" subtitle="Night black screen and dark colours" />
 
       <div style={{ fontSize: 14, color: C.muted }}>
-        The wall screen turns itself off and on at these times (the Raspberry Pi
-        applies the schedule). Use "Blank" if your monitor is slow to wake from a
-        full power-off.
+        Outside these hours the wall goes to a plain black screen. Tap it to
+        wake it for two minutes. (This monitor can&apos;t stay powered off: it
+        wakes itself up again, so the screen goes black instead.)
       </div>
 
       <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 16, fontWeight: 600 }}>
         <input type="checkbox" checked={s.display_enabled} onChange={(e) => set('display_enabled')(e.target.checked)} />
-        Auto on/off enabled
+        Black screen outside these hours
       </label>
 
       <div style={{ opacity: s.display_enabled ? 1 : 0.5, pointerEvents: s.display_enabled ? 'auto' : 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {[
-            ['power', 'Power off'],
-            ['blank', 'Blank screen'],
-          ].map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => set('mode')(key)}
-              style={{ all: 'unset', cursor: 'pointer', background: s.mode === key ? C.home : C.card, color: s.mode === key ? '#FFFFFF' : C.ink, border: s.mode === key ? 'none' : `2px solid ${C.border}`, borderRadius: 999, padding: '8px 14px', fontSize: 15, fontWeight: 600 }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
 
         <div style={card}>
           <div style={sect}>Weekdays</div>
-          <TimeField label="Turn on" value={s.on_time} onChange={set('on_time')} />
-          <TimeField label="Turn off" value={s.off_time} onChange={set('off_time')} />
+          <TimeField label="Screen on" value={s.on_time} onChange={set('on_time')} />
+          <TimeField label="Black screen from" value={s.off_time} onChange={set('off_time')} />
         </div>
 
         <div style={card}>
           <div style={sect}>Weekends</div>
-          <TimeField label="Turn on" value={s.weekend_on_time} onChange={set('weekend_on_time')} />
-          <TimeField label="Turn off" value={s.weekend_off_time} onChange={set('weekend_off_time')} />
+          <TimeField label="Screen on" value={s.weekend_on_time} onChange={set('weekend_on_time')} />
+          <TimeField label="Black screen from" value={s.weekend_off_time} onChange={set('weekend_off_time')} />
         </div>
       </div>
 

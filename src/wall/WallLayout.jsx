@@ -5,6 +5,7 @@ import { buildWallNav } from '../config/people.js'
 import { useMembers } from '../lib/members.jsx'
 import { C } from '../theme.js'
 import { useWallNightTheme } from '../lib/theme.jsx'
+import NightScreen from './NightScreen.jsx'
 
 const FRAME_W = 1080
 const FRAME_H = 1920
@@ -133,6 +134,7 @@ export default function WallLayout() {
           </div>
         </div>
       </div>
+      <NightScreen />
     </div>
   )
 }
