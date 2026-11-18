@@ -34,6 +34,8 @@ turn_on() {
   local done=0
   if command -v wlr-randr >/dev/null 2>&1; then
     local o; o="$(wlr_output)"; [ -n "$o" ] && wlr-randr --output "$o" --on >/dev/null 2>&1 && done=1 && log "wlr-randr on ($o)"
+    # Also undo a DPMS power-save (see turn_off).
+    [ -n "$o" ] && command -v wlopm >/dev/null 2>&1 && wlopm --on "$o" >/dev/null 2>&1 && done=1 && log "wlopm on ($o)"
   fi
   if [ "$done" = 0 ] && command -v xset >/dev/null 2>&1; then
     DISPLAY="${DISPLAY:-:0}" xset dpms force on >/dev/null 2>&1 && done=1 && log "xset on"
@@ -55,8 +57,15 @@ turn_off() {
   if [ "$MODE" = power ] && command -v cec-client >/dev/null 2>&1; then
     echo 'standby 0' | cec-client -s -d 1 >/dev/null 2>&1 && log "cec standby"
   fi
-  if command -v wlr-randr >/dev/null 2>&1; then
-    local o; o="$(wlr_output)"; [ -n "$o" ] && wlr-randr --output "$o" --off >/dev/null 2>&1 && done=1 && log "wlr-randr off ($o)"
+  # Wayland: DPMS power-save (wlopm) keeps the output configured, so waking is
+  # clean. Some monitors drop HDMI when they sleep and labwc powers them back
+  # up; pi/display-keeper.py (family-display-keeper.service) re-sleeps them.
+  # Fall back to disabling the output when wlopm isn't installed.
+  local o; o="$(wlr_output)"
+  if [ -n "$o" ] && command -v wlopm >/dev/null 2>&1; then
+    wlopm --off "$o" >/dev/null 2>&1 && done=1 && log "wlopm off ($o)"
+  elif [ -n "$o" ] && command -v wlr-randr >/dev/null 2>&1; then
+    wlr-randr --output "$o" --off >/dev/null 2>&1 && done=1 && log "wlr-randr off ($o)"
   fi
   if [ "$done" = 0 ] && command -v xset >/dev/null 2>&1; then
     DISPLAY="${DISPLAY:-:0}" xset dpms force off >/dev/null 2>&1 && done=1 && log "xset off"

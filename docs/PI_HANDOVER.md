@@ -167,12 +167,28 @@ Set the times from the phone app (Today → Wall display), then:
 
 ```bash
 # add the wall account to ~/family-dashboard/.env.local: WALL_EMAIL / WALL_PASSWORD
-cp ~/family-dashboard/pi/family-display.service ~/.config/systemd/user/
+sudo apt install -y wlopm        # DPMS power-save for Wayland (often preinstalled)
+cp ~/family-dashboard/pi/family-display.service ~/family-dashboard/pi/family-display-keeper.service ~/.config/systemd/user/
 systemctl --user daemon-reload
-systemctl --user enable --now family-display.service
+systemctl --user enable --now family-display.service family-display-keeper.service
 ```
 
-**Check:** `bash pi/display.sh off` then `bash pi/display.sh on` switch the panel.
+- `family-display.service` reads the schedule once a minute and writes `on`/`off`
+  to `~/.config/family-wall/display.state` (via `pi/display.sh`).
+- `family-display-keeper.service` (`pi/display-keeper.py`) holds the monitor in
+  DPMS power-save while the state is `off`. Needed on labwc: some monitors (our
+  IPS PST240A) drop HDMI when they sleep, labwc treats the reconnect as a new
+  screen and powers it up after ~9 s; the keeper puts it back to sleep, after
+  which it stays off. It also wakes the screen for 2 minutes on a real tap, if
+  the touchscreen stays powered while the monitor sleeps (ours doesn't: its touch
+  controller is powered by the monitor, so it comes back at the on-time only).
+- Tried and not usable on this monitor: HDMI-CEC (no response), DDC/CI standby
+  (ignored). DDC brightness 0 works but still glows.
+- The wall app also blacks out the screen in the off hours (`src/wall/NightScreen.jsx`)
+  as a fallback if the monitor can't power down.
+
+**Check:** `bash pi/display.sh off` sleeps the panel and it stays off with the
+keeper running; `bash pi/display.sh on` wakes it.
 
 ## 7. NAS photos
 

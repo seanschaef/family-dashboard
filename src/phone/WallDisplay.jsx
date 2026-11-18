@@ -51,17 +51,18 @@ export default function WallDisplay() {
 
   return (
     <>
-      <PhoneHeader title="Wall display" subtitle="Night black screen and dark colours" />
+      <PhoneHeader title="Wall display" subtitle="Screen off at night, dark colours" />
 
       <div style={{ fontSize: 14, color: C.muted }}>
-        Outside these hours the wall goes to a plain black screen. Tap it to
-        wake it for two minutes. (This monitor can&apos;t stay powered off: it
-        wakes itself up again, so the screen goes black instead.)
+        Outside these hours the wall&apos;s monitor powers off, and it comes back
+        on by itself at the &quot;Screen on&quot; time. The touchscreen is off
+        while the monitor sleeps, so tapping won&apos;t wake it. Changes reach the
+        wall within a minute.
       </div>
 
       <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 16, fontWeight: 600 }}>
         <input type="checkbox" checked={s.display_enabled} onChange={(e) => set('display_enabled')(e.target.checked)} />
-        Black screen outside these hours
+        Turn the screen off outside these hours
       </label>
 
       <div style={{ opacity: s.display_enabled ? 1 : 0.5, pointerEvents: s.display_enabled ? 'auto' : 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -69,13 +70,13 @@ export default function WallDisplay() {
         <div style={card}>
           <div style={sect}>Weekdays</div>
           <TimeField label="Screen on" value={s.on_time} onChange={set('on_time')} />
-          <TimeField label="Black screen from" value={s.off_time} onChange={set('off_time')} />
+          <TimeField label="Screen off" value={s.off_time} onChange={set('off_time')} />
         </div>
 
         <div style={card}>
           <div style={sect}>Weekends</div>
           <TimeField label="Screen on" value={s.weekend_on_time} onChange={set('weekend_on_time')} />
-          <TimeField label="Black screen from" value={s.weekend_off_time} onChange={set('weekend_off_time')} />
+          <TimeField label="Screen off" value={s.weekend_off_time} onChange={set('weekend_off_time')} />
         </div>
       </div>
 

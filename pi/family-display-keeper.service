@@ -1,0 +1,21 @@
+# systemd USER service: keeps the wall monitor asleep at night and wakes it on
+# a touch (pi/display-keeper.py). Works with family-display.service, which
+# decides on/off from the schedule set on the phone.
+# Install (as the Pi's desktop user):
+#   cp ~/family-dashboard/pi/family-display-keeper.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now family-display-keeper.service
+[Unit]
+Description=Family Dashboard wall monitor sleep keeper
+After=family-wall.service
+
+[Service]
+Type=simple
+Environment=XDG_RUNTIME_DIR=%t
+Environment=WAYLAND_DISPLAY=wayland-0
+ExecStart=/usr/bin/python3 %h/family-dashboard/pi/display-keeper.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
