@@ -1,0 +1,18 @@
+# systemd USER service: pull the latest code from GitHub, rebuild and restart
+# the wall (pi/update.sh). Run nightly by family-update.timer.
+# Install (as the Pi's desktop user):
+#   cp ~/family-dashboard/pi/family-update.service ~/family-dashboard/pi/family-update.timer ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now family-update.timer
+# Run it now by hand: systemctl --user start family-update.service
+[Unit]
+Description=Family Dashboard nightly update (git pull, build, restart wall)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=XDG_RUNTIME_DIR=%t
+Environment=WAYLAND_DISPLAY=wayland-0
+ExecStart=/usr/bin/bash %h/family-dashboard/pi/update.sh
+TimeoutStartSec=15min

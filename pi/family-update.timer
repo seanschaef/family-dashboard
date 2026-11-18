@@ -1,0 +1,12 @@
+# Nightly at 3:00 am (Edmonton time on the Pi), while the screen is off.
+# Persistent: if the Pi was off at 3 am, it runs soon after it starts.
+[Unit]
+Description=Nightly Family Dashboard update
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

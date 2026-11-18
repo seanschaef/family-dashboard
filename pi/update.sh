@@ -7,8 +7,21 @@ APP_DIR="${APP_DIR:-$HOME/family-dashboard}"
 cd "$APP_DIR"
 
 echo "Updating family dashboard in $APP_DIR"
+before="$(git rev-parse HEAD)"
 git pull --ff-only
-npm ci
+after="$(git rev-parse HEAD)"
+
+# Nightly runs (family-update.timer) do nothing when there's nothing new, so
+# the wall isn't restarted for no reason. Pass --force to rebuild anyway.
+if [ "$before" = "$after" ] && [ "${1:-}" != "--force" ]; then
+  echo "Already up to date ($after)."
+  exit 0
+fi
+
+# Reinstall packages only when they changed.
+if [ "$before" = "$after" ] || ! git diff --quiet "$before" "$after" -- package-lock.json; then
+  npm ci
+fi
 npm run build
 
 # Restart the wall if it is managed by systemd (see pi/README.md).

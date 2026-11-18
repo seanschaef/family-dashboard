@@ -244,8 +244,21 @@ Nest/Google devices appear once HA's Nest integration is added.
 ## Updating the Pi later
 
 ```bash
-bash ~/family-dashboard/pi/update.sh   # pulls, rebuilds, restarts the wall
+bash ~/family-dashboard/pi/update.sh           # pulls; rebuilds + restarts only if something changed
+bash ~/family-dashboard/pi/update.sh --force   # rebuild and restart anyway
 ```
+
+Automatic nightly update (3:00 am, while the screen is off):
+
+```bash
+cp ~/family-dashboard/pi/family-update.service ~/family-dashboard/pi/family-update.timer ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now family-update.timer
+systemctl --user list-timers family-update.timer   # shows the next run
+```
+
+The kiosk starts fine at night (it wakes the monitor briefly; see
+`pi/kiosk.sh`) and the keeper puts it back to sleep.
 
 ## Verification checklist
 
