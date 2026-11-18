@@ -39,6 +39,7 @@ export function AuthProvider({ children }) {
         email,
         options: { emailRedirectTo: window.location.origin },
       }),
+    updatePassword: (password) => supabase.auth.updateUser({ password }),
     signOut: () => supabase.auth.signOut(),
   }
 

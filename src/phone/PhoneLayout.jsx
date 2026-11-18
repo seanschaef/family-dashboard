@@ -1,10 +1,13 @@
 import { Outlet } from 'react-router-dom'
 import PhoneNav from '../components/PhoneNav.jsx'
+import ForcePasswordChange from './ForcePasswordChange.jsx'
+import { useMembers } from '../lib/members.jsx'
 import { C } from '../theme.js'
 
 // Phone / computer app shell. Fills the device; centred with a max width on
 // larger screens so it still looks right on a laptop.
 export default function PhoneLayout() {
+  const { mustChangePassword } = useMembers()
   return (
     <div
       style={{
@@ -28,9 +31,9 @@ export default function PhoneLayout() {
           paddingTop: 'max(28px, env(safe-area-inset-top))',
         }}
       >
-        <Outlet />
+        {mustChangePassword ? <ForcePasswordChange /> : <Outlet />}
       </main>
-      <PhoneNav />
+      {!mustChangePassword && <PhoneNav />}
     </div>
   )
 }

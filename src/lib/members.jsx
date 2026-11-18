@@ -19,6 +19,8 @@ export function MembersProvider({ children }) {
   const [members, setMembers] = useState(isSupabaseConfigured ? [] : SAMPLE_MEMBERS)
   const [familyName, setFamilyName] = useState('family') // generic until loaded
   const [myMemberId, setMyMemberId] = useState(isSupabaseConfigured ? null : 'sm2')
+  const [isAdmin, setIsAdmin] = useState(!isSupabaseConfigured)
+  const [mustChangePassword, setMustChangePassword] = useState(false)
   const [loading, setLoading] = useState(isSupabaseConfigured)
 
   useEffect(() => {
@@ -36,8 +38,12 @@ export function MembersProvider({ children }) {
       else if (data.length) setMembers(data)
       if (fam?.data?.name) setFamilyName(fam.data.name)
       if (userData?.user) {
-        const { data: prof } = await supabase.from('profiles').select('member_id').eq('id', userData.user.id).maybeSingle()
-        if (active) setMyMemberId(prof?.member_id ?? null)
+        const { data: prof } = await supabase.from('profiles').select('member_id, is_admin, must_change_password').eq('id', userData.user.id).maybeSingle()
+        if (active) {
+          setMyMemberId(prof?.member_id ?? null)
+          setIsAdmin(prof?.is_admin ?? false)
+          setMustChangePassword(prof?.must_change_password ?? false)
+        }
       }
       setLoading(false)
     }
@@ -69,8 +75,17 @@ export function MembersProvider({ children }) {
     setMyMemberId(memberId)
   }
 
+  // Clear the "must change password" flag after the user sets a new one.
+  async function clearMustChangePassword() {
+    setMustChangePassword(false)
+    if (!isSupabaseConfigured) return
+    const { data: userData } = await supabase.auth.getUser()
+    if (!userData?.user) return
+    await supabase.from('profiles').update({ must_change_password: false }).eq('id', userData.user.id)
+  }
+
   return (
-    <MembersContext.Provider value={{ members, familyName, loading, byKey, colorFor, nameFor, me, setMe }}>
+    <MembersContext.Provider value={{ members, familyName, loading, byKey, colorFor, nameFor, me, setMe, isAdmin, mustChangePassword, clearMustChangePassword }}>
       {children}
     </MembersContext.Provider>
   )
