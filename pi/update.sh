@@ -13,7 +13,11 @@ npm run build
 
 # Restart the wall if it is managed by systemd (see pi/README.md).
 if systemctl --user is-enabled family-wall.service >/dev/null 2>&1; then
-  systemctl --user restart family-wall.service
+  # The app is a PWA: drop the wall profile's cached service worker so the new
+  # build shows instead of the old one. Sign-in (local storage) is kept.
+  systemctl --user stop family-wall.service
+  rm -rf "$HOME/.config/family-wall/Default/Service Worker"
+  systemctl --user start family-wall.service
   echo "Restarted family-wall.service"
 else
   echo "Rebuilt. Restart the kiosk to pick up changes."

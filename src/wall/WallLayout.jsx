@@ -117,8 +117,14 @@ export default function WallLayout() {
             gap: 24,
           }}
         >
-          <Outlet />
-          <WallNav />
+          {/* Page content takes the space left above the nav and can never push
+              it off-screen: it shrinks/clips instead of growing the frame. */}
+          <div style={{ flex: '1 1 0', minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <Outlet />
+          </div>
+          <div style={{ flexShrink: 0 }}>
+            <WallNav />
+          </div>
         </div>
       </div>
     </div>

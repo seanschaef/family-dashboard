@@ -46,10 +46,14 @@ sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]\+"/
   "$PROFILE/Default/Preferences" 2>/dev/null || true
 
 exec "$CHROME" \
-  --kiosk \
+  --start-maximized \
   --app="$URL" \
   --user-data-dir="$PROFILE" \
   --noerrdialogs \
+  --password-store=basic \
+  --ozone-platform=wayland \
+  --enable-wayland-ime \
+  --wayland-text-input-version=3 \
   --disable-infobars \
   --disable-session-crashed-bubble \
   --disable-features=TranslateUI \

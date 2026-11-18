@@ -42,7 +42,7 @@ export function normalizeHubLayout(stored) {
 
 // Heights (px) for a block at a given size, within the 1080x1920 wall.
 export function blockHeight(id, size) {
-  if (id === 'photo') return size === 'l' ? 380 : size === 'm' ? 300 : 220
-  if (id === 'calendar') return size === 'l' ? 470 : size === 'm' ? 360 : 260
+  if (id === 'photo') return size === 'l' ? 320 : size === 'm' ? 260 : 200
+  if (id === 'calendar') return size === 'l' ? 430 : size === 'm' ? 340 : 250
   return undefined // content-sized (cards grow to fit)
 }

@@ -127,6 +127,40 @@ sudo loginctl enable-linger "$USER"
 Portrait rotation (1080×1920), if the display is landscape: Pi 5 is Wayland —
 use the Screen Configuration app, or see `pi/README.md` → Portrait rotation.
 
+### Pi OS (trixie, labwc) kiosk notes
+
+Learned on the real Pi 5 (Debian 13 trixie, labwc). Do these as part of step 5.
+
+- **Start at boot.** labwc on this image never activates
+  `graphical-session.target`, so the user service alone won't start at login.
+  Add it to the desktop's autostart:
+  `echo 'systemctl --user start family-wall.service &' >> ~/.config/labwc/autostart`
+- **No top panel.** labwc runs the system autostart (`/etc/xdg/labwc/autostart`)
+  as well as yours, so the panel can't be removed there, and auto-hide leaves a
+  gap. Stop it after login with `pi/nopanel.sh`:
+  `echo '~/family-dashboard/pi/nopanel.sh &' >> ~/.config/labwc/autostart`
+- **On-screen keyboard.** `--kiosk` (fullscreen) draws above Squeekboard, so the
+  keyboard opens hidden behind the app. `kiosk.sh` therefore runs Chromium
+  maximized with the Wayland input flags. Add a window rule so it has no title
+  bar: inside `<openbox_config>` in `~/.config/labwc/rc.xml`:
+
+  ```xml
+  <windowRules>
+    <windowRule identifier="chrom*" serverDecoration="no">
+      <action name="Maximize"/>
+    </windowRule>
+  </windowRules>
+  ```
+
+  then `labwc --reconfigure`.
+- **Keyring prompt.** `kiosk.sh` passes `--password-store=basic` so Chromium
+  doesn't block on a "new keyring" password dialog.
+- **Time zone.** Edmonton is UTC-6 year round now. If Imager set another zone:
+  `sudo timedatectl set-timezone America/Edmonton`.
+- **Stale build after an update.** The app is a PWA, so Chromium can keep
+  showing the previous build. `pi/update.sh` clears the wall profile's service
+  worker cache (the sign-in is kept).
+
 ## 6. Monitor on/off schedule (optional, DAKboard-style)
 
 Set the times from the phone app (Today → Wall display), then:
