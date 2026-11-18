@@ -36,18 +36,28 @@ export const C = {
 // Fixed colours offered when picking a person's or a calendar's colour. All
 // dark enough for white text (4.5:1+) and readable on the dark theme too.
 // A custom colour is still available beside these.
+// Spread around the colour wheel so no two are easy to confuse, each still
+// dark enough for white text.
 export const MEMBER_PALETTE = [
-  C.violet, C.rust, C.green, C.blue, C.meals, C.home,
-  '#A63D6B', // raspberry
-  '#4A4FA3', // indigo
-  '#8E2F3C', // burgundy
-  '#2F6B4F', // forest
-  '#B05A12', // pumpkin
-  '#5B6B2A', // olive
-  '#2C5C7A', // ocean
-  '#6B4A9E', // grape
-  '#7A5230', // walnut
-  '#4E5D6C', // slate
+  '#D32F2F', // red
+  '#E65100', // orange
+  '#A86B00', // gold
+  '#689F38', // lime
+  '#2E7D32', // green
+  '#00796B', // teal
+  '#0288D1', // sky
+  '#1565C0', // blue
+  '#3949AB', // indigo
+  '#6A1B9A', // purple
+  '#C2185B', // pink
+  '#6D4C41', // brown
+  '#546E7A', // slate
+  C.violet, // the original six, so existing choices still show as selected
+  C.rust,
+  C.green,
+  C.blue,
+  C.meals,
+  C.home,
 ]
 // The "Family" calendar colour as stored in the database (a real hex value).
 export const FAMILY_COLOR = '#2B2420'
