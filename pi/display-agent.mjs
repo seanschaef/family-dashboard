@@ -9,6 +9,7 @@
 //
 // Run from the repo root: `node pi/display-agent.mjs`
 
+import { createRequire } from 'node:module'
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { homedir } from 'node:os'
@@ -51,7 +52,9 @@ async function fetchSupabaseSettings(env) {
   const email = env.WALL_EMAIL
   const password = env.WALL_PASSWORD
   if (!url || !key || !email || !password) return null
-  const { createClient } = await import(join(REPO, 'node_modules', '@supabase', 'supabase-js', 'dist', 'module', 'index.js'))
+  // Load supabase-js from the app's node_modules (its CommonJS build; the ESM
+  // build uses extensionless imports that plain Node can't resolve).
+  const { createClient } = createRequire(join(REPO, 'package.json'))('@supabase/supabase-js')
   const supabase = createClient(url, key, { auth: { persistSession: false } })
   const { error: authErr } = await supabase.auth.signInWithPassword({ email, password })
   if (authErr) throw new Error('wall login failed: ' + authErr.message)

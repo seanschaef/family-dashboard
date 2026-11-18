@@ -11,6 +11,7 @@
 // Run from anywhere: `node pi/photos-agent.mjs`  (default port 8787)
 // No external dependencies.
 
+import { createRequire } from 'node:module'
 import { createServer } from 'node:http'
 import { readdirSync, existsSync, readFileSync, statSync, createReadStream } from 'node:fs'
 import { homedir } from 'node:os'
@@ -157,7 +158,9 @@ async function supabaseClient(env) {
   if (client) return client
   const { VITE_SUPABASE_URL: url, VITE_SUPABASE_ANON_KEY: key, WALL_EMAIL: email, WALL_PASSWORD: password } = env
   if (!url || !key || !email || !password) return null
-  const { createClient } = await import(join(REPO, 'node_modules', '@supabase', 'supabase-js', 'dist', 'module', 'index.js'))
+  // Load supabase-js from the app's node_modules (its CommonJS build; the ESM
+  // build uses extensionless imports that plain Node can't resolve).
+  const { createClient } = createRequire(join(REPO, 'package.json'))('@supabase/supabase-js')
   const c = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: true } })
   const { error } = await c.auth.signInWithPassword({ email, password })
   if (error) throw new Error('wall login failed: ' + error.message)
