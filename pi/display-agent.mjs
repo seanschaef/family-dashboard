@@ -72,12 +72,26 @@ const toMin = (hhmm) => {
   return h * 60 + m
 }
 
-function desiredOn(conf, now = new Date()) {
+// Local day and time from the system clock, not Node's Date. Node ships its own
+// time-zone table, and older ones still put Edmonton on UTC-7 in winter; since
+// Alberta moved to UTC-6 year round that made the schedule run an hour late
+// (the screen woke at 7:30 instead of 6:30). `date` uses the OS tzdata.
+function localNow() {
+  try {
+    const [dow, h, m] = execFileSync('date', ['+%w %H %M'], { encoding: 'utf8' }).trim().split(' ').map(Number)
+    return { day: dow, minutes: h * 60 + m }
+  } catch {
+    const d = new Date()
+    return { day: d.getDay(), minutes: d.getHours() * 60 + d.getMinutes() }
+  }
+}
+
+function desiredOn(conf, now = localNow()) {
   if (!conf.display_enabled) return null // null => leave alone
-  const weekend = now.getDay() === 0 || now.getDay() === 6
+  const weekend = now.day === 0 || now.day === 6
   const on = toMin(weekend ? conf.weekend_on_time : conf.on_time)
   const off = toMin(weekend ? conf.weekend_off_time : conf.off_time)
-  const cur = now.getHours() * 60 + now.getMinutes()
+  const cur = now.minutes
   if (on === off) return true
   return on < off ? cur >= on && cur < off : cur >= on || cur < off // handle wrap past midnight
 }
