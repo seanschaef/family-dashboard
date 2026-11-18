@@ -58,12 +58,18 @@ export function MembersProvider({ children }) {
     }
     load()
     const channel = supabase
-      .channel('members-changes')
+      .channel('family-roster')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'families' }, load)
       .subscribe()
+    // Re-fetch once auth is ready. The first load() on mount can race ahead of
+    // the persisted session being restored (so it runs unauthenticated and gets
+    // nothing); this re-runs it with the real session, and on later sign-in.
+    const { data: authSub } = supabase.auth.onAuthStateChange(() => load())
     return () => {
       active = false
       supabase.removeChannel(channel)
+      authSub.subscription.unsubscribe()
     }
   }, [])
 
