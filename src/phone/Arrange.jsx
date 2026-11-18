@@ -3,14 +3,18 @@ import { Link } from 'react-router-dom'
 import { C } from '../theme.js'
 import { PhoneHeader } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
-import { normalizeHubLayout, HUB_BLOCK_LABELS } from '../wall/hubLayout.js'
+import { normalizeHubLayout, HUB_BLOCK_LABELS, SIZES, WIDTH_LABELS, WIDTH_SPAN, withSize, widthOptions } from '../wall/hubLayout.js'
 
-const SIZES = [
-  { v: 's', label: 'S' },
-  { v: 'm', label: 'M' },
-  { v: 'l', label: 'L (full width)' },
-]
-const schemHeight = (size) => (size === 'l' ? 58 : size === 'm' ? 92 : 58)
+// Schematic heights for the preview (roughly proportional to the wall).
+const schemHeight = (size) => ({ s: 34, m: 64, l: 80, xl: 112 })[size] || 64
+
+function Pick({ active, disabled, onClick, children }) {
+  return (
+    <button type="button" aria-pressed={active} disabled={disabled} onClick={onClick} style={{ all: 'unset', cursor: disabled ? 'default' : 'pointer', boxSizing: 'border-box', minWidth: 34, height: 30, padding: '0 10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: active ? C.meals : C.cream, color: active ? '#FFF' : C.ink, border: `2px solid ${active ? C.meals : C.border}`, borderRadius: 999, fontSize: 13, fontWeight: 700 }}>
+      {children}
+    </button>
+  )
+}
 
 function IconBtn({ children, onClick, disabled }) {
   return (
@@ -34,7 +38,8 @@ export default function Arrange() {
     ;[next[i], next[j]] = [next[j], next[i]]
     change(next)
   }
-  const setSize = (i, v) => change(items.map((b, k) => (k === i ? { ...b, size: v } : b)))
+  const setSize = (i, v) => change(items.map((b, k) => (k === i ? withSize(b, v) : b)))
+  const setWidth = (i, w) => change(items.map((b, k) => (k === i ? { ...b, width: w } : b)))
   const toggle = (i) => change(items.map((b, k) => (k === i ? { ...b, visible: !b.visible } : b)))
 
   const save = async () => { await updateFamily({ wall_layout: items }); setSaved(true) }
@@ -49,10 +54,10 @@ export default function Arrange() {
       {/* Live schematic of the hub grid */}
       <div style={{ background: C.cream, border: `3px solid ${C.ink}`, borderRadius: 16, padding: 10 }}>
         <div style={{ textAlign: 'center', fontSize: 12, color: C.muted, marginBottom: 6 }}>Greeting · clock · weather</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gridAutoFlow: 'row dense', gap: 6 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row dense', gap: 6 }}>
           {visible.map((b) => (
-            <div key={b.id} style={{ gridColumn: b.size === 'l' ? '1 / -1' : 'auto', height: schemHeight(b.size), background: C.card, border: `2px solid ${C.border}`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: C.ink }}>
-              {HUB_BLOCK_LABELS[b.id]}
+            <div key={b.id} style={{ gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`, height: schemHeight(b.size), background: C.card, border: `2px solid ${C.border}`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 4, fontSize: b.width === 'quarter' ? 10 : 13, fontWeight: 700, color: C.ink, overflow: 'hidden', boxSizing: 'border-box' }}>
+              {HUB_BLOCK_LABELS[b.id].replace(/ \(.*\)$/, '')}
             </div>
           ))}
         </div>
@@ -68,11 +73,20 @@ export default function Arrange() {
           </div>
           <div style={{ flexGrow: 1, minWidth: 0 }}>
             <div style={{ fontSize: 16, fontWeight: 700 }}>{HUB_BLOCK_LABELS[b.id]}</div>
-            <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+            <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}>
               {SIZES.map((s) => (
-                <button key={s.v} type="button" disabled={!isAdmin} onClick={() => setSize(i, s.v)} style={{ all: 'unset', cursor: isAdmin ? 'pointer' : 'default', background: b.size === s.v ? C.meals : C.cream, color: b.size === s.v ? '#FFF' : C.ink, border: `2px solid ${b.size === s.v ? C.meals : C.border}`, borderRadius: 999, padding: '4px 10px', fontSize: 13, fontWeight: 700 }}>{s.label}</button>
+                <Pick key={s.v} active={b.size === s.v} disabled={!isAdmin} onClick={() => setSize(i, s.v)}>{s.label}</Pick>
               ))}
             </div>
+            {widthOptions(b.size).length > 1 ? (
+              <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                {widthOptions(b.size).map((w) => (
+                  <Pick key={w} active={b.width === w} disabled={!isAdmin} onClick={() => setWidth(i, w)}>{WIDTH_LABELS[w]}</Pick>
+                ))}
+              </div>
+            ) : (
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{WIDTH_LABELS[b.width]} width</div>
+            )}
           </div>
           <button type="button" disabled={!isAdmin} onClick={() => toggle(i)} style={{ all: 'unset', cursor: isAdmin ? 'pointer' : 'default', fontSize: 13, fontWeight: 700, color: b.visible ? C.tealText : C.muted }}>{b.visible ? 'Hide' : 'Show'}</button>
         </div>

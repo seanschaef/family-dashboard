@@ -15,7 +15,7 @@ import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone } from '../lib/chores.js'
 import { useReminders, usePetLog, PET_TASKS, petDone, petBy, togglePet } from '../lib/household.js'
 import { useMeals, mealFor } from '../lib/kitchen.js'
-import { normalizeHubLayout, blockHeight } from './hubLayout.js'
+import { normalizeHubLayout, blockHeight, WIDTH_SPAN, MIN_HEIGHT } from './hubLayout.js'
 
 export default function Hub() {
   const now = useNow()
@@ -125,9 +125,10 @@ export default function Hub() {
         <WeatherCard />
       </div>
 
-      <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridAutoFlow: 'row dense', gap: 24, alignContent: 'start' }}>
+      {/* 4-column grid: full = 4, half = 2, quarter = 1 (see hubLayout.js). */}
+      <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row dense', gap: 24, alignContent: 'start' }}>
         {layout.map((b) => (
-          <div key={b.id} style={{ gridColumn: b.size === 'l' ? '1 / -1' : 'auto', minHeight: b.size === 'm' ? 240 : undefined }}>
+          <div key={b.id} style={{ gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`, minHeight: MIN_HEIGHT[b.size], minWidth: 0 }}>
             {blocks[b.id](b.size)}
           </div>
         ))}
