@@ -6,6 +6,7 @@ import { useMembers } from '../lib/members.jsx'
 import { addDays, startOfWeek, isSameDay, timeOfDay } from '../lib/time.js'
 import { rangeFor, eventsOn, stepAnchor, periodTitle } from '../lib/calendar.js'
 import DayPopover from './DayPopover.jsx'
+import EventPopover from './EventPopover.jsx'
 import { useDragScroll } from './dragScroll.js'
 
 // An embeddable calendar that combines everyone's calendars (colour-coded) with
@@ -40,6 +41,7 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
   const [view, setView] = useState('week')
   const [anchor, setAnchor] = useState(() => new Date())
   const [selectedDay, setSelectedDay] = useState(null)
+  const [selectedEvent, setSelectedEvent] = useState(null)
   const drag = useDragScroll({ onSwipeX: (dir) => setAnchor((a) => stepAnchor(view, a, dir)) })
 
   // Fetch a wide enough window that the Today summary works in any view.
@@ -75,30 +77,31 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
 
       {/* Drag to scroll (the wall's touch is mouse-like); swipe sideways for prev/next. */}
       <div ref={drag.ref} {...drag.handlers} className={drag.className} style={{ ...drag.style, flex: '1 1 0', minHeight: 0 }}>
-        {view === 'day' && <DayView events={scoped} anchor={anchor} colorFor={colorFor} />}
-        {view === 'week' && <WeekView events={scoped} anchor={anchor} colorFor={colorFor} today={today} />}
+        {view === 'day' && <DayView events={scoped} anchor={anchor} colorFor={colorFor} onEventClick={setSelectedEvent} />}
+        {view === 'week' && <WeekView events={scoped} anchor={anchor} colorFor={colorFor} today={today} onDayClick={setSelectedDay} />}
         {view === 'month' && <MonthView events={scoped} anchor={anchor} colorFor={colorFor} today={today} onDayClick={setSelectedDay} />}
       </div>
 
       <DayPopover day={selectedDay} events={scoped} onClose={() => setSelectedDay(null)} />
+      <EventPopover event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </div>
   )
 }
 
-function DayView({ events, anchor, colorFor }) {
+function DayView({ events, anchor, colorFor, onEventClick }) {
   const list = eventsOn(events, anchor)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {list.length ? (
         list.map((ev) => (
-          <div key={ev.id} style={{ display: 'flex', gap: 16, alignItems: 'center', background: C.cream, borderRadius: 14, padding: '12px 16px' }}>
+          <button key={ev.id} type="button" onClick={() => onEventClick(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 16, alignItems: 'center', background: C.cream, borderRadius: 14, padding: '12px 16px' }}>
             <div style={{ width: 8, height: 40, borderRadius: 4, background: colorFor(ev) }} />
             <div style={{ width: 90, fontSize: 22, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 24, fontWeight: 600 }}>{ev.title}</div>
               {ev.location && <div style={{ fontSize: 19, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.location}</div>}
             </div>
-          </div>
+          </button>
         ))
       ) : (
         <div style={{ fontSize: 22, color: C.muted }}>Nothing scheduled.</div>
@@ -107,7 +110,7 @@ function DayView({ events, anchor, colorFor }) {
   )
 }
 
-function WeekView({ events, anchor, colorFor, today }) {
+function WeekView({ events, anchor, colorFor, today, onDayClick }) {
   const start = startOfWeek(anchor)
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i))
   return (
@@ -116,7 +119,7 @@ function WeekView({ events, anchor, colorFor, today }) {
         const list = eventsOn(events, day)
         const isToday = isSameDay(day, today)
         return (
-          <div key={i} style={{ background: isToday ? C.tealTint : C.cream, borderRadius: 12, padding: 10, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+          <button key={i} type="button" aria-label={`${day.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' })}, ${list.length} events`} onClick={() => onDayClick(day)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', background: isToday ? C.tealTint : C.cream, borderRadius: 12, padding: 10, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
             <div style={{ fontSize: 17, fontWeight: 800, color: isToday ? C.tealText : C.ink }}>{DOW[i]} {day.getDate()}</div>
             {list.map((ev) => (
               <div key={ev.id} style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
@@ -130,7 +133,7 @@ function WeekView({ events, anchor, colorFor, today }) {
                 </span>
               </div>
             ))}
-          </div>
+          </button>
         )
       })}
     </div>

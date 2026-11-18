@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { C } from '../theme.js'
+import EventPopover from './EventPopover.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { eventsOn } from '../lib/calendar.js'
 import { timeOfDay } from '../lib/time.js'
@@ -8,6 +10,7 @@ import { timeOfDay } from '../lib/time.js'
 // dismiss. `events` is the already-scoped list for the current range.
 export default function DayPopover({ day, events, onClose }) {
   const { colorFor, nameFor } = useMembers()
+  const [open, setOpen] = useState(null)
   if (!day) return null
   const list = eventsOn(events, day)
   const heading = day.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' })
@@ -56,7 +59,7 @@ export default function DayPopover({ day, events, onClose }) {
 
         {list.length ? (
           list.map((ev) => (
-            <div key={ev.id} style={{ display: 'flex', gap: 18, alignItems: 'center', background: C.cream, borderRadius: 16, padding: '16px 20px' }}>
+            <button key={ev.id} type="button" onClick={() => setOpen(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 18, alignItems: 'center', background: C.cream, borderRadius: 16, padding: '16px 20px' }}>
               <div style={{ width: 8, height: 48, borderRadius: 4, background: colorFor(ev) }} />
               <div style={{ width: 130, fontSize: 24, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
               <div style={{ flexGrow: 1 }}>
@@ -68,12 +71,13 @@ export default function DayPopover({ day, events, onClose }) {
                   {[(ev.owners || [ev.person_key]).map(nameFor).join(' & '), ev.location].filter(Boolean).join(' · ')}
                 </div>
               </div>
-            </div>
+            </button>
           ))
         ) : (
           <div style={{ fontSize: 24, color: C.muted }}>Nothing scheduled.</div>
         )}
       </div>
+      <EventPopover event={open} onClose={() => setOpen(null)} />
     </div>
   )
 }

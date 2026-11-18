@@ -6,6 +6,7 @@ import { useMembers } from '../lib/members.jsx'
 import { addDays, startOfWeek, isSameDay, timeOfDay } from '../lib/time.js'
 import { VIEWS, DOW, rangeFor, eventsOn, stepAnchor, periodTitle } from '../lib/calendar.js'
 import DayPopover from './DayPopover.jsx'
+import EventPopover from './EventPopover.jsx'
 import { useDragScroll } from './dragScroll.js'
 
 function WallPill({ active, children, onClick }) {
@@ -98,7 +99,7 @@ function MonthView({ events, anchor, onDayClick }) {
   )
 }
 
-function WeekView({ events, anchor }) {
+function WeekView({ events, anchor, onDayClick }) {
   const { colorFor } = useMembers()
   const start = startOfWeek(anchor)
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i))
@@ -109,7 +110,7 @@ function WeekView({ events, anchor }) {
         const list = eventsOn(events, day)
         const isToday = isSameDay(day, today)
         return (
-          <div key={i} style={card({ flex: '1 0 auto', minHeight: 120, padding: '16px 24px', display: 'flex', gap: 20, alignItems: 'center', borderColor: isToday ? C.meals : C.border, background: isToday ? C.tealTint : C.card })}>
+          <button key={i} type="button" onClick={() => onDayClick(day)} style={card({ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', borderRadius: 28, border: `2px solid ${isToday ? C.meals : C.border}`, flex: '1 0 auto', minHeight: 120, padding: '16px 24px', display: 'flex', gap: 20, alignItems: 'center', background: isToday ? C.tealTint : C.card })}>
             <div style={{ width: 150, flexShrink: 0 }}>
               <div style={{ fontSize: 28, fontWeight: 800 }}>{DOW[i]}</div>
               <div style={{ fontSize: 22, color: C.muted }}>{day.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}</div>
@@ -128,28 +129,28 @@ function WeekView({ events, anchor }) {
                 <span style={{ fontSize: 22, color: C.muted }}>Free</span>
               )}
             </div>
-          </div>
+          </button>
         )
       })}
     </div>
   )
 }
 
-function DayView({ events, anchor }) {
+function DayView({ events, anchor, onEventClick }) {
   const { colorFor } = useMembers()
   const list = eventsOn(events, anchor)
   return (
     <div style={card({ minHeight: '100%', padding: 32, display: 'flex', flexDirection: 'column', gap: 16 })}>
       {list.length ? (
         list.map((ev) => (
-          <div key={ev.id} style={{ display: 'flex', gap: 24, alignItems: 'center', background: C.cream, borderRadius: 18, padding: '18px 24px' }}>
+          <button key={ev.id} type="button" onClick={() => onEventClick(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 24, alignItems: 'center', background: C.cream, borderRadius: 18, padding: '18px 24px' }}>
             <div style={{ width: 10, height: 56, borderRadius: 5, background: colorFor(ev) }} />
             <div style={{ width: 160, fontSize: 28, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
             <div>
               <div style={{ fontSize: 30, fontWeight: 600 }}>{ev.title}</div>
               {ev.location && <div style={{ fontSize: 22, color: C.muted }}>{ev.location}</div>}
             </div>
-          </div>
+          </button>
         ))
       ) : (
         <div style={{ fontSize: 28, color: C.muted }}>Nothing scheduled.</div>
@@ -162,6 +163,7 @@ export default function Calendar() {
   const [view, setView] = useState('month')
   const [anchor, setAnchor] = useState(() => new Date())
   const [selectedDay, setSelectedDay] = useState(null)
+  const [selectedEvent, setSelectedEvent] = useState(null)
   const range = useMemo(() => rangeFor(view, anchor), [view, anchor])
   const { events: allEvents } = useEvents(range.from, range.to)
   // Shared screen: never show work calendars, and respect "show on hub".
@@ -197,11 +199,12 @@ export default function Calendar() {
 
       <div ref={drag.ref} {...drag.handlers} className={drag.className} style={{ ...drag.style, flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {view === 'month' && <MonthView events={events} anchor={anchor} onDayClick={setSelectedDay} />}
-        {view === 'week' && <WeekView events={events} anchor={anchor} />}
-        {view === 'day' && <DayView events={events} anchor={anchor} />}
+        {view === 'week' && <WeekView events={events} anchor={anchor} onDayClick={setSelectedDay} />}
+        {view === 'day' && <DayView events={events} anchor={anchor} onEventClick={setSelectedEvent} />}
       </div>
 
       <DayPopover day={selectedDay} events={events} onClose={() => setSelectedDay(null)} />
+      <EventPopover event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </>
   )
 }

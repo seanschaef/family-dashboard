@@ -6,7 +6,7 @@ import { useAuth } from '../lib/auth.jsx'
 import { PhoneHeader, Pill, PhoneCard, PhoneToggle } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, toggleChore, assigneesOf, isEachChore, ANYONE } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, toggleChore, assigneesOf, isEachChore, doneByText } from '../lib/chores.js'
 import { useReminders, addReminder, toggleReminder, usePetLog, PET_TASKS, petDone, petBy, togglePet } from '../lib/household.js'
 
 function firstName(me, user) {
@@ -35,7 +35,8 @@ export default function Today() {
   // assignee (each person ticks their own).
   // "Me" also lists chores nobody is assigned to, so anyone can tick them
   // (the tick and any points are credited to whoever does it).
-  const due = scope === 'me' && me ? [...dueChores(chores, logs, me.key, T), ...dueChores(chores, logs, ANYONE, T)] : dueChores(chores, logs, scopeKey, T)
+  // A person's list already includes chores nobody is assigned to.
+  const due = dueChores(chores, logs, scopeKey, T)
   const choreList = due
     .sort((a, b) => a.title.localeCompare(b.title))
     .flatMap((c) => {
@@ -44,6 +45,8 @@ export default function Today() {
       return [{ c, who: me?.key && assigneesOf(c).includes(me.key) ? me.key : null, rowKey: c.id }]
     })
   const subFor = ({ c, who }) => {
+    const by = doneByText(logs, c, T, nameFor)
+    if (by) return by
     if (scope === 'me' && !assigneesOf(c).length) return ['Anyone', c.points ? `${c.points} pts` : ''].filter(Boolean).join(' · ')
     if (scope === 'me') return [assigneesOf(c).length > 1 ? `with ${assigneesOf(c).filter((k) => k !== me?.key).map(nameFor).join(', ')}` : '', c.points ? `${c.points} pts` : ''].filter(Boolean).join(' · ') || undefined
     if (isEachChore(c)) return nameFor(who)

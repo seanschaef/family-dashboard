@@ -72,7 +72,7 @@ export async function listEvents({ from, to } = {}) {
   if (!isSupabaseConfigured) return []
   let q = supabase
     .from('calendar_events')
-    .select('id, calendar_id, title, starts_at, ends_at, all_day, location, person_key, kind, calendar:calendars(person_keys, color, show_on_hub)')
+    .select('id, calendar_id, title, starts_at, ends_at, all_day, location, person_key, kind, calendar:calendars(name, person_keys, color, show_on_hub)')
     .order('starts_at', { ascending: true })
   if (from) q = q.gte('starts_at', from)
   if (to) q = q.lte('starts_at', to)
@@ -86,7 +86,7 @@ export async function listEvents({ from, to } = {}) {
 function withCalendarInfo(e) {
   const cal = e.calendar || {}
   const owners = cal.person_keys?.length ? cal.person_keys : e.person_key ? [e.person_key] : []
-  return { ...e, calendar: undefined, owners, color: cal.color || null, show_on_hub: cal.show_on_hub !== false }
+  return { ...e, calendar: undefined, owners, color: cal.color || null, show_on_hub: cal.show_on_hub !== false, calendarName: cal.name || null }
 }
 
 // Does this event belong on a person's page? Their own calendars plus the

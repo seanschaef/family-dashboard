@@ -39,9 +39,11 @@ export function greeting(date = new Date()) {
   const hour = Number(
     new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: TZ }).format(date),
   )
-  if (hour < 12) return 'Good morning'
-  if (hour < 17) return 'Good afternoon'
-  return 'Good evening'
+  if (hour < 5) return 'Good Night'
+  if (hour < 12) return 'Good Morning'
+  if (hour < 17) return 'Good Afternoon'
+  if (hour < 21) return 'Good Evening'
+  return 'Good Night'
 }
 
 // Ticking clock hook. Updates every 15s (enough for a minute display) to keep

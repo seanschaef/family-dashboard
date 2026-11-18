@@ -8,7 +8,7 @@ import PhotoFrame from './PhotoFrame.jsx'
 import { formatLongDate, birthdayCountdown, useNow } from '../lib/time.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, toggleChore, pointsThisWeek } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, toggleChore, pointsThisWeek, doneByText, assigneesOf } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import { usePhotoCollections, activeCollectionsFor } from '../lib/photos.js'
 
@@ -31,6 +31,7 @@ function Header({ person }) {
 }
 
 function ChoresCard({ person, due, logs, T, points }) {
+  const { nameFor } = useMembers()
   const done = due.filter((c) => isDone(logs, c, T, person.key)).length
   return (
     <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16 })}>
@@ -40,7 +41,7 @@ function ChoresCard({ person, due, logs, T, points }) {
       </div>
       {due.length ? (
         due.map((c) => (
-          <LiveCheck key={c.id} label={c.title} done={isDone(logs, c, T, person.key)} color={person.color} onToggle={() => toggleChore(c, T, isDone(logs, c, T, person.key), person.key)} />
+          <LiveCheck key={c.id} label={c.title} sub={doneByText(logs, c, T, nameFor) || (assigneesOf(c).length ? undefined : 'Anyone')} done={isDone(logs, c, T, person.key)} color={person.color} onToggle={() => toggleChore(c, T, isDone(logs, c, T, person.key), person.key)} />
         ))
       ) : (
         <div style={{ fontSize: 22, color: C.muted }}>Nothing due today</div>

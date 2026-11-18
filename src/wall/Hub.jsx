@@ -7,9 +7,11 @@ import { LiveCheck, ProgressRow } from './parts.jsx'
 import CalendarBlock from './CalendarBlock.jsx'
 import TodayBlock from './TodayBlock.jsx'
 import Rotator from './Rotator.jsx'
+import LegendBlock from './LegendBlock.jsx'
 import PhotoFrame from './PhotoFrame.jsx'
 import WeatherCard from './WeatherCard.jsx'
-import { formatClock, formatLongDate, greeting, useNow } from '../lib/time.js'
+import { formatClock, formatLongDate, useNow } from '../lib/time.js'
+import { hubGreeting } from '../lib/greetings.js'
 import { useImportantDates, upcomingCountdowns, countdownText } from '../lib/dates.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
@@ -40,7 +42,7 @@ export default function Hub() {
     header: (size) => (
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap', height: blockHeight('header', size) }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 30, fontWeight: 600, color: C.rust }}>{greeting(now)}, {familyName}!</div>
+          <div style={{ fontSize: 30, fontWeight: 600, color: C.rust }}>{hubGreeting({ now, familyName, petName, members, dates: importantDates })}</div>
           <div style={{ fontSize: 104, fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
           <div style={{ fontSize: 26, color: C.muted }}>{formatLongDate(now)}</div>
         </div>
@@ -50,6 +52,7 @@ export default function Hub() {
     photo: (size, opts) => <PhotoFrame height={blockHeight('photo', size)} fit={opts?.fit} />,
     calendar: (size) => <CalendarBlock title="Family calendar" height={blockHeight('calendar', size)} />,
     today: (size) => <TodayBlock height={blockHeight('today', size)} />,
+    legend: () => <LegendBlock />,
     dinner: () => (
       <button type="button" onClick={() => navigate('/wall/meals')} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.tealTint, borderRadius: 16, padding: '16px 22px', color: C.ink }}>
         <span style={{ fontSize: 24 }}>

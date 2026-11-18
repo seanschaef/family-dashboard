@@ -1,7 +1,7 @@
 import { C } from '../theme.js'
 import { LiveCheck } from './parts.jsx'
 import { todayISO } from '../lib/db.js'
-import { dueChores, isDone, toggleChore, assigneesOf, ANYONE } from '../lib/chores.js'
+import { dueChores, isDone, toggleChore, assigneesOf, doneByText, ANYONE } from '../lib/chores.js'
 import { useMembers } from '../lib/members.jsx'
 
 // Tap a person in the hub's Chores card: a pop-up with today's chores for that
@@ -54,7 +54,7 @@ export default function ChoresPopover({ person, chores, logs, onClose }) {
               <div key={c.id} style={{ background: C.cream, borderRadius: 16, padding: '12px 18px' }}>
                 <LiveCheck
                   label={c.title}
-                  sub={[others.length ? `with ${others.map(nameFor).join(', ')}` : '', c.points ? `${c.points} pts` : ''].filter(Boolean).join(' · ') || undefined}
+                  sub={[doneByText(logs, c, T, nameFor), others.length ? `with ${others.map(nameFor).join(', ')}` : '', c.points ? `${c.points} pts` : ''].filter(Boolean).join(' · ') || undefined}
                   done={isDone(logs, c, T, person.key)}
                   color={person.color}
                   onToggle={() => toggleChore(c, T, isDone(logs, c, T, person.key), who)}

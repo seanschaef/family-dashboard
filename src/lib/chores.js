@@ -60,11 +60,32 @@ export const ANYONE = '__anyone'
 // Chores due today for a member (or all members when memberKey is null, or
 // the unassigned ones for ANYONE).
 export function dueChores(chores, logs, memberKey, iso = todayISO()) {
+  // An unassigned ("Anyone") chore is on everyone's list as well as the Anyone
+  // row; one tick by anybody completes it everywhere (see isDone / doneBy).
   const forWho = (c) => {
-    if (memberKey === ANYONE) return assigneesOf(c).length === 0
-    return memberKey ? assigneesOf(c).includes(memberKey) : true
+    const keys = assigneesOf(c)
+    if (memberKey === ANYONE) return keys.length === 0
+    return memberKey ? keys.length === 0 || keys.includes(memberKey) : true
   }
   return chores.filter((c) => forWho(c) && isDueOn(c, iso, logs))
+}
+
+// "Done by Sean" for a chore that more than one person could tick (unassigned,
+// or shared 'any one of them'); null when not done or only one person does it.
+export function doneByText(logs, chore, iso, nameFor) {
+  const keys = assigneesOf(chore)
+  const shared = keys.length === 0 || (keys.length > 1 && !isEachChore(chore))
+  if (!shared) return null
+  const by = doneBy(logs, chore, iso)
+  if (by === undefined) return null
+  return by ? `Done by ${nameFor(by)}` : 'Done'
+}
+
+// Who ticked a shared/unassigned chore on a date (member key, or null if it
+// was ticked from the wall's Anyone row). Undefined when it isn't done.
+export function doneBy(logs, chore, iso) {
+  const log = logs.find((l) => l.chore_id === chore.id && l.log_date === iso)
+  return log ? log.member_key : undefined
 }
 
 export async function addChore({ member_keys, shared_mode, title, repeat, days, points }) {
