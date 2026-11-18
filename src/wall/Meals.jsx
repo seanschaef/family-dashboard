@@ -2,7 +2,10 @@ import { QRCodeSVG } from 'qrcode.react'
 import { C, card } from '../theme.js'
 import { Clock, LiveCheck } from './parts.jsx'
 import { todayISO } from '../lib/db.js'
-import { useMeals, mealFor, weekDates, useGroceries, addGrocery, toggleGrocery, addIngredientsToGroceries, GROCERY_SECTIONS } from '../lib/kitchen.js'
+import { useMeals, mealFor, weekDates, useGroceries, addGrocery, toggleGrocery, addIngredientsToGroceries, GROCERY_SECTIONS, removeGrocery } from '../lib/kitchen.js'
+import { useLongPress } from '../lib/longPress.js'
+import ConfirmSheet from '../components/ConfirmSheet.jsx'
+import { useState } from 'react'
 import { useMembers } from '../lib/members.jsx'
 
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -20,6 +23,7 @@ export default function Meals() {
   const { me } = useMembers()
   const { rows: meals } = useMeals()
   const { rows: groceries } = useGroceries()
+  const [removing, setRemoving] = useState(null)
   const week = weekDates()
   const T = todayISO()
 
@@ -96,13 +100,32 @@ export default function Meals() {
               <div key={name} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ fontSize: 19, fontWeight: 800, color: C.muted, letterSpacing: 1, textTransform: 'uppercase' }}>{name}</div>
                 {bySection[name].map((it) => (
-                  <LiveCheck key={it.id} label={it.label} sub={it.source === 'meal' ? '· Meal plan' : undefined} done={it.done} color={C.meals} size={40} fontSize={22} onToggle={() => toggleGrocery(it.id, !it.done)} />
+                  <WallGroceryItem key={it.id} it={it} onAskRemove={setRemoving} />
                 ))}
               </div>
             ))}
           </div>
         )}
       </div>
+      <ConfirmSheet
+        open={!!removing}
+        scale={2}
+        title={removing ? `Remove ${removing.label}?` : ''}
+        detail="It comes off everyone's list."
+        onCancel={() => setRemoving(null)}
+        onConfirm={async () => { const id = removing.id; setRemoving(null); await removeGrocery(id) }}
+      />
     </>
+  )
+}
+
+// Tap to tick; press and hold to remove. Shows the quantity when more than one.
+function WallGroceryItem({ it, onAskRemove }) {
+  const lp = useLongPress(() => onAskRemove(it))
+  const qty = it.qty || 1
+  return (
+    <div {...lp}>
+      <LiveCheck label={qty > 1 ? `${it.label} ×${qty}` : it.label} sub={it.source === 'meal' ? '· Meal plan' : undefined} done={it.done} color={C.meals} size={40} fontSize={22} onToggle={() => toggleGrocery(it.id, !it.done)} />
+    </div>
   )
 }

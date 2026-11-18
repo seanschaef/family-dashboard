@@ -1,4 +1,5 @@
 import { useFamilyTable, insertRow, updateRow, deleteRow, deleteWhere } from './db.js'
+import { supabase, isSupabaseConfigured } from './supabase.js'
 
 // Monday of the current week as YYYY-MM-DD, and the 7 day ISO strings.
 export function weekDates(from = new Date()) {
@@ -76,8 +77,38 @@ export const SAMPLE_GROCERIES = [
 ]
 
 export const useGroceries = () => useFamilyTable('grocery_items', { order: { column: 'created_at' }, sample: SAMPLE_GROCERIES })
-export const addGrocery = ({ label, section, added_by_member_key, source }) =>
-  insertRow('grocery_items', { label, section: section || guessSection(label), added_by_member_key: added_by_member_key || null, source: source || 'manual' })
+// "3 apples", "apples x3", "apples ×3" -> { label: 'apples', qty: 3 }.
+export function parseQty(text) {
+  const t = String(text || '').trim()
+  let m = t.match(/^(\d{1,2})\s*[x×]?\s+(.+)$/i)
+  if (m) return { label: m[2].trim(), qty: Math.min(99, Math.max(1, +m[1])) }
+  m = t.match(/^(.+?)\s*[x×]\s*(\d{1,2})$/i)
+  if (m) return { label: m[1].trim(), qty: Math.min(99, Math.max(1, +m[2])) }
+  return { label: t, qty: 1 }
+}
+
+// Add an item. If the same item is already on the list (not checked off), its
+// quantity goes up instead of adding a second line.
+export async function addGrocery({ label, section, added_by_member_key, source, qty = 1 }) {
+  const name = String(label || '').trim()
+  if (!name) return null
+  if (isSupabaseConfigured) {
+    const { data: existing } = await supabase
+      .from('grocery_items')
+      .select('id, qty')
+      .ilike('label', name.replace(/[%_]/g, '\\$&'))
+      .eq('done', false)
+      .limit(1)
+      .maybeSingle()
+    if (existing) {
+      await updateRow('grocery_items', existing.id, { qty: Math.min(99, (existing.qty || 1) + qty) })
+      return existing
+    }
+  }
+  return insertRow('grocery_items', { label: name, qty: Math.min(99, Math.max(1, qty)), section: section || guessSection(name), added_by_member_key: added_by_member_key || null, source: source || 'manual' })
+}
+export const setGroceryQty = (id, qty) => updateRow('grocery_items', id, { qty: Math.min(99, Math.max(1, qty)) })
+export const removeGrocery = (id) => deleteRow('grocery_items', id)
 export const toggleGrocery = (id, done) => updateRow('grocery_items', id, { done })
 export const updateGrocerySection = (id, section) => updateRow('grocery_items', id, { section })
 export const clearCheckedGroceries = () => deleteWhere('grocery_items', { done: true })
@@ -89,7 +120,7 @@ export async function addIngredientsToGroceries(ingredients, memberKey) {
     .map((s) => s.trim())
     .filter(Boolean)
   for (const label of items) {
-    await insertRow('grocery_items', { label, section: guessSection(label), added_by_member_key: memberKey || null, source: 'meal' })
+    await addGrocery({ label, added_by_member_key: memberKey, source: 'meal' })
   }
   return items.length
 }
