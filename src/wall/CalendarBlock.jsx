@@ -35,7 +35,7 @@ function Seg({ active, children, onClick }) {
   )
 }
 
-export default function CalendarBlock({ personKey = null, includeWork = false, title = 'Family calendar', height = 500, todaySummary = false }) {
+export default function CalendarBlock({ personKey = null, includeWork = false, title = 'Family calendar', height = 500 }) {
   const { colorFor } = useMembers()
   const [view, setView] = useState('week')
   const [anchor, setAnchor] = useState(() => new Date())
@@ -46,8 +46,6 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
   const range = useMemo(() => rangeFor(view, anchor), [view, anchor])
   const { events } = useEvents(range.from, range.to)
   const today = new Date()
-  const todayRange = useMemo(() => rangeFor('day', today), [today.toDateString()])
-  const { events: todayEvents } = useEvents(todayRange.from, todayRange.to)
 
   const scopeFilter = (e) => {
     if (!includeWork && e.kind === 'work') return false
@@ -55,7 +53,6 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
     return ownsEvent(e, personKey)
   }
   const scoped = events.filter(scopeFilter)
-  const todayList = eventsOn(todayEvents.filter(scopeFilter), today)
 
   return (
     <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height })}>
@@ -75,25 +72,6 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
           <button type="button" aria-label="Next" onClick={() => setAnchor((a) => stepAnchor(view, a, 1))} style={arrowBtn}>›</button>
         </div>
       </div>
-
-      {todaySummary && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
-          <span style={{ fontSize: 18, fontWeight: 800, color: C.muted, letterSpacing: 1 }}>TODAY</span>
-          {todayList.length ? (
-            todayList.map((ev) => (
-              <span key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: C.cream, borderRadius: 999, padding: '6px 14px' }}>
-                <span style={{ width: 9, height: 9, borderRadius: 5, background: colorFor(ev) }} />
-                <span style={{ fontSize: 19 }}>
-                  <span style={{ color: C.muted }}>{ev.all_day ? '' : timeOfDay(ev.starts_at) + ' '}</span>
-                  {ev.title}
-                </span>
-              </span>
-            ))
-          ) : (
-            <span style={{ fontSize: 19, color: C.muted }}>Nothing scheduled.</span>
-          )}
-        </div>
-      )}
 
       {/* Drag to scroll (the wall's touch is mouse-like); swipe sideways for prev/next. */}
       <div ref={drag.ref} {...drag.handlers} className={drag.className} style={{ ...drag.style, flex: '1 1 0', minHeight: 0 }}>

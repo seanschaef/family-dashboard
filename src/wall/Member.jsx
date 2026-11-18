@@ -113,7 +113,7 @@ export default function Member() {
     return (
       <>
         <Header person={person} />
-        <CalendarBlock personKey={person.key} includeWork todaySummary title="Calendar" height={430} />
+        <CalendarBlock personKey={person.key} includeWork title="Calendar" height={430} />
         <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 18, height: 560 })}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: 30, fontWeight: 800 }}>My jobs</div>
@@ -142,7 +142,7 @@ export default function Member() {
     return (
       <>
         <Header person={person} />
-        <CalendarBlock personKey={person.key} includeWork todaySummary title="Calendar" height={630} />
+        <CalendarBlock personKey={person.key} includeWork title="Calendar" height={630} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 24, height: 400 }}>
           <ChoresCard person={person} due={due} logs={logs} T={T} points={points} />
           <ReminderCard title="Homework and reminders" reminders={myReminders} />
@@ -159,7 +159,7 @@ export default function Member() {
   return (
     <>
       <Header person={person} />
-      <CalendarBlock personKey={person.key} includeWork todaySummary title="Calendar" height={640} />
+      <CalendarBlock personKey={person.key} includeWork title="Calendar" height={640} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 24, height: 380 }}>
         <ChoresCard person={person} due={due} logs={logs} T={T} />
         <ReminderCard title="My reminders" reminders={myReminders} />
