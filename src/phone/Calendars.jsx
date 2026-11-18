@@ -49,7 +49,7 @@ export default function Calendars() {
         person_key: person,
         kind,
         show_on_hub: kind === 'work' ? false : showOnHub,
-        color: p?.color,
+        color: person === 'family' ? C.ink : p?.color,
       })
       setName('')
       setUrl('')
@@ -96,6 +96,13 @@ export default function Calendars() {
 
         <div style={{ fontSize: 14, fontWeight: 700, color: C.muted }}>Whose calendar</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setPerson('family')}
+            style={{ all: 'unset', cursor: 'pointer', background: person === 'family' ? C.ink : C.card, color: person === 'family' ? '#FFFFFF' : C.ink, border: person === 'family' ? 'none' : `2px solid ${C.border}`, borderRadius: 999, padding: '8px 14px', fontSize: 15, fontWeight: 600 }}
+          >
+            Family
+          </button>
           {members.map((p) => (
             <button
               key={p.key}

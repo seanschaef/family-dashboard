@@ -41,6 +41,11 @@ function MemberRow({ m, canEdit, isAdmin, onPatch, onRemove }) {
             {PALETTE.map((col) => (
               <button key={col} type="button" aria-label={`colour ${col}`} onClick={() => onPatch({ color: col })} style={{ all: 'unset', cursor: 'pointer', width: 26, height: 26, borderRadius: 13, background: col, boxShadow: m.color === col ? `0 0 0 3px ${C.cream}, 0 0 0 5px ${col}` : 'none' }} />
             ))}
+            <label style={{ cursor: 'pointer', width: 26, height: 26, borderRadius: 13, border: `2px dashed ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }} title="Custom colour">
+              <span aria-hidden="true" style={{ fontSize: 16, color: C.muted, lineHeight: 1 }}>+</span>
+              <input type="color" aria-label="Custom colour" value={m.color || '#7B4B8A'} onChange={(e) => onPatch({ color: e.target.value })} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
+            </label>
+            {!PALETTE.includes(m.color) && <span style={{ width: 26, height: 26, borderRadius: 13, background: m.color, boxShadow: `0 0 0 3px ${C.cream}, 0 0 0 5px ${m.color}` }} />}
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {ROLES.map((r) => (
@@ -57,19 +62,38 @@ function MemberRow({ m, canEdit, isAdmin, onPatch, onRemove }) {
   )
 }
 
+function SaveToast({ at }) {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    if (!at) return undefined
+    setShow(true)
+    const t = setTimeout(() => setShow(false), 1800)
+    return () => clearTimeout(t)
+  }, [at])
+  if (!show) return null
+  return (
+    <div style={{ position: 'sticky', top: 0, alignSelf: 'center', background: C.tealText, color: '#FFFFFF', borderRadius: 999, padding: '6px 16px', fontSize: 13, fontWeight: 700, zIndex: 5, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>Saved ✓</div>
+  )
+}
+
 export default function Settings() {
   const { user, signOut, configured } = useAuth()
   const { members, familyName, petName, me, setMe, isAdmin, updateFamily, addMember, updateMember, removeMember } = useMembers()
   const [fam, setFam] = useState(familyName)
   const [pet, setPet] = useState(petName)
+  const [savedAt, setSavedAt] = useState(0)
   useEffect(() => setFam(familyName), [familyName])
   useEffect(() => setPet(petName), [petName])
 
+  const flash = () => setSavedAt(Date.now())
+  const saveFamily = async (p) => { await updateFamily(p); flash() }
+  const saveMember = async (id, p) => { await updateMember(id, p); flash() }
   const canEdit = (m) => isAdmin || m.id === me?.id
 
   return (
     <>
       <PhoneHeader title="Settings" subtitle={isAdmin ? 'You are an admin' : 'Your account'} />
+      <SaveToast at={savedAt} />
 
       <div style={card}>
         <div style={{ fontSize: 16, fontWeight: 800 }}>You</div>
@@ -88,12 +112,12 @@ export default function Settings() {
         {!isAdmin && <div style={{ fontSize: 13, color: C.muted }}>Only an admin can change these.</div>}
         <div>
           <div style={label}>Family name</div>
-          <input aria-label="Family name" value={fam} disabled={!isAdmin} onChange={(e) => setFam(e.target.value)} onBlur={() => fam.trim() && fam !== familyName && updateFamily({ name: fam.trim() })} style={{ ...input, opacity: isAdmin ? 1 : 0.6 }} />
+          <input aria-label="Family name" value={fam} disabled={!isAdmin} onChange={(e) => setFam(e.target.value)} onBlur={() => fam.trim() && fam !== familyName && saveFamily({ name: fam.trim() })} style={{ ...input, opacity: isAdmin ? 1 : 0.6 }} />
           <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Shown on the hub greeting: “Good morning, {fam || 'family'}!”</div>
         </div>
         <div>
           <div style={label}>Pet name</div>
-          <input aria-label="Pet name" value={pet} disabled={!isAdmin} onChange={(e) => setPet(e.target.value)} onBlur={() => pet !== petName && updateFamily({ pet_name: pet.trim() })} style={{ ...input, opacity: isAdmin ? 1 : 0.6 }} />
+          <input aria-label="Pet name" value={pet} disabled={!isAdmin} onChange={(e) => setPet(e.target.value)} onBlur={() => pet !== petName && saveFamily({ pet_name: pet.trim() })} style={{ ...input, opacity: isAdmin ? 1 : 0.6 }} />
         </div>
       </div>
 
@@ -101,12 +125,12 @@ export default function Settings() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 16, fontWeight: 800 }}>People</div>
           {isAdmin && (
-            <button type="button" onClick={() => addMember({ name: 'New person', color: PALETTE[members.length % PALETTE.length], role: 'child' })} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.tealText }}>+ Add</button>
+            <button type="button" onClick={async () => { await addMember({ name: 'New person', color: PALETTE[members.length % PALETTE.length], role: 'child' }); flash() }} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.tealText }}>+ Add</button>
           )}
         </div>
         {!isAdmin && <div style={{ fontSize: 13, color: C.muted }}>You can edit your own details. An admin edits everyone.</div>}
         {members.map((m) => (
-          <MemberRow key={m.id} m={m} canEdit={canEdit(m)} isAdmin={isAdmin} onPatch={(p) => updateMember(m.id, p)} onRemove={() => removeMember(m.id)} />
+          <MemberRow key={m.id} m={m} canEdit={canEdit(m)} isAdmin={isAdmin} onPatch={(p) => saveMember(m.id, p)} onRemove={async () => { await removeMember(m.id); flash() }} />
         ))}
       </div>
 
