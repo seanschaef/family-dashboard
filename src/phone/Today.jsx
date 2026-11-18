@@ -6,7 +6,7 @@ import { useAuth } from '../lib/auth.jsx'
 import { PhoneHeader, Pill, PhoneCard, PhoneToggle } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, toggleChore, assigneesOf, isEachChore } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, toggleChore, assigneesOf, isEachChore, ANYONE } from '../lib/chores.js'
 import { useReminders, addReminder, toggleReminder, usePetLog, PET_TASKS, petDone, petBy, togglePet } from '../lib/household.js'
 
 function firstName(me, user) {
@@ -33,7 +33,10 @@ export default function Today() {
   const scopeKey = scope === 'me' ? me?.key : null
   // One row per chore, except a family-view 'each' chore gets a row per
   // assignee (each person ticks their own).
-  const choreList = dueChores(chores, logs, scopeKey, T)
+  // "Me" also lists chores nobody is assigned to, so anyone can tick them
+  // (the tick and any points are credited to whoever does it).
+  const due = scope === 'me' && me ? [...dueChores(chores, logs, me.key, T), ...dueChores(chores, logs, ANYONE, T)] : dueChores(chores, logs, scopeKey, T)
+  const choreList = due
     .sort((a, b) => a.title.localeCompare(b.title))
     .flatMap((c) => {
       if (scope === 'me') return [{ c, who: me?.key, rowKey: c.id }]
@@ -41,6 +44,7 @@ export default function Today() {
       return [{ c, who: me?.key && assigneesOf(c).includes(me.key) ? me.key : null, rowKey: c.id }]
     })
   const subFor = ({ c, who }) => {
+    if (scope === 'me' && !assigneesOf(c).length) return ['Anyone', c.points ? `${c.points} pts` : ''].filter(Boolean).join(' · ')
     if (scope === 'me') return [assigneesOf(c).length > 1 ? `with ${assigneesOf(c).filter((k) => k !== me?.key).map(nameFor).join(', ')}` : '', c.points ? `${c.points} pts` : ''].filter(Boolean).join(' · ') || undefined
     if (isEachChore(c)) return nameFor(who)
     const names = assigneesOf(c).map(nameFor)

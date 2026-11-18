@@ -24,7 +24,7 @@ function shuffle(a) {
 // seasonal and time-of-day collections); a member key = that person's page.
 // Images come from the Pi's NAS agent; in the unconfigured demo it shows sample
 // frames, and on a real deployment with no agent yet it shows a gentle hint.
-export default function PhotoFrame({ memberKey = null, height = 380, radius = 36 }) {
+export default function PhotoFrame({ memberKey = null, height = 380, radius = 36, fit = 'cover' }) {
   const { rows: collections } = usePhotoCollections()
   const [images, setImages] = useState([])
   const [idx, setIdx] = useState(0)
@@ -82,8 +82,20 @@ export default function PhotoFrame({ memberKey = null, height = 380, radius = 36
     )
   }
 
+  // fit 'contain' shows the whole photo; the leftover space gets a soft,
+  // blurred copy of the same photo instead of bars.
+  const contain = fit === 'contain'
   return (
     <div style={frame}>
+      {contain && (
+        <img
+          key={`bg-${idx}`}
+          src={images[idx]}
+          alt=""
+          aria-hidden="true"
+          style={{ position: 'absolute', inset: -20, width: 'calc(100% + 40px)', height: 'calc(100% + 40px)', objectFit: 'cover', filter: 'blur(24px) brightness(0.8)' }}
+        />
+      )}
       {images.map((src, i) => (
         <img
           key={src + i}
@@ -94,7 +106,7 @@ export default function PhotoFrame({ memberKey = null, height = 380, radius = 36
             inset: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
+            objectFit: contain ? 'contain' : 'cover',
             opacity: i === idx ? 1 : 0,
             transition: 'opacity 1.2s ease-in-out',
           }}

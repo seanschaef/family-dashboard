@@ -60,7 +60,11 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
   return (
     <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height })}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 26, fontWeight: 800 }}>{title}</div>
+        {/* Title with the period beside it (saves a whole row for events). */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, minWidth: 0 }}>
+          <div style={{ fontSize: 26, fontWeight: 800, whiteSpace: 'nowrap' }}>{title}</div>
+          <div style={{ fontSize: 20, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{periodTitle(view, anchor)}</div>
+        </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <div style={{ display: 'flex', background: C.cream, borderRadius: 999, padding: 3 }}>
             <Seg active={view === 'day'} onClick={() => setView('day')}>Day</Seg>
@@ -90,8 +94,6 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
           )}
         </div>
       )}
-
-      <div style={{ fontSize: 20, color: C.muted }}>{periodTitle(view, anchor)}</div>
 
       {/* Drag to scroll (the wall's touch is mouse-like); swipe sideways for prev/next. */}
       <div ref={drag.ref} {...drag.handlers} className={drag.className} style={{ ...drag.style, flex: '1 1 0', minHeight: 0 }}>

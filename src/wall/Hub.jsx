@@ -6,13 +6,14 @@ import Icon from '../components/Icon.jsx'
 import { LiveCheck, ProgressRow } from './parts.jsx'
 import CalendarBlock from './CalendarBlock.jsx'
 import TodayBlock from './TodayBlock.jsx'
+import Rotator from './Rotator.jsx'
 import PhotoFrame from './PhotoFrame.jsx'
 import WeatherCard from './WeatherCard.jsx'
 import { formatClock, formatLongDate, greeting, useNow } from '../lib/time.js'
 import { useImportantDates, upcomingCountdowns, countdownText } from '../lib/dates.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, ANYONE } from '../lib/chores.js'
 import { useReminders, usePetLog, PET_TASKS, petDone, petBy, togglePet } from '../lib/household.js'
 import { useMeals, mealFor } from '../lib/kitchen.js'
 import { normalizeHubLayout, blockHeight, WIDTH_SPAN, MIN_HEIGHT } from './hubLayout.js'
@@ -36,7 +37,17 @@ export default function Hub() {
 
   // Block content by id. Rendered in the order/size the layout specifies.
   const blocks = {
-    photo: (size) => <PhotoFrame height={blockHeight('photo', size)} />,
+    header: (size) => (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap', height: blockHeight('header', size) }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ fontSize: 30, fontWeight: 600, color: C.rust }}>{greeting(now)}, {familyName}!</div>
+          <div style={{ fontSize: 104, fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
+          <div style={{ fontSize: 26, color: C.muted }}>{formatLongDate(now)}</div>
+        </div>
+        <WeatherCard />
+      </div>
+    ),
+    photo: (size, opts) => <PhotoFrame height={blockHeight('photo', size)} fit={opts?.fit} />,
     calendar: (size) => <CalendarBlock title="Family calendar" height={blockHeight('calendar', size)} />,
     today: (size) => <TodayBlock height={blockHeight('today', size)} />,
     dinner: () => (
@@ -50,8 +61,9 @@ export default function Hub() {
     chores: () => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Chores today</div>
-        {members.map((m) => {
+        {[...members, { key: ANYONE, name: 'Anyone', color: C.family }].map((m) => {
           const due = dueChores(chores, logs, m.key, T)
+          if (m.key === ANYONE && !due.length) return null // only when there are unassigned chores
           const done = due.filter((c) => isDone(logs, c, T, m.key)).length
           return (
             <button key={m.key} type="button" aria-label={`Show ${m.name}'s chores`} onClick={() => setChoresFor(m)} style={{ all: 'unset', cursor: 'pointer', display: 'block' }}>
@@ -112,24 +124,19 @@ export default function Hub() {
     ),
   }
 
-  const layout = normalizeHubLayout(wallLayout).filter((b) => b.visible && blocks[b.id])
+  const layout = normalizeHubLayout(wallLayout).filter((b) => b.visible && (b.group || blocks[b.id]))
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 160 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 30, fontWeight: 600, color: C.rust }}>{greeting(now)}, {familyName}!</div>
-          <div style={{ fontSize: 104, fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
-          <div style={{ fontSize: 26, color: C.muted }}>{formatLongDate(now)}</div>
-        </div>
-        <WeatherCard />
-      </div>
-
       {/* 4-column grid: full = 4, half = 2, quarter = 1 (see hubLayout.js). */}
       <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row dense', gap: 24, alignContent: 'start' }}>
         {layout.map((b) => (
           <div key={b.id} style={{ gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`, minHeight: MIN_HEIGHT[b.size], minWidth: 0 }}>
-            {blocks[b.id](b.size)}
+            {b.group ? (
+              <Rotator items={b.group.filter((id) => blocks[id]).map((id) => blocks[id](b.size, b))} interval={b.interval} transition={b.transition} />
+            ) : (
+              blocks[b.id](b.size, b)
+            )}
           </div>
         ))}
       </div>

@@ -54,9 +54,17 @@ export function isDone(logs, chore, iso, memberKey = null) {
   )
 }
 
-// Chores due today for a member (or all members when memberKey is null).
+// Pass as memberKey to get the chores nobody is assigned to ("Anyone").
+export const ANYONE = '__anyone'
+
+// Chores due today for a member (or all members when memberKey is null, or
+// the unassigned ones for ANYONE).
 export function dueChores(chores, logs, memberKey, iso = todayISO()) {
-  return chores.filter((c) => (memberKey ? assigneesOf(c).includes(memberKey) : true) && isDueOn(c, iso, logs))
+  const forWho = (c) => {
+    if (memberKey === ANYONE) return assigneesOf(c).length === 0
+    return memberKey ? assigneesOf(c).includes(memberKey) : true
+  }
+  return chores.filter((c) => forWho(c) && isDueOn(c, iso, logs))
 }
 
 export async function addChore({ member_keys, shared_mode, title, repeat, days, points }) {

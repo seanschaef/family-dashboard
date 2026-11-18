@@ -3,10 +3,28 @@ import { Link } from 'react-router-dom'
 import { C } from '../theme.js'
 import { PhoneHeader } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
-import { normalizeHubLayout, HUB_BLOCK_LABELS, SIZES, WIDTH_LABELS, WIDTH_SPAN, withSize, widthOptions } from '../wall/hubLayout.js'
+import {
+  normalizeHubLayout,
+  HUB_BLOCK_LABELS,
+  SIZES,
+  WIDTH_LABELS,
+  WIDTH_SPAN,
+  withSize,
+  widthOptions,
+  entryLabel,
+  combineEntries,
+  separateEntry,
+} from '../wall/hubLayout.js'
 
 // Schematic heights for the preview (roughly proportional to the wall).
 const schemHeight = (size) => ({ s: 34, m: 64, l: 80, xl: 112 })[size] || 64
+const INTERVALS = [5, 10, 15, 20, 30, 60]
+const TRANSITIONS = [
+  { v: 'fade', label: 'Fade' },
+  { v: 'slide', label: 'Slide' },
+  { v: 'none', label: 'Instant' },
+]
+const short = (id) => HUB_BLOCK_LABELS[id].replace(/ \(.*\)$/, '')
 
 function Pick({ active, disabled, onClick, children }) {
   return (
@@ -16,13 +34,15 @@ function Pick({ active, disabled, onClick, children }) {
   )
 }
 
-function IconBtn({ children, onClick, disabled }) {
+function IconBtn({ children, onClick, disabled, label }) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} style={{ all: 'unset', cursor: disabled ? 'default' : 'pointer', width: 34, height: 34, borderRadius: 10, border: `2px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: disabled ? C.border : C.ink }}>
+    <button type="button" aria-label={label} onClick={onClick} disabled={disabled} style={{ all: 'unset', cursor: disabled ? 'default' : 'pointer', width: 34, height: 34, borderRadius: 10, border: `2px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: disabled ? C.border : C.ink }}>
       {children}
     </button>
   )
 }
+
+const rowLabel = { fontSize: 12, fontWeight: 700, color: C.muted, marginTop: 8, marginBottom: 4 }
 
 export default function Arrange() {
   const { wallLayout, updateFamily, isAdmin } = useMembers()
@@ -31,6 +51,7 @@ export default function Arrange() {
   useEffect(() => setItems(normalizeHubLayout(wallLayout)), [wallLayout])
 
   const change = (next) => { setItems(next); setSaved(false) }
+  const patch = (i, p) => change(items.map((b, k) => (k === i ? { ...b, ...p } : b)))
   const move = (i, dir) => {
     const j = i + dir
     if (j < 0 || j >= items.length) return
@@ -38,9 +59,6 @@ export default function Arrange() {
     ;[next[i], next[j]] = [next[j], next[i]]
     change(next)
   }
-  const setSize = (i, v) => change(items.map((b, k) => (k === i ? withSize(b, v) : b)))
-  const setWidth = (i, w) => change(items.map((b, k) => (k === i ? { ...b, width: w } : b)))
-  const toggle = (i) => change(items.map((b, k) => (k === i ? { ...b, visible: !b.visible } : b)))
 
   const save = async () => { await updateFamily({ wall_layout: items }); setSaved(true) }
   const reset = async () => { await updateFamily({ wall_layout: null }); setSaved(true) }
@@ -49,51 +67,106 @@ export default function Arrange() {
 
   return (
     <>
-      <PhoneHeader title="Arrange the hub" subtitle="Reorder, resize and hide the wall's windows" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
+      <PhoneHeader title="Arrange the hub" subtitle="Reorder, resize, combine and hide the wall's windows" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
 
-      {/* Live schematic of the hub grid */}
+      {/* Live schematic of the hub grid (4 columns: full / half / quarter) */}
       <div style={{ background: C.cream, border: `3px solid ${C.ink}`, borderRadius: 16, padding: 10 }}>
-        <div style={{ textAlign: 'center', fontSize: 12, color: C.muted, marginBottom: 6 }}>Greeting · clock · weather</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row dense', gap: 6 }}>
           {visible.map((b) => (
-            <div key={b.id} style={{ gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`, height: schemHeight(b.size), background: C.card, border: `2px solid ${C.border}`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 4, fontSize: b.width === 'quarter' ? 10 : 13, fontWeight: 700, color: C.ink, overflow: 'hidden', boxSizing: 'border-box' }}>
-              {HUB_BLOCK_LABELS[b.id].replace(/ \(.*\)$/, '')}
+            <div key={b.id} style={{ gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`, height: schemHeight(b.size), background: b.group ? C.tealTint : C.card, border: `2px ${b.group ? 'dashed' : 'solid'} ${b.group ? C.meals : C.border}`, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 4, fontSize: b.width === 'quarter' ? 10 : 12, fontWeight: 700, color: C.ink, overflow: 'hidden', boxSizing: 'border-box' }}>
+              {b.group ? `${entryLabel(b)} ⟳` : short(b.id)}
             </div>
           ))}
         </div>
+        <div style={{ fontSize: 11, color: C.muted, marginTop: 6, textAlign: 'center' }}>Dashed = combined window that rotates (⟳)</div>
       </div>
 
       {!isAdmin && <div style={{ fontSize: 13, color: C.muted }}>Only an admin can change the wall layout. This is a preview.</div>}
 
       {items.map((b, i) => (
-        <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: C.card, border: `2px solid ${C.border}`, borderRadius: 14, padding: 10, opacity: b.visible ? 1 : 0.5 }}>
+        <div key={b.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: C.card, border: `2px solid ${b.group ? C.meals : C.border}`, borderRadius: 14, padding: 10, opacity: b.visible ? 1 : 0.5 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <IconBtn onClick={() => move(i, -1)} disabled={!isAdmin || i === 0}>↑</IconBtn>
-            <IconBtn onClick={() => move(i, 1)} disabled={!isAdmin || i === items.length - 1}>↓</IconBtn>
+            <IconBtn label="Move up" onClick={() => move(i, -1)} disabled={!isAdmin || i === 0}>↑</IconBtn>
+            <IconBtn label="Move down" onClick={() => move(i, 1)} disabled={!isAdmin || i === items.length - 1}>↓</IconBtn>
           </div>
           <div style={{ flexGrow: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 16, fontWeight: 700 }}>{HUB_BLOCK_LABELS[b.id]}</div>
-            <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ fontSize: 16, fontWeight: 700 }}>{b.group ? `Combined: ${entryLabel(b)}` : HUB_BLOCK_LABELS[b.id]}</div>
+
+            <div style={rowLabel}>Size</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {SIZES.map((s) => (
-                <Pick key={s.v} active={b.size === s.v} disabled={!isAdmin} onClick={() => setSize(i, s.v)}>{s.label}</Pick>
+                <Pick key={s.v} active={b.size === s.v} disabled={!isAdmin} onClick={() => change(items.map((x, k) => (k === i ? withSize(x, s.v) : x)))}>{s.label}</Pick>
               ))}
+              {widthOptions(b.size).length > 1 ? (
+                widthOptions(b.size).map((w) => (
+                  <Pick key={w} active={b.width === w} disabled={!isAdmin} onClick={() => patch(i, { width: w })}>{WIDTH_LABELS[w]}</Pick>
+                ))
+              ) : (
+                <span style={{ fontSize: 12, color: C.muted, alignSelf: 'center' }}>{WIDTH_LABELS[b.width]} width</span>
+              )}
             </div>
-            {widthOptions(b.size).length > 1 ? (
-              <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                {widthOptions(b.size).map((w) => (
-                  <Pick key={w} active={b.width === w} disabled={!isAdmin} onClick={() => setWidth(i, w)}>{WIDTH_LABELS[w]}</Pick>
-                ))}
-              </div>
-            ) : (
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{WIDTH_LABELS[b.width]} width</div>
+
+            {b.id === 'photo' && (
+              <>
+                <div style={rowLabel}>Photo</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <Pick active={b.fit !== 'contain'} disabled={!isAdmin} onClick={() => patch(i, { fit: 'cover' })}>Fill (crop)</Pick>
+                  <Pick active={b.fit === 'contain'} disabled={!isAdmin} onClick={() => patch(i, { fit: 'contain' })}>Fit (whole photo)</Pick>
+                </div>
+              </>
+            )}
+
+            {b.group && (
+              <>
+                <div style={rowLabel}>Rotates between (tap one to take it out)</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {b.group.map((id) => (
+                    <button key={id} type="button" disabled={!isAdmin} onClick={() => change(separateEntry(items, i, id))} title="Take out of this window" style={{ all: 'unset', cursor: isAdmin ? 'pointer' : 'default', background: C.tealTint, color: C.ink, borderRadius: 999, padding: '5px 10px', fontSize: 13, fontWeight: 600 }}>
+                      {short(id)} <span aria-hidden="true" style={{ color: C.muted }}>×</span>
+                    </button>
+                  ))}
+                </div>
+                <div style={rowLabel}>Change every</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {INTERVALS.map((s) => (
+                    <Pick key={s} active={b.interval === s} disabled={!isAdmin} onClick={() => patch(i, { interval: s })}>{s < 60 ? `${s}s` : '1 min'}</Pick>
+                  ))}
+                </div>
+                <div style={rowLabel}>Transition</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {TRANSITIONS.map((t) => (
+                    <Pick key={t.v} active={b.transition === t.v} disabled={!isAdmin} onClick={() => patch(i, { transition: t.v })}>{t.label}</Pick>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {isAdmin && items.length > 1 && (
+              <>
+                <div style={rowLabel}>{b.group ? 'Add another window' : 'Combine with (rotates in this spot)'}</div>
+                <select
+                  aria-label="Combine with"
+                  value=""
+                  onChange={(e) => {
+                    const j = items.findIndex((x) => x.id === e.target.value)
+                    if (j >= 0) change(combineEntries(items, i, j))
+                  }}
+                  style={{ font: 'inherit', fontSize: 14, padding: '6px 8px', borderRadius: 10, border: `2px solid ${C.border}`, background: C.cream, color: C.ink, maxWidth: '100%' }}
+                >
+                  <option value="">Choose a window…</option>
+                  {items.filter((x, k) => k !== i).map((x) => (
+                    <option key={x.id} value={x.id}>{x.group ? `Combined: ${entryLabel(x)}` : short(x.id)}</option>
+                  ))}
+                </select>
+              </>
             )}
           </div>
-          <button type="button" disabled={!isAdmin} onClick={() => toggle(i)} style={{ all: 'unset', cursor: isAdmin ? 'pointer' : 'default', fontSize: 13, fontWeight: 700, color: b.visible ? C.tealText : C.muted }}>{b.visible ? 'Hide' : 'Show'}</button>
+          <button type="button" disabled={!isAdmin} onClick={() => patch(i, { visible: !b.visible })} style={{ all: 'unset', cursor: isAdmin ? 'pointer' : 'default', fontSize: 13, fontWeight: 700, color: b.visible ? C.tealText : C.muted }}>{b.visible ? 'Hide' : 'Show'}</button>
         </div>
       ))}
 
       {isAdmin && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 4 }}>
+        <div style={{ position: 'sticky', bottom: 92, display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: C.card, border: `2px solid ${C.border}`, borderRadius: 16, zIndex: 5 }}>
           <button type="button" onClick={save} style={{ all: 'unset', cursor: 'pointer', background: C.meals, color: '#FFF', borderRadius: 14, padding: '12px 22px', fontSize: 16, fontWeight: 700 }}>Save to wall</button>
           <button type="button" onClick={reset} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.muted }}>Reset to default</button>
           {saved && <span style={{ fontSize: 14, color: C.tealText }}>Saved</span>}
