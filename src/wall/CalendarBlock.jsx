@@ -6,6 +6,7 @@ import { useMembers } from '../lib/members.jsx'
 import { addDays, startOfWeek, isSameDay, timeOfDay } from '../lib/time.js'
 import { rangeFor, eventsOn, stepAnchor, periodTitle } from '../lib/calendar.js'
 import DayPopover from './DayPopover.jsx'
+import { useDragScroll } from './dragScroll.js'
 
 // An embeddable calendar that combines everyone's calendars (colour-coded) with
 // a Day / Week / Month switch. Used in the hub's calendar block. Pass
@@ -39,6 +40,7 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
   const [view, setView] = useState('week')
   const [anchor, setAnchor] = useState(() => new Date())
   const [selectedDay, setSelectedDay] = useState(null)
+  const drag = useDragScroll({ onSwipeX: (dir) => setAnchor((a) => stepAnchor(view, a, dir)) })
 
   // Fetch a wide enough window that the Today summary works in any view.
   const range = useMemo(() => rangeFor(view, anchor), [view, anchor])
@@ -91,9 +93,12 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
 
       <div style={{ fontSize: 20, color: C.muted }}>{periodTitle(view, anchor)}</div>
 
-      {view === 'day' && <DayView events={scoped} anchor={anchor} colorFor={colorFor} />}
-      {view === 'week' && <WeekView events={scoped} anchor={anchor} colorFor={colorFor} today={today} />}
-      {view === 'month' && <MonthView events={scoped} anchor={anchor} colorFor={colorFor} today={today} onDayClick={setSelectedDay} />}
+      {/* Drag to scroll (the wall's touch is mouse-like); swipe sideways for prev/next. */}
+      <div ref={drag.ref} {...drag.handlers} className={drag.className} style={{ ...drag.style, flex: '1 1 0', minHeight: 0 }}>
+        {view === 'day' && <DayView events={scoped} anchor={anchor} colorFor={colorFor} />}
+        {view === 'week' && <WeekView events={scoped} anchor={anchor} colorFor={colorFor} today={today} />}
+        {view === 'month' && <MonthView events={scoped} anchor={anchor} colorFor={colorFor} today={today} onDayClick={setSelectedDay} />}
+      </div>
 
       <DayPopover day={selectedDay} events={scoped} onClose={() => setSelectedDay(null)} />
     </div>
@@ -103,7 +108,7 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
 function DayView({ events, anchor, colorFor }) {
   const list = eventsOn(events, anchor)
   return (
-    <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {list.length ? (
         list.map((ev) => (
           <div key={ev.id} style={{ display: 'flex', gap: 16, alignItems: 'center', background: C.cream, borderRadius: 14, padding: '12px 16px' }}>
@@ -126,14 +131,14 @@ function WeekView({ events, anchor, colorFor, today }) {
   const start = startOfWeek(anchor)
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i))
   return (
-    <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8, overflow: 'hidden' }}>
+    <div style={{ minHeight: '100%', display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
       {days.map((day, i) => {
         const list = eventsOn(events, day)
         const isToday = isSameDay(day, today)
         return (
-          <div key={i} style={{ background: isToday ? C.tealTint : C.cream, borderRadius: 12, padding: 10, display: 'flex', flexDirection: 'column', gap: 6, overflow: 'hidden' }}>
+          <div key={i} style={{ background: isToday ? C.tealTint : C.cream, borderRadius: 12, padding: 10, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
             <div style={{ fontSize: 17, fontWeight: 800, color: isToday ? C.tealText : C.ink }}>{DOW[i]} {day.getDate()}</div>
-            {list.slice(0, 5).map((ev) => (
+            {list.map((ev) => (
               <div key={ev.id} style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
                 <span style={{ width: 8, height: 8, borderRadius: 4, background: colorFor(ev), flexShrink: 0, alignSelf: 'center' }} />
                 <span style={{ fontSize: 15, lineHeight: 1.2, minWidth: 0 }}>
@@ -145,7 +150,6 @@ function WeekView({ events, anchor, colorFor, today }) {
                 </span>
               </div>
             ))}
-            {list.length > 5 && <div style={{ fontSize: 14, color: C.muted }}>+{list.length - 5}</div>}
           </div>
         )
       })}
@@ -158,7 +162,7 @@ function MonthView({ events, anchor, colorFor, today, onDayClick }) {
   const cells = Array.from({ length: 42 }, (_, i) => addDays(from, i))
   const curMonth = monthFirst.getMonth()
   return (
-    <div style={{ flexGrow: 1, display: 'grid', gridTemplateRows: 'auto repeat(6, 1fr)', gap: 4, overflow: 'hidden' }}>
+    <div style={{ display: 'grid', gridTemplateRows: 'auto', gridAutoRows: 'minmax(64px, auto)', gap: 4 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
         {DOW.map((d) => (
           <div key={d} style={{ textAlign: 'center', fontSize: 14, fontWeight: 800, color: C.muted }}>{d[0]}</div>
@@ -179,11 +183,11 @@ function MonthView({ events, anchor, colorFor, today, onDayClick }) {
                 style={{ all: 'unset', cursor: 'pointer', borderRadius: 8, padding: '4px 6px', background: isToday ? C.tealTint : C.cream, opacity: inMonth ? 1 : 0.4, display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden', boxSizing: 'border-box' }}
               >
                 <div style={{ fontSize: 15, fontWeight: isToday ? 800 : 600 }}>{day.getDate()}</div>
-                <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                  {list.slice(0, 4).map((ev) => (
-                    <span key={ev.id} title={ev.title} style={{ width: 9, height: 9, borderRadius: 5, background: colorFor(ev) }} />
-                  ))}
-                </div>
+                {list.map((ev) => (
+                  <span key={ev.id} style={{ fontSize: 11, lineHeight: 1.2, padding: '1px 5px', borderRadius: 5, background: colorFor(ev), color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {ev.title}
+                  </span>
+                ))}
               </button>
             )
           })}

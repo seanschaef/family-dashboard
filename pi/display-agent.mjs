@@ -55,9 +55,28 @@ async function fetchSupabaseSettings(env) {
   // Load supabase-js from the app's node_modules (its CommonJS build; the ESM
   // build uses extensionless imports that plain Node can't resolve).
   const { createClient } = createRequire(join(REPO, 'package.json'))('@supabase/supabase-js')
-  const supabase = createClient(url, key, { auth: { persistSession: false } })
-  const { error: authErr } = await supabase.auth.signInWithPassword({ email, password })
-  if (authErr) throw new Error('wall login failed: ' + authErr.message)
+  // Keep one session in a private file and refresh it, rather than signing in
+  // with the password every minute (which piled up a new login per run).
+  const SESSION = join(HOME, '.config', 'family-wall', 'agent-session.json')
+  const storage = {
+    getItem: (k) => {
+      try { return JSON.parse(readFileSync(SESSION, 'utf8'))[k] ?? null } catch { return null }
+    },
+    setItem: (k, v) => {
+      let all = {}
+      try { all = JSON.parse(readFileSync(SESSION, 'utf8')) } catch { /* new file */ }
+      all[k] = v
+      mkdirSync(dirname(SESSION), { recursive: true })
+      writeFileSync(SESSION, JSON.stringify(all), { mode: 0o600 })
+    },
+    removeItem: (k) => storage.setItem(k, null),
+  }
+  const supabase = createClient(url, key, { auth: { persistSession: true, autoRefreshToken: false, storage } })
+  const { data: cur } = await supabase.auth.getSession() // refreshes an expired token
+  if (!cur?.session) {
+    const { error: authErr } = await supabase.auth.signInWithPassword({ email, password })
+    if (authErr) throw new Error('wall login failed: ' + authErr.message)
+  }
   const { data, error } = await supabase
     .from('wall_settings')
     .select('display_enabled, mode, on_time, off_time, weekend_on_time, weekend_off_time')

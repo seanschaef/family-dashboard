@@ -100,23 +100,6 @@ export default function PhotoFrame({ memberKey = null, height = 380, radius = 36
           }}
         />
       ))}
-      {label && (
-        <div
-          style={{
-            position: 'absolute',
-            left: 20,
-            bottom: 16,
-            background: 'rgba(0,0,0,0.38)',
-            color: '#FFFFFF',
-            fontSize: 18,
-            fontWeight: 600,
-            padding: '6px 14px',
-            borderRadius: 999,
-          }}
-        >
-          {label}
-        </div>
-      )}
     </div>
   )
 }

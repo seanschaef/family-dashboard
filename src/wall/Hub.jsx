@@ -5,6 +5,7 @@ import { C, card } from '../theme.js'
 import Icon from '../components/Icon.jsx'
 import { LiveCheck, ProgressRow } from './parts.jsx'
 import CalendarBlock from './CalendarBlock.jsx'
+import TodayBlock from './TodayBlock.jsx'
 import PhotoFrame from './PhotoFrame.jsx'
 import WeatherCard from './WeatherCard.jsx'
 import { formatClock, formatLongDate, greeting, useNow } from '../lib/time.js'
@@ -36,7 +37,8 @@ export default function Hub() {
   // Block content by id. Rendered in the order/size the layout specifies.
   const blocks = {
     photo: (size) => <PhotoFrame height={blockHeight('photo', size)} />,
-    calendar: (size) => <CalendarBlock title="Family calendar" height={blockHeight('calendar', size)} todaySummary />,
+    calendar: (size) => <CalendarBlock title="Family calendar" height={blockHeight('calendar', size)} />,
+    today: (size) => <TodayBlock height={blockHeight('today', size)} />,
     dinner: () => (
       <button type="button" onClick={() => navigate('/wall/meals')} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.tealTint, borderRadius: 16, padding: '16px 22px', color: C.ink }}>
         <span style={{ fontSize: 24 }}>

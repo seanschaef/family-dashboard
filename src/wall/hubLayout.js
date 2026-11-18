@@ -8,6 +8,7 @@ export const HUB_BLOCK_LABELS = {
   dinner: 'Dinner tonight',
   chores: 'Chores',
   pet: 'Pet',
+  today: 'Today (schedule)',
   reminders: 'Reminders',
   birthdays: 'Coming up (birthdays and dates)',
 }
@@ -19,7 +20,8 @@ export const DEFAULT_HUB_LAYOUT = [
   { id: 'dinner', size: 'l', visible: true },
   { id: 'chores', size: 'm', visible: true },
   { id: 'pet', size: 'm', visible: true },
-  { id: 'reminders', size: 'm', visible: true },
+  { id: 'today', size: 'm', visible: true },
+  { id: 'reminders', size: 'm', visible: false },
   { id: 'birthdays', size: 's', visible: true },
 ]
 
@@ -27,6 +29,11 @@ export const DEFAULT_HUB_LAYOUT = [
 // unknown/removed ids are dropped. Returns a full, ordered list.
 export function normalizeHubLayout(stored) {
   if (!Array.isArray(stored) || !stored.length) return DEFAULT_HUB_LAYOUT
+  // Today replaced Reminders on the hub: a saved layout without Today takes
+  // over Reminders' spot and size (Reminders stays available, hidden).
+  if (!stored.some((b) => b?.id === 'today')) {
+    stored = stored.flatMap((b) => (b?.id === 'reminders' ? [{ ...b, id: 'today' }, { ...b, visible: false }] : [b]))
+  }
   const known = new Set(Object.keys(HUB_BLOCK_LABELS))
   const seen = new Set()
   const out = []
@@ -43,6 +50,7 @@ export function normalizeHubLayout(stored) {
 // Heights (px) for a block at a given size, within the 1080x1920 wall.
 export function blockHeight(id, size) {
   if (id === 'photo') return size === 'l' ? 320 : size === 'm' ? 260 : 200
+  if (id === 'today') return size === 'l' ? 300 : size === 'm' ? 300 : 240
   if (id === 'calendar') return size === 'l' ? 430 : size === 'm' ? 340 : 250
   return undefined // content-sized (cards grow to fit)
 }

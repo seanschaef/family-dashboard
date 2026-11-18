@@ -110,7 +110,7 @@ server.listen(PORT, () => {
 })
 
 // ---------- publish the folder list so the phone can pick a folder ----------
-// Every 10 minutes, list the folders under ROOT (a few levels deep) with how
+// Every 2 minutes, list the folders under ROOT (a few levels deep) with how
 // many images each holds, and write them to the photo_folders table, signed in
 // as the wall account (WALL_EMAIL / WALL_PASSWORD in family-dashboard/.env.local,
 // the same login the display agent uses). Folder names only; no images leave
@@ -119,7 +119,7 @@ server.listen(PORT, () => {
 const REPO = join(HOME, 'family-dashboard')
 const MAX_DEPTH = 3
 const MAX_FOLDERS = 500
-const PUBLISH_EVERY_MS = 10 * 60 * 1000
+const PUBLISH_EVERY_MS = 2 * 60 * 1000
 
 function parseEnvFile(path) {
   const out = {}
