@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ChoresPopover from './ChoresPopover.jsx'
 import { C, card } from '../theme.js'
 import Icon from '../components/Icon.jsx'
 import { LiveCheck, ProgressRow } from './parts.jsx'
@@ -17,6 +19,7 @@ import { normalizeHubLayout, blockHeight } from './hubLayout.js'
 export default function Hub() {
   const now = useNow()
   const navigate = useNavigate()
+  const [choresFor, setChoresFor] = useState(null) // member whose chore pop-up is open
   const { members, nameFor, familyName, petName, wallLayout } = useMembers()
   const T = todayISO()
   const { rows: chores } = useChores()
@@ -48,7 +51,11 @@ export default function Hub() {
         {members.map((m) => {
           const due = dueChores(chores, logs, m.key, T)
           const done = due.filter((c) => isDone(logs, c, T, m.key)).length
-          return <ProgressRow key={m.key} name={m.name} done={done} total={due.length} color={m.color} />
+          return (
+            <button key={m.key} type="button" aria-label={`Show ${m.name}'s chores`} onClick={() => setChoresFor(m)} style={{ all: 'unset', cursor: 'pointer', display: 'block' }}>
+              <ProgressRow name={m.name} done={done} total={due.length} color={m.color} />
+            </button>
+          )
         })}
       </div>
     ),
@@ -123,6 +130,7 @@ export default function Hub() {
           </div>
         ))}
       </div>
+      <ChoresPopover person={choresFor} chores={chores} logs={logs} onClose={() => setChoresFor(null)} />
     </>
   )
 }
