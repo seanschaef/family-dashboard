@@ -15,8 +15,32 @@ export async function listCalendars() {
   return data ?? []
 }
 
+// People often paste the calendar's *web page* link instead of its feed.
+// Turn the common ones into the ICS feed the sync needs:
+//  - Google "embed?src=<id>" or "?cid=<id>" -> .../ical/<id>/public/basic.ics
+//  - Outlook published "…/calendar.html"     -> "…/calendar.ics"
+//  - webcal://                               -> https://
+export function normalizeCalendarUrl(raw) {
+  let url = String(raw || '').trim().replace(/^webcal:\/\//i, 'https://')
+  try {
+    const u = new URL(url)
+    if (u.hostname === 'calendar.google.com' && !u.pathname.includes('/ical/')) {
+      const id = u.searchParams.get('src') || u.searchParams.get('cid')
+      if (id) return `https://calendar.google.com/calendar/ical/${encodeURIComponent(id)}/public/basic.ics`
+    }
+    if (/outlook\.(office365|office|live)\.com$/.test(u.hostname) && u.pathname.endsWith('/calendar.html')) {
+      u.pathname = u.pathname.replace(/calendar\.html$/, 'calendar.ics')
+      return u.toString()
+    }
+  } catch {
+    /* not a URL; leave it for the form to reject */
+  }
+  return url
+}
+
 export async function addCalendar({ name, ics_url, person_keys, kind, show_on_hub, color }) {
   if (!isSupabaseConfigured) throw new Error('Supabase not configured')
+  ics_url = normalizeCalendarUrl(ics_url)
   const keys = person_keys || []
   const { data, error } = await supabase
     .from('calendars')

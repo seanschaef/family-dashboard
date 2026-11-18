@@ -216,14 +216,50 @@ function parseDate(value: string, params: Record<string, string>): { date: Date;
   const [, Y, Mo, D, H, Mi, S, z] = m
   const y = +Y, mo = +Mo, d = +D, h = +H, mi = +Mi, s = +S
   if (z === 'Z') return { date: new Date(Date.UTC(y, mo - 1, d, h, mi, s)), allDay: false }
-  const tz = params.TZID || TZ_DEFAULT
+  const tz = ianaZone(params.TZID || TZ_DEFAULT)
   return { date: zonedToUtc(y, mo, d, h, mi, s, tz), allDay: false }
 }
+
+// Outlook / Exchange feeds name zones the Windows way ("Mountain Standard
+// Time", "Alberta Standard Time 1"); Intl only understands IANA names, and an
+// unknown name used to throw and fail the whole calendar.
+const WINDOWS_ZONES: Record<string, string> = {
+  'alberta standard time': 'America/Edmonton',
+  'mountain standard time': 'America/Denver',
+  'us mountain standard time': 'America/Phoenix',
+  'central standard time': 'America/Chicago',
+  'canada central standard time': 'America/Regina',
+  'eastern standard time': 'America/New_York',
+  'pacific standard time': 'America/Los_Angeles',
+  'atlantic standard time': 'America/Halifax',
+  'newfoundland standard time': 'America/St_Johns',
+  'utc': 'UTC',
+}
+
+function ianaZone(name: string): string {
+  const clean = name.replace(/^"|"$/g, '').trim()
+  const key = clean.toLowerCase().replace(/\s+\d+$/, '') // "Alberta Standard Time 1"
+  if (WINDOWS_ZONES[key]) return WINDOWS_ZONES[key]
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: clean })
+    return clean
+  } catch {
+    return TZ_DEFAULT
+  }
+}
+
+// Alberta has been on UTC-6 year round since 2026-11-01. Older time-zone data
+// in the runtime still has Edmonton falling back to UTC-7, which would put
+// every later Edmonton-time event an hour late, so pin it here.
+const ALBERTA_PERMANENT_FROM = Date.UTC(2026, 10, 1, 8, 0, 0) // 2026-11-01 02:00 MDT
 
 // Convert a wall-clock time in a named zone to a UTC Date without a tz library,
 // by measuring that zone's offset at the given instant.
 function zonedToUtc(y: number, mo: number, d: number, h: number, mi: number, s: number, tz: string): Date {
   const asUtc = Date.UTC(y, mo - 1, d, h, mi, s)
+  if (tz === 'America/Edmonton' && asUtc + 6 * 3600000 >= ALBERTA_PERMANENT_FROM) {
+    return new Date(asUtc + 6 * 3600000)
+  }
   const fmt = new Intl.DateTimeFormat('en-US', {
     timeZone: tz,
     year: 'numeric', month: '2-digit', day: '2-digit',

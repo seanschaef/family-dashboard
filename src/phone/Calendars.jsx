@@ -205,6 +205,13 @@ export default function Calendars() {
           ))}
         </div>
 
+        {kind === 'work' && (
+          <div style={{ background: C.dangerTint, color: C.danger, borderRadius: 12, padding: 12, fontSize: 13 }}>
+            Publish a work calendar as <b>busy only</b> (Outlook: &quot;Can view when I&apos;m busy&quot;). Whatever the link shows is
+            readable by anyone who has it, and gets copied into the family database. Client or confidential details should never be in it.
+          </div>
+        )}
+
         {kind === 'personal' && (
           <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15 }}>
             <input type="checkbox" checked={showOnHub} onChange={(e) => setShowOnHub(e.target.checked)} />

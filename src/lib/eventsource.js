@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { isSupabaseConfigured } from './supabase.js'
+import { useMembers } from './members.jsx'
 import { listEvents } from './calendars.js'
 import { sampleEvents } from '../data/sampleEvents.js'
 
@@ -41,5 +43,21 @@ export function useEvents(from, to) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromMs, toMs])
 
-  return { events, loading }
+  // Confidentiality: a work calendar's details (titles, locations) show only to
+  // its owner on their own phone. The wall (a shared screen, including the
+  // phone's Wall preview) and everyone else see "Busy" at the same times.
+  const { me } = useMembers()
+  const { pathname } = useLocation()
+  const onWall = pathname.startsWith('/wall')
+  const shown = useMemo(
+    () =>
+      events.map((e) =>
+        e.kind === 'work' && (onWall || !(e.owners || [e.person_key]).includes(me?.key))
+          ? { ...e, title: 'Busy', location: null }
+          : e,
+      ),
+    [events, onWall, me?.key],
+  )
+
+  return { events: shown, loading }
 }
