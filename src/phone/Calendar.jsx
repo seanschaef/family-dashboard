@@ -10,7 +10,7 @@ import DayPopover from '../wall/DayPopover.jsx'
 
 function AgendaRow({ ev }) {
   const { colorFor } = useMembers()
-  const color = colorFor(ev.person_key)
+  const color = colorFor(ev)
   return (
     <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
       <div style={{ width: 6, alignSelf: 'stretch', minHeight: 40, borderRadius: 3, background: color, flexShrink: 0 }} />
@@ -55,7 +55,7 @@ function WeekView({ events, anchor }) {
             {list.length ? (
               list.map((ev) => (
                 <div key={ev.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 15 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: 4, background: colorFor(ev.person_key), flexShrink: 0 }} />
+                  <span style={{ width: 8, height: 8, borderRadius: 4, background: colorFor(ev), flexShrink: 0 }} />
                   <span style={{ color: C.muted, width: 52, flexShrink: 0 }}>{ev.all_day ? '—' : timeOfDay(ev.starts_at)}</span>
                   <span>{ev.title}</span>
                 </div>
@@ -92,7 +92,7 @@ function MonthView({ events, anchor, onDayClick }) {
             <button key={i} type="button" onClick={() => onDayClick(day)} style={{ all: 'unset', cursor: 'pointer', minHeight: 62, borderRadius: 8, padding: 4, background: isToday ? C.tealTint : 'transparent', opacity: inMonth ? 1 : 0.35, display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden', boxSizing: 'border-box' }}>
               <div style={{ fontSize: 12, fontWeight: isToday ? 800 : 600, textAlign: 'right' }}>{day.getDate()}</div>
               {list.slice(0, 3).map((ev) => (
-                <div key={ev.id} title={ev.title} style={{ fontSize: 10, lineHeight: 1.2, padding: '1px 4px', borderRadius: 4, background: colorFor(ev.person_key), color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div key={ev.id} title={ev.title} style={{ fontSize: 10, lineHeight: 1.2, padding: '1px 4px', borderRadius: 4, background: colorFor(ev), color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {ev.title}
                 </div>
               ))}

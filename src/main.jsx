@@ -5,15 +5,18 @@ import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './lib/auth.jsx'
 import { MembersProvider } from './lib/members.jsx'
+import { ThemeProvider } from './lib/theme.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <MembersProvider>
-          <App />
-        </MembersProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <MembersProvider>
+            <App />
+          </MembersProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   </StrictMode>,
 )

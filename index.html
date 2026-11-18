@@ -9,6 +9,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Family" />
     <title>Family Dashboard</title>
+    <script>
+      // Set the theme before first paint so dark mode doesn't flash light.
+      // (src/lib/theme.jsx takes over once the app loads.)
+      try {
+        var p = localStorage.getItem('theme-pref')
+        var dark = p === 'dark' || (p !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        if (location.pathname.indexOf('/wall') !== 0) document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      } catch (e) {}
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" />

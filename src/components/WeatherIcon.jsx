@@ -46,22 +46,22 @@ export default function WeatherIcon({ code, size = 48 }) {
               return <line key={i} x1={18 + Math.cos(a) * 9} y1={18 + Math.sin(a) * 9} x2={18 + Math.cos(a) * 12} y2={18 + Math.sin(a) * 12} />
             })}
           </g>
-          <path d="M14 34 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" fill={C.card} stroke={cloudC} strokeWidth="2.5" />
+          <path d="M14 34 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" strokeWidth="2.5" style={{ fill: C.card, stroke: cloudC }} />
         </g>
       )}
       {kind === 'cloud' && (
-        <path d="M14 34 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" fill={C.card} stroke={cloudC} strokeWidth="2.5" {...common} />
+        <path d="M14 34 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" stroke={cloudC} strokeWidth="2.5" {...common} style={{ fill: C.card, stroke: cloudC }} />
       )}
       {kind === 'fog' && (
-        <g {...common} stroke={cloudC} strokeWidth="2.5">
-          <path d="M14 28 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" fill={C.card} />
+        <g {...common} strokeWidth="2.5" style={{ stroke: cloudC }}>
+          <path d="M14 28 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" style={{ fill: C.card }} />
           <line x1="12" y1="36" x2="34" y2="36" />
           <line x1="16" y1="41" x2="38" y2="41" />
         </g>
       )}
       {kind === 'rain' && (
         <g {...common}>
-          <path d="M14 30 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" fill={C.card} stroke={cloudC} strokeWidth="2.5" />
+          <path d="M14 30 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" strokeWidth="2.5" style={{ fill: C.card, stroke: cloudC }} />
           <g stroke={C.blue} strokeWidth="2.5">
             <line x1="18" y1="35" x2="16" y2="41" />
             <line x1="25" y1="35" x2="23" y2="41" />
@@ -71,7 +71,7 @@ export default function WeatherIcon({ code, size = 48 }) {
       )}
       {kind === 'snow' && (
         <g {...common}>
-          <path d="M14 30 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" fill={C.card} stroke={cloudC} strokeWidth="2.5" />
+          <path d="M14 30 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" strokeWidth="2.5" style={{ fill: C.card, stroke: cloudC }} />
           <g fill={C.blue}>
             <circle cx="18" cy="38" r="1.8" />
             <circle cx="25" cy="40" r="1.8" />
@@ -81,7 +81,7 @@ export default function WeatherIcon({ code, size = 48 }) {
       )}
       {kind === 'storm' && (
         <g {...common}>
-          <path d="M14 28 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" fill={C.card} stroke={cloudC} strokeWidth="2.5" />
+          <path d="M14 28 a7 7 0 0 1 1-13 a9 9 0 0 1 17 2 a6 6 0 0 1 -1 11 Z" strokeWidth="2.5" style={{ fill: C.card, stroke: cloudC }} />
           <path d="M24 31 l-5 8 h5 l-2 7 l7 -10 h-5 l3 -5 Z" fill={sun} stroke={sun} strokeWidth="1.5" />
         </g>
       )}

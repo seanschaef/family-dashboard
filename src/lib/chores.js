@@ -36,24 +36,58 @@ export function isDueOn(chore, iso, logs) {
   return !logs.some((l) => l.chore_id === chore.id)
 }
 
-export const isDone = (logs, choreId, iso) => logs.some((l) => l.chore_id === choreId && l.log_date === iso)
+// Everyone a chore is assigned to. Older rows only have member_key.
+export function assigneesOf(chore) {
+  if (chore.member_keys?.length) return chore.member_keys
+  return chore.member_key ? [chore.member_key] : []
+}
+
+// 'each' = every assignee ticks their own; 'any' = one tick clears it for all.
+// A chore with one (or no) assignee behaves the same either way.
+export const isEachChore = (chore) => chore.shared_mode !== 'any' && assigneesOf(chore).length > 1
+
+// Is the chore done on a date, from a given person's point of view?
+// For an 'each' chore that means *their* tick; otherwise any tick counts.
+export function isDone(logs, chore, iso, memberKey = null) {
+  return logs.some(
+    (l) => l.chore_id === chore.id && l.log_date === iso && (!isEachChore(chore) || !memberKey || l.member_key === memberKey),
+  )
+}
 
 // Chores due today for a member (or all members when memberKey is null).
 export function dueChores(chores, logs, memberKey, iso = todayISO()) {
-  return chores.filter((c) => (memberKey ? c.member_key === memberKey : true) && isDueOn(c, iso, logs))
+  return chores.filter((c) => (memberKey ? assigneesOf(c).includes(memberKey) : true) && isDueOn(c, iso, logs))
 }
 
-export async function addChore({ member_key, title, repeat, days, points }) {
-  return insertRow('chores', { member_key: member_key || null, title, repeat, days: days || [], points: points || 0 })
+export async function addChore({ member_keys, shared_mode, title, repeat, days, points }) {
+  const keys = member_keys || []
+  return insertRow('chores', {
+    member_key: keys[0] || null,
+    member_keys: keys,
+    shared_mode: shared_mode === 'any' ? 'any' : 'each',
+    title,
+    repeat,
+    days: days || [],
+    points: points || 0,
+  })
 }
 export const removeChore = (id) => deleteRow('chores', id)
 
-// Toggle a chore's completion for a date.
-export async function toggleChore(chore, iso, done) {
+// Toggle a chore's completion for a date. memberKey is who is ticking it: for
+// an 'each' chore only their own tick changes; otherwise the single shared
+// tick is set (credited to whoever tapped) or cleared for everyone.
+export async function toggleChore(chore, iso, done, memberKey = null) {
+  const who = memberKey || (assigneesOf(chore).length === 1 ? assigneesOf(chore)[0] : null)
+  if (isEachChore(chore)) {
+    if (!who) return // an 'each' chore needs to know whose tick this is
+    if (done) await deleteWhere('chore_logs', { chore_id: chore.id, log_date: iso, member_key: who })
+    else await insertRow('chore_logs', { chore_id: chore.id, member_key: who, log_date: iso, points: chore.points || 0 })
+    return
+  }
   if (done) {
     await deleteWhere('chore_logs', { chore_id: chore.id, log_date: iso })
   } else {
-    await insertRow('chore_logs', { chore_id: chore.id, member_key: chore.member_key, log_date: iso, points: chore.points || 0 })
+    await insertRow('chore_logs', { chore_id: chore.id, member_key: who, log_date: iso, points: chore.points || 0 })
   }
 }
 

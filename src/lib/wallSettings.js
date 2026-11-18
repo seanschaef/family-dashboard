@@ -7,17 +7,20 @@ export const DEFAULT_WALL_SETTINGS = {
   off_time: '22:00',
   weekend_on_time: '08:00',
   weekend_off_time: '22:30',
+  dark_enabled: true,
+  dark_start: '19:30',
+  dark_end: '07:00',
 }
 
 export async function getWallSettings() {
   if (!isSupabaseConfigured) return { ...DEFAULT_WALL_SETTINGS }
   const { data, error } = await supabase
     .from('wall_settings')
-    .select('display_enabled, mode, on_time, off_time, weekend_on_time, weekend_off_time')
+    .select('display_enabled, mode, on_time, off_time, weekend_on_time, weekend_off_time, dark_enabled, dark_start, dark_end')
     .limit(1)
     .maybeSingle()
   if (error) throw error
-  return data ?? { ...DEFAULT_WALL_SETTINGS }
+  return data ? { ...DEFAULT_WALL_SETTINGS, ...data } : { ...DEFAULT_WALL_SETTINGS }
 }
 
 // Upsert the single per-family row. family_id defaults to auth_family_id().

@@ -107,3 +107,87 @@ const server = createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`photo agent on http://localhost:${PORT}  (root: ${ROOT}${existsSync(ROOT) ? '' : ' — NOT MOUNTED'})`)
 })
+
+// ---------- publish the folder list so the phone can pick a folder ----------
+// Every 10 minutes, list the folders under ROOT (a few levels deep) with how
+// many images each holds, and write them to the photo_folders table, signed in
+// as the wall account (WALL_EMAIL / WALL_PASSWORD in family-dashboard/.env.local,
+// the same login the display agent uses). Folder names only; no images leave
+// the Pi. Skipped quietly if those settings aren't there.
+
+const REPO = join(HOME, 'family-dashboard')
+const MAX_DEPTH = 3
+const MAX_FOLDERS = 500
+const PUBLISH_EVERY_MS = 10 * 60 * 1000
+
+function parseEnvFile(path) {
+  const out = {}
+  if (!existsSync(path)) return out
+  for (const line of readFileSync(path, 'utf8').split('\n')) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i)
+    if (m) out[m[1]] = m[2].replace(/^["']|["']$/g, '')
+  }
+  return out
+}
+
+function scanFolders() {
+  const out = []
+  const walk = (rel, depth) => {
+    if (out.length >= MAX_FOLDERS) return
+    let entries
+    try {
+      entries = readdirSync(join(ROOT, rel), { withFileTypes: true })
+    } catch {
+      return
+    }
+    const images = entries.filter((e) => e.isFile() && TYPES[extname(e.name).toLowerCase()]).length
+    if (rel) out.push({ path: rel.split(sep).join('/'), image_count: images })
+    if (depth >= MAX_DEPTH) return
+    for (const e of entries) {
+      // Skip hidden and Synology system folders (@eaDir, #recycle).
+      if (e.isDirectory() && !/^[.@#]/.test(e.name)) walk(rel ? join(rel, e.name) : e.name, depth + 1)
+    }
+  }
+  walk('', 0)
+  return out
+}
+
+let client = null
+async function supabaseClient(env) {
+  if (client) return client
+  const { VITE_SUPABASE_URL: url, VITE_SUPABASE_ANON_KEY: key, WALL_EMAIL: email, WALL_PASSWORD: password } = env
+  if (!url || !key || !email || !password) return null
+  const { createClient } = await import(join(REPO, 'node_modules', '@supabase', 'supabase-js', 'dist', 'module', 'index.js'))
+  const c = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: true } })
+  const { error } = await c.auth.signInWithPassword({ email, password })
+  if (error) throw new Error('wall login failed: ' + error.message)
+  client = c
+  return c
+}
+
+async function publishFolders() {
+  if (!existsSync(ROOT)) return
+  const env = { ...process.env, ...parseEnvFile(join(REPO, '.env.local')) }
+  const sb = await supabaseClient(env)
+  if (!sb) return
+  const folders = scanFolders()
+  const now = new Date().toISOString()
+  if (folders.length) {
+    const { error } = await sb.from('photo_folders').upsert(
+      folders.map((f) => ({ ...f, updated_at: now })),
+      { onConflict: 'family_id,path' },
+    )
+    if (error) throw error
+  }
+  // Drop folders that no longer exist (not refreshed this round).
+  await sb.from('photo_folders').delete().lt('updated_at', now)
+  console.log(`[photos-agent] published ${folders.length} folders`)
+}
+
+const publish = () =>
+  publishFolders().catch((e) => {
+    client = null // force a fresh sign-in next time
+    console.error('[photos-agent] folder publish failed:', e.message)
+  })
+publish()
+setInterval(publish, PUBLISH_EVERY_MS)

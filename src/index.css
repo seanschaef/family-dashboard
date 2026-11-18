@@ -29,7 +29,34 @@
   --link: #B4532A;
   --link-hover: #8A3E1F;
 
+  /* Status + the "Family" chip (white text on it) */
+  --danger: #8A3E1F;
+  --danger-tint: #FBE9E3;
+  --family: #2B2420;
+
   --font: Outfit, 'Segoe UI', system-ui, sans-serif;
+  color-scheme: light;
+}
+
+/* Dark theme: warm charcoal surfaces, same accents. Set by src/lib/theme.jsx
+   (phones: device setting or the user's choice; wall: night-time schedule). */
+:root[data-theme='dark'] {
+  --cream: #1B1714;
+  --card: #26201C;
+  --border: #3A312A;
+  --ink: #F4EDE4;
+  --muted: #B5A89B;
+  --track: #362E27;
+  --teal-tint: #1E3432;
+  --teal-text: #8FCBC5;
+  --light-on: #4A3A1C;
+  --toggle-off: #4B4139;
+  --danger: #F2A587;
+  --danger-tint: #3D231A;
+  --family: #5E524A;
+  --link: #EE9469;
+  --link-hover: #F6B796;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }

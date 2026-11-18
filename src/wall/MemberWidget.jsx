@@ -3,6 +3,7 @@ import { C, card } from '../theme.js'
 import WeatherIcon from '../components/WeatherIcon.jsx'
 import { useWeather } from '../lib/weather.js'
 import { useEvents } from '../lib/eventsource.js'
+import { ownsEvent } from '../lib/calendars.js'
 import { startOfDay, addDays, timeOfDay } from '../lib/time.js'
 import { eventsOn } from '../lib/calendar.js'
 
@@ -103,7 +104,7 @@ function NextWidget({ shell, personKey }) {
   const to = useMemo(() => addDays(from, 30), [from])
   const { events } = useEvents(from, to)
   const next = events
-    .filter((e) => e.person_key === personKey || e.person_key === 'family')
+    .filter((e) => ownsEvent(e, personKey))
     .map((e) => ({ ...e, _d: new Date(e.starts_at) }))
     .filter((e) => e._d >= now || eventsOn([e], now).length)
     .sort((a, b) => a._d - b._d)[0]

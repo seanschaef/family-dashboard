@@ -6,7 +6,7 @@ import { useAuth } from '../lib/auth.jsx'
 import { PhoneHeader, Pill, PhoneCard, PhoneToggle } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, toggleChore } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, toggleChore, assigneesOf, isEachChore } from '../lib/chores.js'
 import { useReminders, addReminder, toggleReminder, usePetLog, PET_TASKS, petDone, petBy, togglePet } from '../lib/household.js'
 
 function firstName(me, user) {
@@ -31,7 +31,21 @@ export default function Today() {
 
   const meColor = me?.color || C.rust
   const scopeKey = scope === 'me' ? me?.key : null
-  const choreList = dueChores(chores, logs, scopeKey, T).sort((a, b) => a.title.localeCompare(b.title))
+  // One row per chore, except a family-view 'each' chore gets a row per
+  // assignee (each person ticks their own).
+  const choreList = dueChores(chores, logs, scopeKey, T)
+    .sort((a, b) => a.title.localeCompare(b.title))
+    .flatMap((c) => {
+      if (scope === 'me') return [{ c, who: me?.key, rowKey: c.id }]
+      if (isEachChore(c)) return assigneesOf(c).map((k) => ({ c, who: k, rowKey: `${c.id}-${k}` }))
+      return [{ c, who: me?.key && assigneesOf(c).includes(me.key) ? me.key : null, rowKey: c.id }]
+    })
+  const subFor = ({ c, who }) => {
+    if (scope === 'me') return [assigneesOf(c).length > 1 ? `with ${assigneesOf(c).filter((k) => k !== me?.key).map(nameFor).join(', ')}` : '', c.points ? `${c.points} pts` : ''].filter(Boolean).join(' · ') || undefined
+    if (isEachChore(c)) return nameFor(who)
+    const names = assigneesOf(c).map(nameFor)
+    return names.length ? names.join(' or ') : 'Anyone'
+  }
   const reminderList = reminders.filter((r) => (scope === 'family' ? true : r.member_key === me?.key || r.member_key === null))
 
   async function submitReminder(e) {
@@ -74,14 +88,14 @@ export default function Today() {
         ) : choreList.length === 0 ? (
           <div style={{ fontSize: 15, color: C.muted }}>Nothing due today.</div>
         ) : (
-          choreList.map((c) => (
+          choreList.map((row) => (
             <PhoneToggle
-              key={c.id}
-              label={c.title}
-              sub={scope === 'family' ? nameFor(c.member_key) : c.points ? `${c.points} pts` : undefined}
-              done={isDone(logs, c.id, T)}
+              key={row.rowKey}
+              label={row.c.title}
+              sub={subFor(row)}
+              done={isDone(logs, row.c, T, row.who)}
               color={scope === 'family' ? C.meals : meColor}
-              onToggle={() => toggleChore(c, T, isDone(logs, c.id, T))}
+              onToggle={() => toggleChore(row.c, T, isDone(logs, row.c, T, row.who), row.who)}
             />
           ))
         )}

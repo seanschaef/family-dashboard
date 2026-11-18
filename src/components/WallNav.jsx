@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { buildWallNav } from '../config/people.js'
 import { useMembers } from '../lib/members.jsx'
 import { C } from '../theme.js'
@@ -7,8 +7,13 @@ import Icon from './Icon.jsx'
 // Bottom page bar shown on every wall screen. Tap to jump; the active page
 // gets the ringed avatar + bold label (as in the mockups). Member entries come
 // from the database roster.
+//
+// Buttons, not links: a link under the (hidden) pointer makes Chromium show its
+// grey URL preview ("localhost:4173/...") in the corner of the kiosk.
 export default function WallNav() {
   const { members } = useMembers()
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
   const items = buildWallNav(members)
   return (
     <nav
@@ -26,45 +31,48 @@ export default function WallNav() {
         flexShrink: 0,
       }}
     >
-      {items.map((item) => (
-        <NavLink
-          key={item.key}
-          to={item.to}
-          style={{
-            flex: 1,
-            minWidth: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 6,
-            color: C.ink,
-          }}
-        >
-          {({ isActive }) => (
-            <>
-              <span
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 32,
-                  background: item.color,
-                  color: '#FFFFFF',
-                  fontSize: 28,
-                  fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  outline: isActive ? `4px solid ${C.ink}` : 'none',
-                  outlineOffset: 3,
-                }}
-              >
-                {item.icon ? <Icon name={item.icon} size={30} color="#FFFFFF" /> : item.letter}
-              </span>
-              <span style={{ fontSize: 19, fontWeight: isActive ? 800 : 500 }}>{item.label}</span>
-            </>
-          )}
-        </NavLink>
-      ))}
+      {items.map((item) => {
+        const isActive = pathname === item.to || pathname.startsWith(item.to + '/')
+        return (
+          <button
+            key={item.key}
+            type="button"
+            aria-current={isActive ? 'page' : undefined}
+            onClick={() => navigate(item.to)}
+            style={{
+              all: 'unset',
+              cursor: 'pointer',
+              flex: 1,
+              minWidth: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 6,
+              color: C.ink,
+            }}
+          >
+            <span
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                background: item.color,
+                color: '#FFFFFF',
+                fontSize: 28,
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                outline: isActive ? `4px solid ${C.ink}` : 'none',
+                outlineOffset: 3,
+              }}
+            >
+              {item.icon ? <Icon name={item.icon} size={30} color="#FFFFFF" /> : item.letter}
+            </span>
+            <span style={{ fontSize: 19, fontWeight: isActive ? 800 : 500 }}>{item.label}</span>
+          </button>
+        )
+      })}
     </nav>
   )
 }

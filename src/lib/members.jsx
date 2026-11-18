@@ -65,7 +65,12 @@ export function MembersProvider({ children }) {
     // Re-fetch once auth is ready. The first load() on mount can race ahead of
     // the persisted session being restored (so it runs unauthenticated and gets
     // nothing); this re-runs it with the real session, and on later sign-in.
-    const { data: authSub } = supabase.auth.onAuthStateChange(() => load())
+    // Deferred with setTimeout: load() calls supabase.auth.getUser() and runs
+    // queries, and awaiting Supabase calls *inside* this callback deadlocks the
+    // auth lock (the app then sticks on "Loading…" forever; seen on the wall).
+    const { data: authSub } = supabase.auth.onAuthStateChange(() => {
+      setTimeout(load, 0)
+    })
     return () => {
       active = false
       supabase.removeChannel(channel)
@@ -74,7 +79,12 @@ export function MembersProvider({ children }) {
   }, [])
 
   const byKey = (key) => members.find((m) => m.key === key)
-  const colorFor = (key) => (key === 'family' ? C.ink : byKey(key)?.color || C.muted)
+  // colorFor(key) for a person; colorFor(event) uses the event's calendar
+  // colour when one is set, else the (first) owner's colour.
+  const colorFor = (keyOrEvent) => {
+    if (keyOrEvent && typeof keyOrEvent === 'object') return keyOrEvent.color || colorFor(keyOrEvent.person_key)
+    return keyOrEvent === 'family' ? C.family : byKey(keyOrEvent)?.color || C.muted
+  }
   const nameFor = (key) => (key === 'family' ? 'Family' : byKey(key)?.name || '')
   const me = members.find((m) => m.id === myMemberId) ?? null
 

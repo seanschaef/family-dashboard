@@ -33,26 +33,34 @@ export const removeMeal = (id) => deleteRow('meals', id)
 // Store sections in a shelf-friendly order.
 export const GROCERY_SECTIONS = ['Produce', 'Dairy & eggs', 'Meat & fish', 'Bakery', 'Frozen', 'Pantry', 'Drinks', 'Household', 'Other']
 
-// Keyword → section, checked in this order so specific beats generic
-// (e.g. "dog food" is Household before "food" could fall to Pantry).
+// Keyword → section. The LONGEST matching keyword wins, so specific phrases
+// beat generic words: "garlic bread" is Bakery (not Produce for "garlic"),
+// "peanut butter" is Pantry (not Dairy for "butter"), "dog food" is Household.
 const SECTION_KEYWORDS = [
-  ['Household', ['paper towel', 'toilet', 'detergent', 'soap', 'dish soap', 'cleaner', 'garbage', 'trash bag', 'foil', 'wrap', 'ziploc', 'diaper', 'wipes', 'shampoo', 'toothpaste', 'dog food', 'cat food', 'litter', 'batteries', 'napkin', 'tissue']],
-  ['Produce', ['apple', 'banana', 'lettuce', 'spinach', 'onion', 'tomato', 'potato', 'carrot', 'pepper', 'cucumber', 'berry', 'berries', 'strawberr', 'blueberr', 'grape', 'orange', 'lemon', 'lime', 'avocado', 'broccoli', 'celery', 'mushroom', 'garlic', 'kale', 'salad', 'lettuce', 'fruit', 'veg', 'cilantro', 'herb', 'corn', 'pea', 'bean sprout']],
-  ['Dairy & eggs', ['milk', 'cheese', 'butter', 'yogurt', 'yoghurt', 'cream', 'egg', 'sour cream', 'cottage']],
-  ['Meat & fish', ['chicken', 'beef', 'pork', 'bacon', 'sausage', 'turkey', 'fish', 'salmon', 'tuna', 'shrimp', 'ham', 'ground', 'steak', 'meat']],
-  ['Bakery', ['bread', 'bun', 'bagel', 'tortilla', 'croissant', 'muffin', 'roll', 'pita', 'naan']],
-  ['Frozen', ['frozen', 'ice cream', 'popsicle', 'frozen pizza']],
-  ['Drinks', ['juice', 'soda', 'pop', 'coffee', 'tea', 'sparkling', 'water', 'wine', 'beer', 'cola']],
-  ['Pantry', ['pasta', 'rice', 'flour', 'sugar', 'salt', 'oil', 'sauce', 'bean', 'soup', 'cereal', 'cracker', 'granola', 'snack', 'chip', 'cookie', 'spice', 'can', 'peanut', 'jam', 'honey', 'oat', 'noodle', 'ketchup', 'mustard', 'vinegar', 'broth', 'stock', 'tortilla chip']],
+  ['Household', ['paper towel', 'toilet', 'detergent', 'soap', 'dish soap', 'dishwasher', 'cleaner', 'bleach', 'garbage', 'trash bag', 'foil', 'plastic wrap', 'saran', 'ziploc', 'freezer bag', 'diaper', 'wipes', 'shampoo', 'conditioner', 'toothpaste', 'toothbrush', 'deodorant', 'dog food', 'cat food', 'dog treat', 'litter', 'batteries', 'napkin', 'tissue', 'kleenex', 'sponge', 'light bulb', 'lotion', 'sunscreen', 'vitamin']],
+  ['Produce', ['apple', 'banana', 'lettuce', 'romaine', 'iceberg', 'arugula', 'spinach', 'onion', 'shallot', 'tomato', 'potato', 'yam', 'carrot', 'pepper', 'jalapeno', 'cucumber', 'zucchini', 'squash', 'pumpkin', 'berry', 'berries', 'grape', 'orange', 'clementine', 'mandarin', 'lemon', 'lime', 'avocado', 'broccoli', 'cauliflower', 'cabbage', 'celery', 'mushroom', 'garlic', 'ginger', 'kale', 'salad', 'fruit', 'veg', 'cilantro', 'parsley', 'basil', 'herb', 'corn', 'peas', 'green bean', 'bean sprout', 'asparagus', 'pear', 'peach', 'plum', 'melon', 'watermelon', 'cantaloupe', 'pineapple', 'mango', 'kiwi', 'cherr', 'radish', 'beet', 'leek', 'sweet potato']],
+  ['Dairy & eggs', ['milk', 'cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta', 'butter', 'yogurt', 'yoghurt', 'cream', 'egg', 'sour cream', 'cottage', 'cream cheese', 'whipping cream', 'half and half', 'kefir', 'margarine']],
+  ['Meat & fish', ['chicken', 'beef', 'pork', 'bacon', 'sausage', 'turkey', 'fish', 'salmon', 'tuna', 'cod', 'tilapia', 'shrimp', 'prawn', 'ham', 'ground beef', 'ground pork', 'ground turkey', 'ground chicken', 'steak', 'meat', 'roast', 'ribs', 'lamb', 'deli', 'salami', 'pepperoni', 'hot dog', 'wiener', 'meatball']],
+  ['Bakery', ['bread', 'garlic bread', 'bun', 'buns', 'bagel', 'tortilla', 'wrap', 'croissant', 'muffin', 'roll', 'pita', 'naan', 'english muffin', 'cake', 'donut', 'baguette', 'sourdough', 'crouton', 'stuffing']],
+  ['Frozen', ['frozen', 'ice cream', 'popsicle', 'frozen pizza', 'frozen fries', 'fries', 'waffle', 'perogies', 'pierogi', 'bag of ice', 'ice cubes']],
+  ['Drinks', ['juice', 'soda', 'pop', 'coffee', 'tea', 'sparkling', 'water', 'wine', 'beer', 'cola', 'gatorade', 'kombucha', 'lemonade', 'iced tea', 'iced coffee']],
+  ['Pantry', ['pasta', 'spaghetti', 'macaroni', 'rice', 'flour', 'sugar', 'salt', 'oil', 'olive oil', 'sauce', 'pasta sauce', 'beans', 'black bean', 'kidney bean', 'chickpea', 'lentil', 'soup', 'cereal', 'cracker', 'granola', 'snack', 'chips', 'tortilla chip', 'cookie', 'spice', 'canned', 'peanut butter', 'peanut', 'jam', 'honey', 'syrup', 'oatmeal', 'oats', 'noodle', 'ketchup', 'mustard', 'mayo', 'relish', 'vinegar', 'broth', 'stock', 'baking', 'yeast', 'chocolate', 'nuts', 'almond', 'popcorn', 'pickle', 'salsa', 'dressing', 'taco seasoning']],
 ]
 
 // Best-guess section for a label; 'Other' when nothing matches.
 export function guessSection(label) {
   const t = String(label || '').toLowerCase()
+  let best = 'Other'
+  let bestLen = 0
   for (const [section, words] of SECTION_KEYWORDS) {
-    if (words.some((w) => t.includes(w))) return section
+    for (const w of words) {
+      if (w.length > bestLen && t.includes(w)) {
+        best = section
+        bestLen = w.length
+      }
+    }
   }
-  return 'Other'
+  return best
 }
 
 export const SAMPLE_GROCERIES = [

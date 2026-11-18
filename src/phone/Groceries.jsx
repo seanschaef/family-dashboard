@@ -67,7 +67,7 @@ export default function Groceries() {
               style={{ all: 'unset', cursor: 'pointer', background: C.card, color: C.ink, border: `2px solid ${C.border}`, borderRadius: 999, padding: '8px 14px', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
               {!editStaples && <span style={{ color: C.tealText, fontWeight: 800 }}>+</span>}
               {s.label}
-              {editStaples && <span style={{ color: '#8A3E1F', fontWeight: 800 }}>×</span>}
+              {editStaples && <span style={{ color: C.danger, fontWeight: 800 }}>×</span>}
             </button>
           ))}
         </div>

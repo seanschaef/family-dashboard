@@ -86,7 +86,7 @@ function MonthView({ events, anchor, onDayClick }) {
               >
                 <div style={{ fontSize: 22, fontWeight: isToday ? 800 : 600, textAlign: 'right' }}>{day.getDate()}</div>
                 {list.slice(0, 4).map((ev) => (
-                  <div key={ev.id} style={{ fontSize: 16, lineHeight: 1.15, padding: '2px 8px', borderRadius: 7, background: colorFor(ev.person_key), color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div key={ev.id} style={{ fontSize: 16, lineHeight: 1.15, padding: '2px 8px', borderRadius: 7, background: colorFor(ev), color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {ev.title}
                   </div>
                 ))}
@@ -120,7 +120,7 @@ function WeekView({ events, anchor }) {
               {list.length ? (
                 list.map((ev) => (
                   <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: C.cream, borderRadius: 12, padding: '8px 14px' }}>
-                    <span style={{ width: 10, height: 10, borderRadius: 5, background: colorFor(ev.person_key) }} />
+                    <span style={{ width: 10, height: 10, borderRadius: 5, background: colorFor(ev) }} />
                     <span style={{ fontSize: 22, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</span>
                     <span style={{ fontSize: 22, fontWeight: 600 }}>{ev.title}</span>
                   </div>
@@ -144,7 +144,7 @@ function DayView({ events, anchor }) {
       {list.length ? (
         list.map((ev) => (
           <div key={ev.id} style={{ display: 'flex', gap: 24, alignItems: 'center', background: C.cream, borderRadius: 18, padding: '18px 24px' }}>
-            <div style={{ width: 10, height: 56, borderRadius: 5, background: colorFor(ev.person_key) }} />
+            <div style={{ width: 10, height: 56, borderRadius: 5, background: colorFor(ev) }} />
             <div style={{ width: 160, fontSize: 28, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
             <div>
               <div style={{ fontSize: 30, fontWeight: 600 }}>{ev.title}</div>
@@ -164,7 +164,9 @@ export default function Calendar() {
   const [anchor, setAnchor] = useState(() => new Date())
   const [selectedDay, setSelectedDay] = useState(null)
   const range = useMemo(() => rangeFor(view, anchor), [view, anchor])
-  const { events } = useEvents(range.from, range.to)
+  const { events: allEvents } = useEvents(range.from, range.to)
+  // Shared screen: never show work calendars, and respect "show on hub".
+  const events = allEvents.filter((e) => e.kind !== 'work' && e.show_on_hub !== false)
 
   // Swipe within the calendar body: horizontal = prev/next period, vertical =
   // change view zoom. stopPropagation keeps it from triggering the wall's

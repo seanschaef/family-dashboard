@@ -4,7 +4,7 @@ import { C } from '../theme.js'
 // at runtime (see buildWallNav); only the fixed, non-person pages live here.
 
 const WALL_HEAD = [
-  { key: 'hub', label: 'Family', to: '/wall/hub', color: C.ink, icon: 'home' },
+  { key: 'hub', label: 'Family', to: '/wall/hub', color: C.family, icon: 'home' },
   { key: 'calendar', label: 'Calendar', to: '/wall/calendar', color: C.meals, icon: 'calendarGrid' },
 ]
 const WALL_TAIL = [

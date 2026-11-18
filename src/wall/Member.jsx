@@ -31,7 +31,7 @@ function Header({ person }) {
 }
 
 function ChoresCard({ person, due, logs, T, points }) {
-  const done = due.filter((c) => isDone(logs, c.id, T)).length
+  const done = due.filter((c) => isDone(logs, c, T, person.key)).length
   return (
     <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16 })}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -40,7 +40,7 @@ function ChoresCard({ person, due, logs, T, points }) {
       </div>
       {due.length ? (
         due.map((c) => (
-          <LiveCheck key={c.id} label={c.title} done={isDone(logs, c.id, T)} color={person.color} onToggle={() => toggleChore(c, T, isDone(logs, c.id, T))} />
+          <LiveCheck key={c.id} label={c.title} done={isDone(logs, c, T, person.key)} color={person.color} onToggle={() => toggleChore(c, T, isDone(logs, c, T, person.key), person.key)} />
         ))
       ) : (
         <div style={{ fontSize: 22, color: C.muted }}>Nothing due today</div>
@@ -85,7 +85,7 @@ function BirthdayCountdown({ person, big }) {
 function JobTile({ chore, done, color, onToggle }) {
   return (
     <button type="button" aria-label={`Mark ${chore.title} ${done ? 'not done' : 'done'}`} aria-pressed={done} onClick={onToggle}
-      style={{ all: 'unset', cursor: 'pointer', background: done ? color : '#FFFFFF', color: done ? '#FFFFFF' : C.ink, border: done ? 'none' : `3px dashed ${color}`, borderRadius: 24, padding: 24, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 150, boxSizing: 'border-box' }}>
+      style={{ all: 'unset', cursor: 'pointer', background: done ? color : C.card, color: done ? '#FFFFFF' : C.ink, border: done ? 'none' : `3px dashed ${color}`, borderRadius: 24, padding: 24, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 150, boxSizing: 'border-box' }}>
       {done ? <Icon name="check" size={44} color="#FFFFFF" strokeWidth={3} /> : <span style={{ width: 44, height: 44, borderRadius: 22, border: `3px solid ${color}`, boxSizing: 'border-box' }} />}
       <span style={{ fontSize: 28, fontWeight: 700 }}>{chore.title}</span>
     </button>
@@ -124,7 +124,7 @@ export default function Member() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 18 }}>
             {due.slice(0, 6).map((c) => (
-              <JobTile key={c.id} chore={c} done={isDone(logs, c.id, T)} color={person.color} onToggle={() => toggleChore(c, T, isDone(logs, c.id, T))} />
+              <JobTile key={c.id} chore={c} done={isDone(logs, c, T, person.key)} color={person.color} onToggle={() => toggleChore(c, T, isDone(logs, c, T, person.key), person.key)} />
             ))}
             {due.length === 0 && <div style={{ fontSize: 24, color: C.muted }}>No jobs today</div>}
           </div>

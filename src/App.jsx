@@ -23,6 +23,8 @@ import Rewards from './phone/Rewards.jsx'
 import Settings from './phone/Settings.jsx'
 import WallPreview from './phone/WallPreview.jsx'
 import Arrange from './phone/Arrange.jsx'
+import Accounts from './phone/Accounts.jsx'
+import Dates from './phone/Dates.jsx'
 
 // On the Pi we set VITE_DEVICE_MODE=wall so the root boots straight to the wall.
 const DEVICE_MODE = import.meta.env.VITE_DEVICE_MODE
@@ -74,6 +76,8 @@ export default function App() {
         <Route path="settings" element={<Settings />} />
         <Route path="wall-preview" element={<WallPreview />} />
         <Route path="arrange" element={<Arrange />} />
+        <Route path="accounts" element={<Accounts />} />
+        <Route path="dates" element={<Dates />} />
       </Route>
 
       <Route path="*" element={<Navigate to={HOME_ROUTE} replace />} />

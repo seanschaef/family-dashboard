@@ -57,7 +57,7 @@ export default function DayPopover({ day, events, onClose }) {
         {list.length ? (
           list.map((ev) => (
             <div key={ev.id} style={{ display: 'flex', gap: 18, alignItems: 'center', background: C.cream, borderRadius: 16, padding: '16px 20px' }}>
-              <div style={{ width: 8, height: 48, borderRadius: 4, background: colorFor(ev.person_key) }} />
+              <div style={{ width: 8, height: 48, borderRadius: 4, background: colorFor(ev) }} />
               <div style={{ width: 130, fontSize: 24, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
               <div style={{ flexGrow: 1 }}>
                 <div style={{ fontSize: 26, fontWeight: 600 }}>
@@ -65,7 +65,7 @@ export default function DayPopover({ day, events, onClose }) {
                   {ev.kind === 'work' && <span style={{ fontSize: 18, color: C.muted, fontWeight: 500 }}> · work</span>}
                 </div>
                 <div style={{ fontSize: 19, color: C.muted }}>
-                  {[nameFor(ev.person_key), ev.location].filter(Boolean).join(' · ')}
+                  {[(ev.owners || [ev.person_key]).map(nameFor).join(' & '), ev.location].filter(Boolean).join(' · ')}
                 </div>
               </div>
             </div>

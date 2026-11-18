@@ -51,7 +51,7 @@ export default function WallDisplay() {
 
   return (
     <>
-      <PhoneHeader title="Wall display" subtitle="Auto turn the monitor on and off" />
+      <PhoneHeader title="Wall display" subtitle="Monitor on/off and night colours" />
 
       <div style={{ fontSize: 14, color: C.muted }}>
         The wall screen turns itself off and on at these times (the Raspberry Pi
@@ -94,14 +94,26 @@ export default function WallDisplay() {
         </div>
       </div>
 
+      <div style={card}>
+        <div style={sect}>DARK MODE AT NIGHT</div>
+        <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 16, fontWeight: 600 }}>
+          <input type="checkbox" checked={s.dark_enabled} onChange={(e) => set('dark_enabled')(e.target.checked)} />
+          Switch the wall to dark colours
+        </label>
+        <div style={{ opacity: s.dark_enabled ? 1 : 0.5, pointerEvents: s.dark_enabled ? 'auto' : 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <TimeField label="Dark from" value={s.dark_start} onChange={set('dark_start')} />
+          <TimeField label="Light again at" value={s.dark_end} onChange={set('dark_end')} />
+        </div>
+      </div>
+
       {!configured && (
-        <div style={{ background: '#FBE9E3', color: '#8A3E1F', borderRadius: 12, padding: 14, fontSize: 14 }}>
+        <div style={{ background: C.dangerTint, color: C.danger, borderRadius: 12, padding: 14, fontSize: 14 }}>
           Connect Supabase to save this from your phone. Until then the Pi uses
           its local schedule file (see pi/README.md).
         </div>
       )}
 
-      {status && <div style={{ fontSize: 14, color: status.kind === 'error' ? '#8A3E1F' : C.tealText }}>{status.text}</div>}
+      {status && <div style={{ fontSize: 14, color: status.kind === 'error' ? C.danger : C.tealText }}>{status.text}</div>}
 
       <button
         type="button"

@@ -4,14 +4,14 @@ import { C } from '../theme.js'
 import { PhoneHeader } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { useAuth } from '../lib/auth.jsx'
-import { useChores, addChore, removeChore } from '../lib/chores.js'
+import { useChores, addChore, removeChore, assigneesOf, isEachChore } from '../lib/chores.js'
 
 const REPEATS = [
   { label: 'Once', value: 'once' },
   { label: 'Daily', value: 'daily' },
   { label: 'Weekly', value: 'weekly' },
 ]
-const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] // index = getDay() (0=Sun)
+const DAYS = ['Su', 'M', 'T', 'W', 'R', 'F', 'Sa'] // index = getDay() (0=Sun); R = Thursday
 const POINTS = [
   { label: 'None', value: 0 },
   { label: '5', value: 5 },
@@ -40,19 +40,20 @@ export default function Chores() {
   const { configured } = useAuth()
   const { rows: chores } = useChores()
   const [name, setName] = useState('')
-  const [who, setWho] = useState('')
+  const [who, setWho] = useState([]) // member keys; empty = anyone
+  const [mode, setMode] = useState('each')
   const [repeat, setRepeat] = useState('weekly')
   const [days, setDays] = useState([1, 3, 5])
   const [points, setPoints] = useState(0)
   const [status, setStatus] = useState(null)
 
-  const toggleDay = (i) => setDays((d) => (d.includes(i) ? d.filter((x) => x !== i) : [...d, i]))
+  const toggleDay = (i) => setDays((d) => (d.includes(i) ? d.filter((x) => x !== i) : [...d, i].sort((a, b) => a - b)))
 
   async function save() {
     if (!name.trim()) return
     setStatus(null)
     try {
-      await addChore({ member_key: who === 'rotate' || who === '' ? null : who, title: name.trim(), repeat, days: repeat === 'weekly' ? days : [], points })
+      await addChore({ member_keys: who, shared_mode: mode, title: name.trim(), repeat, days: repeat === 'weekly' ? days : [], points })
       setName('')
       setStatus('Saved')
     } catch (e) {
@@ -60,7 +61,14 @@ export default function Chores() {
     }
   }
 
-  const repeatLabel = (c) => (c.repeat === 'weekly' ? (c.days || []).map((d) => DAYS[d]).join('') : c.repeat)
+  const whoLabel = (c) => {
+    const keys = assigneesOf(c)
+    if (!keys.length) return 'Anyone'
+    const names = keys.map(nameFor)
+    if (keys.length === 1) return names[0]
+    return isEachChore(c) ? `${names.join(', ')} (each)` : `${names.join(' or ')} (any one)`
+  }
+  const repeatLabel = (c) => (c.repeat === 'weekly' ? [...(c.days || [])].sort((a, b) => a - b).map((d) => DAYS[d]).join(' ') : c.repeat)
 
   return (
     <>
@@ -70,14 +78,27 @@ export default function Chores() {
       <Field label="Chore">
         <input aria-label="Chore name" type="text" placeholder="Walk the dog" value={name} onChange={(e) => setName(e.target.value)} style={{ font: 'inherit', fontSize: 17, padding: '12px 14px', borderRadius: 12, border: `2px solid ${C.border}`, background: C.card, color: C.ink }} />
       </Field>
-      <Field label="Who">
+      <Field label="Who (tap one or more)">
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {members.map((p) => (
-            <Chip key={p.key} active={who === p.key} color={p.color} onClick={() => setWho(p.key)}>{p.name}</Chip>
+            <Chip key={p.key} active={who.includes(p.key)} color={p.color} onClick={() => setWho((w) => (w.includes(p.key) ? w.filter((k) => k !== p.key) : [...w, p.key]))}>{p.name}</Chip>
           ))}
-          <Chip active={who === 'rotate'} onClick={() => setWho('rotate')}>Anyone</Chip>
+          <Chip active={who.length === 0} onClick={() => setWho([])}>Anyone</Chip>
         </div>
       </Field>
+      {who.length > 1 && (
+        <Field label="When it's shared">
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Chip active={mode === 'each'} onClick={() => setMode('each')}>Each person does it</Chip>
+            <Chip active={mode === 'any'} onClick={() => setMode('any')}>Any one of them</Chip>
+          </div>
+          <div style={{ fontSize: 13, color: C.muted }}>
+            {mode === 'each'
+              ? 'It shows on everyone’s list; each person ticks their own and earns their own points.'
+              : 'One tick clears it for everyone; points go to whoever ticked it.'}
+          </div>
+        </Field>
+      )}
       <Field label="Repeats">
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {REPEATS.map((r) => (
@@ -104,7 +125,7 @@ export default function Chores() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button type="button" onClick={save} disabled={!configured} style={{ all: 'unset', cursor: configured ? 'pointer' : 'default', background: C.meals, color: '#FFFFFF', borderRadius: 14, padding: '14px 24px', fontSize: 16, fontWeight: 700, opacity: configured ? 1 : 0.6 }}>Save chore</button>
-        {status && <span style={{ fontSize: 14, color: status === 'Saved' ? C.tealText : '#8A3E1F' }}>{status}</span>}
+        {status && <span style={{ fontSize: 14, color: status === 'Saved' ? C.tealText : C.danger }}>{status}</span>}
       </div>
       {!configured && <div style={{ fontSize: 13, color: C.muted }}>Connect Supabase to save chores.</div>}
 
@@ -117,10 +138,10 @@ export default function Chores() {
             <div style={{ flexGrow: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 600 }}>{c.title}</div>
               <div style={{ fontSize: 13, color: C.muted }}>
-                {c.member_key ? nameFor(c.member_key) : 'Anyone'} · {repeatLabel(c)}{c.points ? ` · ${c.points} pts` : ''}
+                {whoLabel(c)} · {repeatLabel(c)}{c.points ? ` · ${c.points} pts` : ''}
               </div>
             </div>
-            <button type="button" onClick={() => removeChore(c.id)} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#8A3E1F' }}>Delete</button>
+            <button type="button" onClick={() => removeChore(c.id)} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.danger }}>Delete</button>
           </div>
         ))
       )}

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { C, card } from '../theme.js'
 import { useEvents } from '../lib/eventsource.js'
+import { ownsEvent } from '../lib/calendars.js'
 import { useMembers } from '../lib/members.jsx'
 import { addDays, startOfWeek, isSameDay, timeOfDay } from '../lib/time.js'
 import { rangeFor, eventsOn, stepAnchor, periodTitle } from '../lib/calendar.js'
@@ -48,8 +49,8 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
 
   const scopeFilter = (e) => {
     if (!includeWork && e.kind === 'work') return false
-    if (!personKey) return true
-    return e.person_key === personKey || e.person_key === 'family'
+    if (!personKey) return e.show_on_hub !== false
+    return ownsEvent(e, personKey)
   }
   const scoped = events.filter(scopeFilter)
   const todayList = eventsOn(todayEvents.filter(scopeFilter), today)
@@ -75,7 +76,7 @@ export default function CalendarBlock({ personKey = null, includeWork = false, t
           {todayList.length ? (
             todayList.map((ev) => (
               <span key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: C.cream, borderRadius: 999, padding: '6px 14px' }}>
-                <span style={{ width: 9, height: 9, borderRadius: 5, background: colorFor(ev.person_key) }} />
+                <span style={{ width: 9, height: 9, borderRadius: 5, background: colorFor(ev) }} />
                 <span style={{ fontSize: 19 }}>
                   <span style={{ color: C.muted }}>{ev.all_day ? '' : timeOfDay(ev.starts_at) + ' '}</span>
                   {ev.title}
@@ -106,7 +107,7 @@ function DayView({ events, anchor, colorFor }) {
       {list.length ? (
         list.map((ev) => (
           <div key={ev.id} style={{ display: 'flex', gap: 16, alignItems: 'center', background: C.cream, borderRadius: 14, padding: '12px 16px' }}>
-            <div style={{ width: 8, height: 40, borderRadius: 4, background: colorFor(ev.person_key) }} />
+            <div style={{ width: 8, height: 40, borderRadius: 4, background: colorFor(ev) }} />
             <div style={{ width: 90, fontSize: 22, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
             <div style={{ fontSize: 24, fontWeight: 600 }}>{ev.title}</div>
           </div>
@@ -131,7 +132,7 @@ function WeekView({ events, anchor, colorFor, today }) {
             <div style={{ fontSize: 17, fontWeight: 800, color: isToday ? C.tealText : C.ink }}>{DOW[i]} {day.getDate()}</div>
             {list.slice(0, 5).map((ev) => (
               <div key={ev.id} style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
-                <span style={{ width: 8, height: 8, borderRadius: 4, background: colorFor(ev.person_key), flexShrink: 0, alignSelf: 'center' }} />
+                <span style={{ width: 8, height: 8, borderRadius: 4, background: colorFor(ev), flexShrink: 0, alignSelf: 'center' }} />
                 <span style={{ fontSize: 15, lineHeight: 1.2 }}>
                   <span style={{ color: C.muted }}>{ev.all_day ? '' : timeOfDay(ev.starts_at) + ' '}</span>
                   {ev.title}
@@ -174,7 +175,7 @@ function MonthView({ events, anchor, colorFor, today, onDayClick }) {
                 <div style={{ fontSize: 15, fontWeight: isToday ? 800 : 600 }}>{day.getDate()}</div>
                 <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                   {list.slice(0, 4).map((ev) => (
-                    <span key={ev.id} title={ev.title} style={{ width: 9, height: 9, borderRadius: 5, background: colorFor(ev.person_key) }} />
+                    <span key={ev.id} title={ev.title} style={{ width: 9, height: 9, borderRadius: 5, background: colorFor(ev) }} />
                   ))}
                 </div>
               </button>

@@ -68,7 +68,7 @@ export default function Login() {
         </div>
 
         {!configured && (
-          <div style={{ background: '#FBE9E3', color: '#8A3E1F', borderRadius: 12, padding: 14, fontSize: 15 }}>
+          <div style={{ background: C.dangerTint, color: C.danger, borderRadius: 12, padding: 14, fontSize: 15 }}>
             Supabase is not configured yet. Set VITE_SUPABASE_URL and
             VITE_SUPABASE_ANON_KEY in <code>.env.local</code> (see
             <code> .env.example</code>), then restart.
@@ -106,7 +106,7 @@ export default function Login() {
             <div
               style={{
                 fontSize: 15,
-                color: status.kind === 'error' ? '#8A3E1F' : C.tealText,
+                color: status.kind === 'error' ? C.danger : C.tealText,
               }}
             >
               {status.text}

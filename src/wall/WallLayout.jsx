@@ -4,6 +4,7 @@ import WallNav from '../components/WallNav.jsx'
 import { buildWallNav } from '../config/people.js'
 import { useMembers } from '../lib/members.jsx'
 import { C } from '../theme.js'
+import { useWallNightTheme } from '../lib/theme.jsx'
 
 const FRAME_W = 1080
 const FRAME_H = 1920
@@ -18,6 +19,7 @@ export default function WallLayout() {
   const location = useLocation()
   const { members } = useMembers()
   const [scale, setScale] = useState(1)
+  useWallNightTheme() // dark at night, per the schedule set on the phone
 
   // Scale the fixed 1080x1920 frame to fit whatever viewport we are on.
   // On the Pi at native portrait resolution this is 1:1; in a browser it

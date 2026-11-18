@@ -1,11 +1,12 @@
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { C, card } from '../theme.js'
 import Icon from '../components/Icon.jsx'
 import { LiveCheck, ProgressRow } from './parts.jsx'
 import CalendarBlock from './CalendarBlock.jsx'
 import PhotoFrame from './PhotoFrame.jsx'
 import WeatherCard from './WeatherCard.jsx'
-import { formatClock, formatLongDate, greeting, useNow, upcomingBirthdays } from '../lib/time.js'
+import { formatClock, formatLongDate, greeting, useNow } from '../lib/time.js'
+import { useImportantDates, upcomingCountdowns, countdownText } from '../lib/dates.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone } from '../lib/chores.js'
@@ -15,6 +16,7 @@ import { normalizeHubLayout, blockHeight } from './hubLayout.js'
 
 export default function Hub() {
   const now = useNow()
+  const navigate = useNavigate()
   const { members, nameFor, familyName, petName, wallLayout } = useMembers()
   const T = todayISO()
   const { rows: chores } = useChores()
@@ -25,26 +27,27 @@ export default function Hub() {
 
   const familyReminders = reminders.filter((r) => r.member_key === null && !r.done)
   const dinner = mealFor(meals, T)?.title
-  const birthdays = upcomingBirthdays(members).slice(0, 3)
+  const { rows: importantDates } = useImportantDates()
+  const coming = upcomingCountdowns(members, importantDates, now).slice(0, 3)
 
   // Block content by id. Rendered in the order/size the layout specifies.
   const blocks = {
     photo: (size) => <PhotoFrame height={blockHeight('photo', size)} />,
     calendar: (size) => <CalendarBlock title="Family calendar" height={blockHeight('calendar', size)} todaySummary />,
     dinner: () => (
-      <Link to="/wall/meals" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.tealTint, borderRadius: 16, padding: '16px 22px', color: C.ink }}>
+      <button type="button" onClick={() => navigate('/wall/meals')} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.tealTint, borderRadius: 16, padding: '16px 22px', color: C.ink }}>
         <span style={{ fontSize: 24 }}>
           <span style={{ fontWeight: 800 }}>Dinner tonight:</span> {dinner || 'Not planned yet'}
         </span>
         <span style={{ fontSize: 20, color: C.tealText, fontWeight: 700 }}>Meals ›</span>
-      </Link>
+      </button>
     ),
     chores: () => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Chores today</div>
         {members.map((m) => {
           const due = dueChores(chores, logs, m.key, T)
-          const done = due.filter((c) => isDone(logs, c.id, T)).length
+          const done = due.filter((c) => isDone(logs, c, T, m.key)).length
           return <ProgressRow key={m.key} name={m.name} done={done} total={due.length} color={m.color} />
         })}
       </div>
@@ -84,15 +87,13 @@ export default function Hub() {
     ),
     birthdays: () => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
-        <div style={{ fontSize: 26, fontWeight: 800 }}>Birthdays</div>
-        {birthdays.length ? (
-          birthdays.map((b) => (
-            <div key={b.member.key} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 22 }}>
-              <span style={{ width: 16, height: 16, borderRadius: 8, background: b.member.color, flexShrink: 0 }} />
-              <span style={{ fontWeight: 600 }}>{b.member.name}</span>
-              <span style={{ color: C.muted, marginLeft: 'auto' }}>
-                {b.days === 0 ? `turns ${b.turning} today!` : `${b.days} ${b.days === 1 ? 'day' : 'days'} · turns ${b.turning}`}
-              </span>
+        <div style={{ fontSize: 26, fontWeight: 800 }}>Coming up</div>
+        {coming.length ? (
+          coming.map((b) => (
+            <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 22, minWidth: 0 }}>
+              <span style={{ width: 16, height: 16, borderRadius: 8, background: b.color || C.muted, flexShrink: 0 }} />
+              <span style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{b.title}</span>
+              <span style={{ color: C.muted, marginLeft: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}>{countdownText(b)}</span>
             </div>
           ))
         ) : (

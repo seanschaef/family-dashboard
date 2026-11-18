@@ -9,7 +9,7 @@ export const HUB_BLOCK_LABELS = {
   chores: 'Chores',
   pet: 'Pet',
   reminders: 'Reminders',
-  birthdays: 'Birthdays',
+  birthdays: 'Coming up (birthdays and dates)',
 }
 
 // size: 'l' = full width, 's'/'m' = half width (m is taller than s).

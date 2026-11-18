@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { C } from '../theme.js'
+import { C, MEMBER_PALETTE } from '../theme.js'
 import { PhoneHeader } from './parts.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import { useMembers } from '../lib/members.jsx'
+import { useTheme } from '../lib/theme.jsx'
 
-const PALETTE = [C.violet, C.rust, C.green, C.blue, C.meals, C.home]
+const PALETTE = MEMBER_PALETTE
 const ROLES = [
   { label: 'Parent', value: 'parent' },
   { label: 'Teen', value: 'teen' },
@@ -32,7 +33,7 @@ function MemberRow({ m, canEdit, isAdmin, onPatch, onRemove }) {
         <span style={{ width: 30, height: 30, borderRadius: 15, background: m.color, color: '#FFF', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{(name[0] || '?').toUpperCase()}</span>
         <input aria-label="Name" value={name} disabled={!canEdit} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() && name !== m.name && onPatch({ name: name.trim() })} style={{ ...input, opacity: canEdit ? 1 : 0.6 }} />
         {isAdmin && (
-          <button type="button" onClick={onRemove} style={{ all: 'unset', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: '#8A3E1F', flexShrink: 0 }}>Remove</button>
+          <button type="button" onClick={onRemove} style={{ all: 'unset', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.danger, flexShrink: 0 }}>Remove</button>
         )}
       </div>
       {canEdit && (
@@ -89,6 +90,7 @@ export default function Settings() {
   const saveFamily = async (p) => { await updateFamily(p); flash() }
   const saveMember = async (id, p) => { await updateMember(id, p); flash() }
   const canEdit = (m) => isAdmin || m.id === me?.id
+  const { pref, setPref } = useTheme()
 
   return (
     <>
@@ -106,6 +108,34 @@ export default function Settings() {
         <div style={{ fontSize: 13, color: C.muted }}>{user?.email}</div>
         <button type="button" onClick={signOut} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.tealText }}>Sign out</button>
       </div>
+
+      <div style={card}>
+        <div style={{ fontSize: 16, fontWeight: 800 }}>Appearance</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {[
+            ['auto', 'Match device'],
+            ['light', 'Light'],
+            ['dark', 'Dark'],
+          ].map(([v, l]) => (
+            <Chip key={v} active={pref === v} onClick={() => setPref(v)}>{l}</Chip>
+          ))}
+        </div>
+        <div style={{ fontSize: 12, color: C.muted }}>Just this device. The wall has its own night-time schedule under Wall display.</div>
+      </div>
+
+      <div style={card}>
+        <div style={{ fontSize: 16, fontWeight: 800 }}>Important dates</div>
+        <Link to="/app/dates" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Birthdays, anniversaries and other dates ›</Link>
+        <div style={{ fontSize: 12, color: C.muted }}>Counted down on the hub with the family&apos;s birthdays.</div>
+      </div>
+
+      {isAdmin && (
+        <div style={card}>
+          <div style={{ fontSize: 16, fontWeight: 800 }}>Accounts</div>
+          <Link to="/app/accounts" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Manage logins ›</Link>
+          <div style={{ fontSize: 12, color: C.muted }}>Create logins, reset passwords, link a login to a person, make someone an admin.</div>
+        </div>
+      )}
 
       <div style={card}>
         <div style={{ fontSize: 16, fontWeight: 800 }}>Family</div>
@@ -138,7 +168,7 @@ export default function Settings() {
         <div style={{ fontSize: 16, fontWeight: 800 }}>Wall display</div>
         <Link to="/app/wall-preview" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>See how the wall looks ›</Link>
         <Link to="/app/arrange" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Arrange the hub windows ›</Link>
-        <Link to="/app/wall-display" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Monitor on/off schedule ›</Link>
+        <Link to="/app/wall-display" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Monitor schedule and night colours ›</Link>
       </div>
 
       {!configured && <div style={{ fontSize: 13, color: C.muted }}>Demo mode: changes are not saved.</div>}

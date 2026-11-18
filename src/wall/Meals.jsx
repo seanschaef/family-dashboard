@@ -2,7 +2,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { C, card } from '../theme.js'
 import { Clock, LiveCheck } from './parts.jsx'
 import { todayISO } from '../lib/db.js'
-import { useMeals, mealFor, weekDates, useGroceries, addGrocery, toggleGrocery, addIngredientsToGroceries } from '../lib/kitchen.js'
+import { useMeals, mealFor, weekDates, useGroceries, addGrocery, toggleGrocery, addIngredientsToGroceries, GROCERY_SECTIONS } from '../lib/kitchen.js'
 import { useMembers } from '../lib/members.jsx'
 
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -25,10 +25,12 @@ export default function Meals() {
 
   const bySection = {}
   for (const it of groceries) (bySection[it.section || 'Other'] ||= []).push(it)
-  const sections = Object.keys(bySection).sort()
+  // Shelf order, like the phone list.
+  const sections = GROCERY_SECTIONS.filter((s) => bySection[s]?.length)
 
   async function addStaple(label) {
-    await addGrocery({ label, section: 'Other', added_by_member_key: me?.key, source: 'manual' })
+    // No section given: addGrocery files it automatically from the name.
+    await addGrocery({ label, added_by_member_key: me?.key, source: 'manual' })
   }
   async function pushIngredients() {
     for (const iso of week) {

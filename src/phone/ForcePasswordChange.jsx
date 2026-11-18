@@ -38,7 +38,7 @@ export default function ForcePasswordChange() {
         <div style={{ fontSize: 15, color: C.muted }}>Replace the temporary password with one only you know. At least 6 characters.</div>
         <input aria-label="New password" type="password" autoComplete="new-password" placeholder="New password" value={pw} onChange={(e) => setPw(e.target.value)} style={input} />
         <input aria-label="Confirm password" type="password" autoComplete="new-password" placeholder="Confirm password" value={confirm} onChange={(e) => setConfirm(e.target.value)} style={input} />
-        {error && <div style={{ fontSize: 14, color: '#8A3E1F' }}>{error}</div>}
+        {error && <div style={{ fontSize: 14, color: C.danger }}>{error}</div>}
         <button type="submit" disabled={busy} style={{ all: 'unset', cursor: busy ? 'default' : 'pointer', textAlign: 'center', background: C.rust, color: '#FFFFFF', borderRadius: 14, padding: '14px 24px', fontSize: 16, fontWeight: 700, opacity: busy ? 0.6 : 1 }}>
           {busy ? 'Saving…' : 'Save password'}
         </button>

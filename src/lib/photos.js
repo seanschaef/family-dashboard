@@ -75,6 +75,7 @@ export const SAMPLE_IMAGES = [
 ]
 
 export const MONTH_LABELS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
+export const MONTH_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 export const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 export function scheduleSummary(c) {
@@ -83,3 +84,7 @@ export function scheduleSummary(c) {
   if (c.start_hour != null && c.end_hour != null) parts.push(`${c.start_hour}:00–${c.end_hour}:00`)
   return parts.join(' · ')
 }
+
+// Folders under the NAS mount, published by the Pi's photo agent, so the phone
+// can browse and pick instead of typing a path. Empty until the Pi publishes.
+export const usePhotoFolders = () => useFamilyTable('photo_folders', { order: { column: 'path' }, sample: [] })

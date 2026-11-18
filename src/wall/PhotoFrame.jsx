@@ -68,7 +68,7 @@ export default function PhotoFrame({ memberKey = null, height = 380, radius = 36
     overflow: 'hidden',
     position: 'relative',
     background: C.border,
-    border: '10px solid #FFFFFF',
+    border: `10px solid ${C.card}`,
     boxSizing: 'border-box',
   }
 

@@ -82,12 +82,13 @@ export default function Icon({ name, size = 24, color = 'currentColor', strokeWi
       height={size}
       viewBox="0 0 24 24"
       fill="none"
-      stroke={color}
       strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      style={style}
+      // stroke goes in style (not the attribute) so theme vars like
+      // var(--ink) resolve; SVG presentation attributes don't take var().
+      style={{ stroke: color, ...style }}
     >
       {body}
     </svg>

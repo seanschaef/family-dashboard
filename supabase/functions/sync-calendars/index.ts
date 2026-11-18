@@ -17,7 +17,7 @@ const MAX_OCCURRENCES = 200
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
@@ -28,24 +28,38 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const admin = createClient(url, serviceKey)
 
-  // Resolve the caller's family so we only sync their calendars.
-  const authHeader = req.headers.get('Authorization') ?? ''
-  const jwt = authHeader.replace('Bearer ', '')
-  const { data: userData } = await admin.auth.getUser(jwt)
-  if (!userData?.user) {
-    return json({ error: 'not authenticated' }, 401)
+  // Two ways in:
+  //  - the scheduler (pg_cron, every 15 min; migration 0014) sends
+  //    x-cron-secret, checked against a secret kept in the database vault, and
+  //    every family's calendars are synced;
+  //  - a signed-in user (the "Refresh events now" button) syncs their family's.
+  const sent = req.headers.get('x-cron-secret')
+  let isCron = false
+  if (sent) {
+    const { data: ok } = await admin.rpc('check_cron_secret', { s: sent })
+    isCron = ok === true
   }
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('family_id')
-    .eq('id', userData.user.id)
-    .single()
-  if (!profile) return json({ error: 'no profile' }, 403)
 
-  const { data: calendars, error: calErr } = await admin
-    .from('calendars')
-    .select('id, ics_url, person_key, kind')
-    .eq('family_id', profile.family_id)
+  let familyId: string | null = null
+  if (!isCron) {
+    const authHeader = req.headers.get('Authorization') ?? ''
+    const jwt = authHeader.replace('Bearer ', '')
+    const { data: userData } = await admin.auth.getUser(jwt)
+    if (!userData?.user) {
+      return json({ error: 'not authenticated' }, 401)
+    }
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('family_id')
+      .eq('id', userData.user.id)
+      .single()
+    if (!profile) return json({ error: 'no profile' }, 403)
+    familyId = profile.family_id
+  }
+
+  let q = admin.from('calendars').select('id, family_id, ics_url, person_key, kind')
+  if (familyId) q = q.eq('family_id', familyId)
+  const { data: calendars, error: calErr } = await q
   if (calErr) return json({ error: calErr.message }, 500)
 
   const now = new Date()
@@ -66,7 +80,7 @@ Deno.serve(async (req) => {
         for (const occ of expand(ev, winStart, winEnd)) {
           rows.push({
             calendar_id: cal.id,
-            family_id: profile.family_id,
+            family_id: cal.family_id,
             uid: occ.uid,
             title: ev.summary ?? '(no title)',
             starts_at: occ.start.toISOString(),

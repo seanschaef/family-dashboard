@@ -71,7 +71,7 @@ function Editor({ member, configured }) {
         <button type="button" onClick={save} disabled={!configured} style={{ all: 'unset', cursor: configured ? 'pointer' : 'default', background: C.meals, color: '#FFFFFF', borderRadius: 12, padding: '10px 20px', fontSize: 15, fontWeight: 700, opacity: configured ? 1 : 0.6 }}>
           Save
         </button>
-        {status && <span style={{ fontSize: 14, color: status === 'Saved' ? C.tealText : '#8A3E1F' }}>{status}</span>}
+        {status && <span style={{ fontSize: 14, color: status === 'Saved' ? C.tealText : C.danger }}>{status}</span>}
       </div>
     </div>
   )
@@ -88,7 +88,7 @@ export default function Widgets() {
         appear on the wall right away.
       </div>
       {!configured && (
-        <div style={{ background: '#FBE9E3', color: '#8A3E1F', borderRadius: 12, padding: 14, fontSize: 14 }}>
+        <div style={{ background: C.dangerTint, color: C.danger, borderRadius: 12, padding: 14, fontSize: 14 }}>
           Connect Supabase to save widgets.
         </div>
       )}

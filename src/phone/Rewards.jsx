@@ -45,7 +45,7 @@ export default function Rewards() {
         <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: C.card, border: `2px solid ${C.border}`, borderRadius: 14, padding: 12 }}>
           <div style={{ flexGrow: 1, fontSize: 16, fontWeight: 600 }}>{r.title}</div>
           <div style={{ fontSize: 15, fontWeight: 800, color: C.meals }}>{r.cost} pts</div>
-          <button type="button" onClick={() => removeReward(r.id)} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#8A3E1F' }}>Delete</button>
+          <button type="button" onClick={() => removeReward(r.id)} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.danger }}>Delete</button>
         </div>
       ))}
 
