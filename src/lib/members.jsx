@@ -14,10 +14,14 @@ export const SAMPLE_MEMBERS = [
 ]
 
 const MembersContext = createContext(null)
+const SAMPLE_PET = 'Buddy' // generic placeholder for the public demo only
 
 export function MembersProvider({ children }) {
   const [members, setMembers] = useState(isSupabaseConfigured ? [] : SAMPLE_MEMBERS)
   const [familyName, setFamilyName] = useState('family') // generic until loaded
+  const [familyId, setFamilyId] = useState(null)
+  const [petName, setPetName] = useState(isSupabaseConfigured ? '' : SAMPLE_PET)
+  const [wallLayout, setWallLayout] = useState(null)
   const [myMemberId, setMyMemberId] = useState(isSupabaseConfigured ? null : 'sm2')
   const [isAdmin, setIsAdmin] = useState(!isSupabaseConfigured)
   const [mustChangePassword, setMustChangePassword] = useState(false)
@@ -29,14 +33,19 @@ export function MembersProvider({ children }) {
     async function load() {
       const [{ data, error }, fam, { data: userData }] = await Promise.all([
         supabase.from('members').select('id, key, name, color, role, birthday, sort_order, widget_type, widget_config').order('sort_order', { ascending: true }),
-        supabase.from('families').select('name').limit(1).maybeSingle(),
+        supabase.from('families').select('id, name, pet_name, wall_layout').limit(1).maybeSingle(),
         supabase.auth.getUser(),
       ])
       if (!active) return
       // Fall back to placeholders only if the query failed (e.g. signed out).
       if (error || !data) setMembers(SAMPLE_MEMBERS)
       else if (data.length) setMembers(data)
-      if (fam?.data?.name) setFamilyName(fam.data.name)
+      if (fam?.data) {
+        setFamilyId(fam.data.id)
+        if (fam.data.name) setFamilyName(fam.data.name)
+        setPetName(fam.data.pet_name || '')
+        setWallLayout(fam.data.wall_layout || null)
+      }
       if (userData?.user) {
         const { data: prof } = await supabase.from('profiles').select('member_id, is_admin, must_change_password').eq('id', userData.user.id).maybeSingle()
         if (active) {
@@ -84,8 +93,42 @@ export function MembersProvider({ children }) {
     await supabase.from('profiles').update({ must_change_password: false }).eq('id', userData.user.id)
   }
 
+  // Family settings (name, pet, hub layout). Admin-only at the DB level.
+  async function updateFamily(patch) {
+    if (patch.name !== undefined) setFamilyName(patch.name)
+    if (patch.pet_name !== undefined) setPetName(patch.pet_name)
+    if (patch.wall_layout !== undefined) setWallLayout(patch.wall_layout)
+    if (!isSupabaseConfigured || !familyId) return
+    await supabase.from('families').update(patch).eq('id', familyId)
+  }
+
+  // Roster editing. Realtime reloads the list after a live write.
+  async function addMember(patch) {
+    if (!isSupabaseConfigured) {
+      setMembers((ms) => [...ms, { id: 'sm' + Date.now(), key: 'm' + Date.now(), birthday: null, widget_type: 'none', widget_config: {}, sort_order: ms.length + 1, ...patch }])
+      return
+    }
+    await supabase.from('members').insert({ key: 'm' + Date.now().toString(36), sort_order: members.length + 1, ...patch })
+  }
+  async function updateMember(id, patch) {
+    if (!isSupabaseConfigured) {
+      setMembers((ms) => ms.map((m) => (m.id === id ? { ...m, ...patch } : m)))
+      return
+    }
+    const { error } = await supabase.from('members').update(patch).eq('id', id)
+    if (error) throw error
+  }
+  async function removeMember(id) {
+    if (!isSupabaseConfigured) {
+      setMembers((ms) => ms.filter((m) => m.id !== id))
+      return
+    }
+    const { error } = await supabase.from('members').delete().eq('id', id)
+    if (error) throw error
+  }
+
   return (
-    <MembersContext.Provider value={{ members, familyName, loading, byKey, colorFor, nameFor, me, setMe, isAdmin, mustChangePassword, clearMustChangePassword }}>
+    <MembersContext.Provider value={{ members, familyName, familyId, petName, wallLayout, loading, byKey, colorFor, nameFor, me, setMe, isAdmin, mustChangePassword, clearMustChangePassword, updateFamily, addMember, updateMember, removeMember }}>
       {children}
     </MembersContext.Provider>
   )

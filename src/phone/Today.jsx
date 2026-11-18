@@ -8,7 +8,6 @@ import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone, toggleChore } from '../lib/chores.js'
 import { useReminders, addReminder, toggleReminder, usePetLog, PET_TASKS, petDone, petBy, togglePet } from '../lib/household.js'
-import { petName } from '../data/sample.js'
 
 function firstName(me, user) {
   if (me?.name) return me.name
@@ -21,7 +20,7 @@ const linkBtn = { all: 'unset', cursor: 'pointer', fontSize: 15, fontWeight: 700
 export default function Today() {
   const now = useNow()
   const { user, signOut } = useAuth()
-  const { me, setMe, members, nameFor } = useMembers()
+  const { me, setMe, members, nameFor, petName } = useMembers()
   const [scope, setScope] = useState('me')
   const T = todayISO()
   const { rows: chores } = useChores()

@@ -32,7 +32,9 @@ export const PHONE_NAV = [
   { key: 'meals', label: 'Meals', to: '/app/meals', icon: 'utensils' },
   { key: 'chores', label: 'Chores', to: '/app/chores', icon: 'check' },
   { key: 'photos', label: 'Photos', to: '/app/photos', icon: 'photos' },
+  { key: 'settings', label: 'Settings', to: '/app/settings', icon: 'gear' },
 ]
 
-// Placeholder pet for sample content until the pet-care feature is DB-backed.
-export const PET_NAME = 'Scout'
+// Generic placeholder pet for the public demo only. The real pet name lives in
+// the database (families.pet_name) and is loaded at runtime.
+export const PET_NAME = 'Buddy'
