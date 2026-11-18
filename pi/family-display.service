@@ -3,18 +3,22 @@
 #   cp ~/family-dashboard/pi/family-display.service ~/.config/systemd/user/
 #   systemctl --user daemon-reload
 #   systemctl --user enable --now family-display.service
-# Needs the kiosk running (kiosk.sh imports the session env so this can reach
-# the display).
+#
+# Starts with the user manager (default.target), not graphical-session.target:
+# labwc on Pi OS trixie never activates that target, so a unit wanted by it
+# never starts at boot. The Wayland socket is set here so wlr-randr can reach
+# the screen even before the kiosk has imported the session environment.
 [Unit]
 Description=Family Dashboard wall display scheduler
-After=graphical-session.target family-wall.service
-PartOf=graphical-session.target
+After=family-wall.service
 
 [Service]
 Type=simple
+Environment=XDG_RUNTIME_DIR=%t
+Environment=WAYLAND_DISPLAY=wayland-0
 ExecStart=%h/family-dashboard/pi/display-watch.sh
 Restart=always
 RestartSec=10
 
 [Install]
-WantedBy=graphical-session.target
+WantedBy=default.target

@@ -13,7 +13,21 @@ mkdir -p "$(dirname "$STATE_FILE")"
 
 log() { echo "[display] $*"; }
 
-wlr_output() { command -v wlr-randr >/dev/null 2>&1 && wlr-randr 2>/dev/null | awk '/^[^ ]/{print $1; exit}'; }
+# The real monitor, never a virtual one: while the screen is off, labwc lists a
+# placeholder (NOOP-1 / HEADLESS-1) first, and turning *that* on leaves the
+# monitor dark. The name is remembered so "on" still finds it.
+WLR_STATE="$HOME/.config/family-wall/wlr-output"
+wlr_output() {
+  command -v wlr-randr >/dev/null 2>&1 || return 1
+  local o
+  o="$(wlr-randr 2>/dev/null | awk '/^[^ ]/ && $1 !~ /^(NOOP|HEADLESS)/ {print $1; exit}')"
+  if [ -n "$o" ]; then
+    mkdir -p "$(dirname "$WLR_STATE")" && echo "$o" > "$WLR_STATE"
+  elif [ -f "$WLR_STATE" ]; then
+    o="$(cat "$WLR_STATE")"
+  fi
+  [ -n "$o" ] && echo "$o"
+}
 x_output() { command -v xrandr >/dev/null 2>&1 && DISPLAY="${DISPLAY:-:0}" xrandr 2>/dev/null | awk '/ connected/{print $1; exit}'; }
 
 turn_on() {
