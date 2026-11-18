@@ -5,10 +5,13 @@ export function weekDates(from = new Date()) {
   const d = new Date(from)
   const day = (d.getDay() + 6) % 7
   d.setDate(d.getDate() - day)
+  // Local calendar dates. (toISOString() is UTC, which in Edmonton rolls to
+  // tomorrow after 5 or 6 pm and shifted every dinner by a day each evening.)
+  const pad = (n) => String(n).padStart(2, '0')
   return Array.from({ length: 7 }, (_, i) => {
     const x = new Date(d)
     x.setDate(d.getDate() + i)
-    return x.toISOString().slice(0, 10)
+    return `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`
   })
 }
 
