@@ -315,12 +315,6 @@ export default function Arrange() {
     change(rest)
     setSelected(id)
   }
-  const step = (id, dir) => {
-    const vis = items.filter((b) => b.visible)
-    const k = vis.findIndex((b) => b.id === id)
-    const other = vis[k + dir]
-    if (other) moveTo(id, other.id, dir < 0)
-  }
 
   const store = (value) => (person ? updateMember(person.id, { page_layout: value }) : updateFamily({ wall_layout: value }))
   const save = async () => {
@@ -337,8 +331,6 @@ export default function Arrange() {
   const i = items.findIndex((b) => b.id === selected)
   const b = i >= 0 ? items[i] : null
   const hidden = items.filter((x) => !x.visible)
-  const visible = items.filter((x) => x.visible)
-  const vIndex = b ? visible.findIndex((x) => x.id === b.id) : -1
 
   // Cancel throws away unsaved changes and shows the saved layout again.
   const dirty = draft?.key === pageKey
@@ -443,12 +435,6 @@ export default function Arrange() {
             ))}
           </div>
 
-          <div style={rowLabel}>Position</div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            <Pick disabled={!canEdit || vIndex <= 0} onClick={() => step(b.id, -1)}>← Earlier</Pick>
-            <Pick disabled={!canEdit || vIndex >= visible.length - 1} onClick={() => step(b.id, 1)}>Later →</Pick>
-          </div>
-
           {b.id === 'photo' && (
             <>
               <div style={rowLabel}>Photo</div>
@@ -480,13 +466,27 @@ export default function Arrange() {
 
           {b.group && (
             <>
-              <div style={rowLabel}>Rotates between (tap one to take it out)</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {b.group.map((id) => (
-                  <button key={id} type="button" disabled={!canEdit} onClick={() => change(separateEntry(items, i, id))} title="Take out of this window" style={{ all: 'unset', cursor: canEdit ? 'pointer' : 'default', background: C.tealTint, color: C.ink, borderRadius: 999, padding: '5px 10px', fontSize: 13, fontWeight: 600 }}>
-                    {short(id)} <span aria-hidden="true" style={{ color: C.muted }}>×</span>
-                  </button>
-                ))}
+              <div style={rowLabel}>Rotates between, in this order</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {b.group.map((id, k) => {
+                  const moveIn = (dir) => {
+                    const g = [...b.group]
+                    ;[g[k], g[k + dir]] = [g[k + dir], g[k]]
+                    update(b.id, { group: g })
+                  }
+                  const arrow = (dir, sym, off) => (
+                    <button type="button" aria-label={dir < 0 ? 'Show earlier' : 'Show later'} disabled={!canEdit || off} onClick={() => moveIn(dir)} style={{ all: 'unset', cursor: off ? 'default' : 'pointer', width: 32, height: 32, borderRadius: 16, border: `2px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, opacity: off ? 0.3 : 1 }}>{sym}</button>
+                  )
+                  return (
+                    <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: C.tealTint, borderRadius: 12, padding: '6px 8px' }}>
+                      <span style={{ width: 20, fontSize: 13, fontWeight: 800, color: C.muted, textAlign: 'center' }}>{k + 1}</span>
+                      <span style={{ flex: 1, fontSize: 14, fontWeight: 700 }}>{short(id)}</span>
+                      {arrow(-1, '↑', k === 0)}
+                      {arrow(1, '↓', k === b.group.length - 1)}
+                      <button type="button" disabled={!canEdit} onClick={() => change(separateEntry(items, i, id))} title="Take out of this window" style={{ all: 'unset', cursor: canEdit ? 'pointer' : 'default', fontSize: 13, fontWeight: 700, color: C.danger, padding: '0 4px' }}>Take Out</button>
+                    </div>
+                  )
+                })}
               </div>
               <div style={rowLabel}>Change every (Manual: swipe or tap the arrows on the wall)</div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

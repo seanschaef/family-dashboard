@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { C, card } from '../theme.js'
 import { useEvents } from '../lib/eventsource.js'
 import { ownsEvent } from '../lib/calendars.js'
@@ -110,25 +110,49 @@ function DayView({ events, anchor, colorFor, onEventClick }) {
   )
 }
 
+// Week view with a focus day: today's column is wider and easier to read, the
+// other days shrink. Tap another day and it grows instead (animated); tap the
+// focused day again to open it. Goes back to today after 30 s without a tap.
+const FOCUS_RESET_MS = 30 * 1000
+
 function WeekView({ events, anchor, colorFor, today, onDayClick }) {
   const start = startOfWeek(anchor)
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i))
+  const todayIdx = days.findIndex((d) => isSameDay(d, today))
+  const [focus, setFocus] = useState(todayIdx)
+  const timer = useRef(null)
+
+  // New week shown, or back to today: focus today (or nothing if not in it).
+  useEffect(() => setFocus(todayIdx), [todayIdx, start.getTime()]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => clearTimeout(timer.current), [])
+
+  const pick = (i) => {
+    if (i === focus) return onDayClick(days[i])
+    setFocus(i)
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setFocus(todayIdx), FOCUS_RESET_MS)
+  }
+
+  const cols = days.map((_, i) => (focus < 0 ? '1fr' : i === focus ? '2.6fr' : '1fr')).join(' ')
   return (
-    <div style={{ minHeight: '100%', display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
+    <div style={{ minHeight: '100%', display: 'grid', gridTemplateColumns: cols, gap: 8, transition: 'grid-template-columns 450ms ease' }}>
       {days.map((day, i) => {
         const list = eventsOn(events, day)
-        const isToday = isSameDay(day, today)
+        const isToday = i === todayIdx
+        const big = focus < 0 || i === focus
         return (
-          <button key={i} type="button" aria-label={`${day.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' })}, ${list.length} events`} onClick={() => onDayClick(day)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', background: isToday ? C.tealTint : C.cream, borderRadius: 12, padding: 10, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-            <div style={{ fontSize: 17, fontWeight: 800, color: isToday ? C.tealText : C.ink }}>{DOW[i]} {day.getDate()}</div>
+          <button key={i} type="button" aria-label={`${day.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' })}, ${list.length} events`} onClick={() => pick(i)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', background: i === focus ? C.tealTint : isToday ? C.tealTint : C.cream, outline: i === focus ? `3px solid ${C.tealText}` : 'none', outlineOffset: -3, borderRadius: 12, padding: big ? 12 : 8, display: 'flex', flexDirection: 'column', gap: big ? 8 : 5, minWidth: 0, overflow: 'hidden', transition: 'padding 450ms ease' }}>
+            <div style={{ fontSize: big ? 19 : 14, fontWeight: 800, color: isToday ? C.tealText : C.ink, whiteSpace: 'nowrap', transition: 'font-size 450ms ease' }}>
+              {DOW[i]} {day.getDate()}
+            </div>
             {list.map((ev) => (
-              <div key={ev.id} style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
-                <span style={{ width: 8, height: 8, borderRadius: 4, background: colorFor(ev), flexShrink: 0, alignSelf: 'center' }} />
-                <span style={{ fontSize: 15, lineHeight: 1.2, minWidth: 0 }}>
+              <div key={ev.id} style={{ display: 'flex', gap: 6, alignItems: 'baseline', minWidth: 0 }}>
+                <span style={{ width: big ? 9 : 6, height: big ? 9 : 6, borderRadius: 5, background: colorFor(ev), flexShrink: 0, alignSelf: 'center' }} />
+                <span style={{ fontSize: big ? 17 : 12, lineHeight: 1.2, minWidth: 0, transition: 'font-size 450ms ease', overflowWrap: 'anywhere' }}>
                   <span style={{ color: C.muted }}>{ev.all_day ? '' : timeOfDay(ev.starts_at) + ' '}</span>
                   {ev.title}
-                  {ev.location && (
-                    <span style={{ display: 'block', fontSize: 13, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.location}</span>
+                  {big && ev.location && (
+                    <span style={{ display: 'block', fontSize: 14, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.location}</span>
                   )}
                 </span>
               </div>
