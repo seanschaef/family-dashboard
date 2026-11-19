@@ -134,6 +134,20 @@ export const useRewards = () => useFamilyTable('rewards', { order: { column: 'co
 export const addReward = ({ title, cost }) => insertRow('rewards', { title, cost: cost || 0 })
 export const removeReward = (id) => deleteRow('rewards', id)
 
+// ---------- spending points ----------
+// A person's balance = every point they've earned minus what they've spent on
+// rewards. Spending is approved by a parent (see phone/Rewards.jsx).
+export const useRedemptions = () => useFamilyTable('reward_redemptions', { order: { column: 'created_at', ascending: false }, sample: [] })
+export const redeemReward = ({ member_key, reward, approved_by }) =>
+  insertRow('reward_redemptions', { member_key, reward_id: reward.id, title: reward.title, cost: reward.cost || 0, approved_by: approved_by || null })
+export const undoRedemption = (id) => deleteRow('reward_redemptions', id)
+
+export const pointsEarned = (logs, memberKey) =>
+  logs.filter((l) => l.member_key === memberKey).reduce((sum, l) => sum + (l.points || 0), 0)
+export const pointsSpent = (redemptions, memberKey) =>
+  redemptions.filter((r) => r.member_key === memberKey).reduce((sum, r) => sum + (r.cost || 0), 0)
+export const pointsBalance = (logs, redemptions, memberKey) => pointsEarned(logs, memberKey) - pointsSpent(redemptions, memberKey)
+
 // Points a member has earned this week (Mon..Sun containing today).
 export function pointsThisWeek(logs, memberKey) {
   const now = new Date()

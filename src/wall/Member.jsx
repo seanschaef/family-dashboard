@@ -8,7 +8,7 @@ import PhotoFrame from './PhotoFrame.jsx'
 import { formatLongDate, birthdayCountdown, useNow } from '../lib/time.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, pointsThisWeek, doneByText, assigneesOf } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, pointsThisWeek, pointsBalance, useRedemptions, doneByText, assigneesOf } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import { usePhotoCollections, activeCollectionsFor } from '../lib/photos.js'
 import { normalizePersonLayout, personBlockHeight } from './personLayout.js'
@@ -55,9 +55,9 @@ function ChoresCard({ person, due, logs, T, points, actions }) {
         <div style={{ fontSize: 22, color: C.muted }}>Nothing due today</div>
       )}
       {points != null && (
-        <div style={{ marginTop: 'auto', background: C.track, borderRadius: 16, padding: '14px 18px', display: 'flex', justifyContent: 'space-between', fontSize: 22 }}>
-          <div style={{ fontWeight: 600 }}>Points this week</div>
-          <div style={{ fontWeight: 800, color: person.color }}>{points}</div>
+        <div style={{ marginTop: 'auto', background: C.track, borderRadius: 16, padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 22 }}>
+          <div style={{ fontWeight: 600 }}>Points <span style={{ fontWeight: 400, color: C.muted, fontSize: 18 }}>· {points.week} this week</span></div>
+          <div style={{ fontWeight: 800, color: person.color }}>{points.balance}</div>
         </div>
       )}
     </div>
@@ -111,12 +111,13 @@ export default function Member() {
   const { rows: photoCollections } = usePhotoCollections()
   const person = byKey(memberKey)
   const jobsDrag = useDragScroll()
+  const { rows: redemptions } = useRedemptions()
   const actions = useChoreActions({ logs, pageKey: memberKey, onWall: true, scale: 2 })
   if (!person) return null
 
   const due = dueChores(chores, logs, person.key, T).sort((a, b) => a.title.localeCompare(b.title))
   const myReminders = reminders.filter((r) => r.member_key === person.key)
-  const points = pointsThisWeek(logs, person.key)
+  const points = { week: pointsThisWeek(logs, person.key), balance: pointsBalance(logs, redemptions, person.key) }
   const hasPhotos = activeCollectionsFor(photoCollections, { memberKey: person.key }).length > 0
   const reminderTitle = person.role === 'teen' ? 'Homework and reminders' : person.role === 'child' ? 'Reminders' : 'My reminders'
 
@@ -132,7 +133,7 @@ export default function Member() {
           <div style={{ fontSize: 30, fontWeight: 800 }}>My jobs</div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 30, fontWeight: 800 }}>
             <StarIcon size={44} />
-            <span>{points} stars</span>
+            <span>{points.balance} stars</span>
           </div>
         </div>
         <div ref={jobsDrag.ref} {...jobsDrag.handlers} className={jobsDrag.className} style={{ ...jobsDrag.style, flex: '1 1 0', minHeight: 0 }}>
