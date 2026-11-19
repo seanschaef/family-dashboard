@@ -313,11 +313,20 @@ export default function Arrange() {
   const visible = items.filter((x) => x.visible)
   const vIndex = b ? visible.findIndex((x) => x.id === b.id) : -1
 
+  // Cancel throws away unsaved changes and shows the saved layout again.
+  const dirty = draft?.key === pageKey
+  const cancel = () => {
+    setDraft(null)
+    setSelected(null)
+    setStatus(null)
+  }
+
   // Save / Reset: in the right-hand column (always in view) when the preview
   // and settings sit side by side; otherwise stuck to the bottom of the screen.
   const saveBar = (
     <div style={{ position: 'sticky', bottom: wide ? undefined : 92, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 12, padding: '10px 12px', background: C.card, border: `2px solid ${C.border}`, borderRadius: 16, zIndex: 5 }}>
       <button type="button" onClick={save} style={{ all: 'unset', cursor: 'pointer', background: C.meals, color: '#FFF', borderRadius: 14, padding: '12px 22px', fontSize: 16, fontWeight: 700 }}>Save to wall</button>
+      <button type="button" onClick={cancel} disabled={!dirty} style={{ all: 'unset', cursor: dirty ? 'pointer' : 'default', fontSize: 14, fontWeight: 700, color: dirty ? C.ink : C.border, padding: '10px 4px' }}>Cancel</button>
       <button type="button" onClick={reset} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.muted }}>Reset to default</button>
       {status && <span style={{ fontSize: 14, color: status === 'error' ? C.rust : C.tealText }}>{status === 'saved' ? 'Saved' : status === 'reset' ? 'Reset and saved' : 'Couldn’t save'}</span>}
     </div>
