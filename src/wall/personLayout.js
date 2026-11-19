@@ -21,7 +21,7 @@ const ALL = ['header', 'calendar', 'chores', 'jobs', 'reminders', 'birthday', 'w
 const ROLE_DEFAULTS = {
   child: [
     { id: 'header', size: 's', width: 'full' },
-    { id: 'calendar', size: 'm', width: 'full' },
+    { id: 'calendar', size: 'l', width: 'full' },
     { id: 'jobs', size: 'xl', width: 'full' },
     { id: 'reminders', size: 'l', width: 'half' },
     { id: 'birthday', size: 'l', width: 'half' },
@@ -57,18 +57,8 @@ export function normalizePersonLayout(stored, role) {
   return normalizeLayout(stored, { labels: PERSON_BLOCK_LABELS, defaults: personDefaults(role) })
 }
 
-// Fixed heights (px) for windows that need one on a person's page.
-const FIXED = {
-  header: { s: 140, m: 180, l: 220, xl: 260 },
-  calendar: { s: 300, m: 430, l: 430, xl: 640 },
-  jobs: { s: 300, m: 420, l: 480, xl: 560 },
-  photo: { s: 220, m: 340, l: 380, xl: 520 },
-}
-export function personBlockHeight(id, size) {
-  return FIXED[id]?.[size]
-}
-
-// Every window's height on a person's page (px); see approxHeight in hubLayout.js.
+// One height per size for every window, the same as the hub (see hubLayout.js).
 export function personApproxHeight(id, size) {
-  return FIXED[id]?.[size] ?? GENERIC_HEIGHT[size] ?? 220
+  return GENERIC_HEIGHT[size] ?? 280
 }
+export const personBlockHeight = personApproxHeight

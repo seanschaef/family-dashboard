@@ -34,14 +34,14 @@ export const WIDTH_SPAN = { full: 4, half: 2, quarter: 1 }
 export const DEFAULT_HUB_LAYOUT = [
   { id: 'header', size: 's', width: 'full', visible: true },
   { id: 'photo', size: 'm', width: 'full', visible: true, fit: 'cover' },
-  { id: 'calendar', size: 'm', width: 'full', visible: true },
+  { id: 'calendar', size: 'l', width: 'full', visible: true },
   { id: 'legend', size: 's', width: 'full', visible: false },
   { id: 'dinner', size: 's', width: 'full', visible: true },
-  { id: 'chores', size: 'l', width: 'half', visible: true },
-  { id: 'pet', size: 'l', width: 'half', visible: true },
-  { id: 'today', size: 'l', width: 'half', visible: true },
-  { id: 'reminders', size: 'l', width: 'half', visible: false },
-  { id: 'birthdays', size: 'l', width: 'half', visible: true },
+  { id: 'chores', size: 'm', width: 'half', visible: true },
+  { id: 'pet', size: 'm', width: 'half', visible: true },
+  { id: 'today', size: 'm', width: 'half', visible: true },
+  { id: 'reminders', size: 'm', width: 'half', visible: false },
+  { id: 'birthdays', size: 'm', width: 'half', visible: true },
   { id: 'points', size: 'l', width: 'half', visible: false },
 ]
 
@@ -154,26 +154,19 @@ export function separateEntry(items, i, memberId) {
 }
 
 
-// Fixed heights (px) for blocks that need one, within the 1080x1920 wall.
+// One height per size for every window (px on the wall), so two windows of
+// the same size always line up. Windows pack like widgets: each one slots into
+// the first space it fits, in order, including gaps beside a taller
+// neighbour. The phone's preview uses the same numbers, scaled down.
+// The one exception is Dinner tonight, a single-line strip.
+export const GENERIC_HEIGHT = { s: 160, m: 280, l: 400, xl: 520 }
 const FIXED = {
-  header: { s: 160, m: 200, l: 240, xl: 300 },
-  photo: { s: 200, m: 270, l: 300, xl: 440 },
-  calendar: { s: 260, m: 400, l: 430, xl: 560 },
-  today: { s: 160, m: 240, l: 260, xl: 440 },
   dinner: { s: 80, m: 120, l: 160, xl: 220 },
 }
-export function blockHeight(id, size) {
-  return FIXED[id]?.[size]
-}
-
-// Every window has a fixed height for its size (px on the 1080-wide wall), so
-// windows pack like widgets: each one slots into the first space it fits,
-// in order, including gaps beside a taller neighbour. The phone's preview
-// uses the same numbers, scaled down.
-export const GENERIC_HEIGHT = { s: 140, m: 220, l: 320, xl: 460 }
 export function approxHeight(id, size) {
-  return FIXED[id]?.[size] ?? GENERIC_HEIGHT[size] ?? 220
+  return FIXED[id]?.[size] ?? GENERIC_HEIGHT[size] ?? 280
 }
+export const blockHeight = approxHeight
 // A combined window is as tall as its tallest member.
 export function entryHeight(b, heightOf = approxHeight) {
   return Math.max(...(b.group || [b.id]).map((id) => heightOf(id, b.size)))
