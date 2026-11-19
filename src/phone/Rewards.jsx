@@ -87,7 +87,7 @@ function RedeemSheet({ reward, members, balanceOf, onClose }) {
 
 export default function Rewards() {
   const { configured } = useAuth()
-  const { members, nameFor, isAdmin } = useMembers()
+  const { members, nameFor, isAdmin, me, updateMember } = useMembers()
   const { rows: logs } = useChoreLogs()
   const { rows: rewards } = useRewards()
   const { rows: redemptions } = useRedemptions()
@@ -119,6 +119,20 @@ export default function Rewards() {
             </div>
             <div style={{ fontSize: 34, fontWeight: 800, color: m.color }}>{balanceOf(m.key)}</div>
             <div style={{ fontSize: 13, color: C.muted }}>points to spend · {pointsThisWeek(logs, m.key)} this week</div>
+            {rewards.length > 0 && (
+              <select
+                aria-label={`${m.name} is saving for`}
+                value={m.goal_reward_id || ''}
+                disabled={!(isAdmin || me?.id === m.id)}
+                onChange={(e) => updateMember(m.id, { goal_reward_id: e.target.value || null })}
+                style={{ font: 'inherit', fontSize: 13, padding: '4px 6px', borderRadius: 8, border: `2px solid ${C.border}`, background: C.cream, color: C.ink, marginTop: 4, maxWidth: '100%' }}
+              >
+                <option value="">Saving for: next reward</option>
+                {rewards.map((r) => (
+                  <option key={r.id} value={r.id}>Saving for: {r.title} ({r.cost})</option>
+                ))}
+              </select>
+            )}
           </div>
         ))}
       </div>

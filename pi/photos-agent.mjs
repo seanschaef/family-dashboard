@@ -13,7 +13,7 @@
 
 import { createRequire } from 'node:module'
 import { createServer } from 'node:http'
-import { readdirSync, existsSync, readFileSync, statSync, createReadStream } from 'node:fs'
+import { readdirSync, existsSync, readFileSync, statSync, createReadStream, openSync, readSync, closeSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join, resolve, sep, extname } from 'node:path'
 
@@ -59,6 +59,68 @@ function listImages(dir) {
   }
 }
 
+// ---------- "On this day": when each photo was taken ----------
+// From the file name (IMG_20241119_…, PXL_20241119_…, 2024-11-19 …) or else
+// the photo's own EXIF date (DateTimeOriginal, read from the first 128 KB).
+// File dates are skipped: they're when it was copied, not taken. Rebuilt
+// every 6 hours; only dates leave this function, never images.
+function dateFromName(name) {
+  const m = name.match(/(?:^|[^0-9])(19[7-9][0-9]|20[0-9]{2})[-_.]?(0[1-9]|1[0-2])[-_.]?(0[1-9]|[12][0-9]|3[01])(?:[^0-9]|$)/)
+  return m ? { y: +m[1], m: +m[2], d: +m[3] } : null
+}
+function dateFromExif(file) {
+  let fd
+  try {
+    fd = openSync(file, 'r')
+    const buf = Buffer.alloc(131072)
+    const n = readSync(fd, buf, 0, buf.length, 0)
+    const m = buf.subarray(0, n).toString('latin1').match(/(19[7-9][0-9]|20[0-9]{2}):(0[1-9]|1[0-2]):(0[1-9]|[12][0-9]|3[01]) [0-2][0-9]:[0-5][0-9]:[0-5][0-9]/)
+    return m ? { y: +m[1], m: +m[2], d: +m[3] } : null
+  } catch {
+    return null
+  } finally {
+    if (fd !== undefined) closeSync(fd)
+  }
+}
+let dateIndex = []
+function buildDateIndex() {
+  const out = []
+  const walk = (rel, depth) => {
+    let entries
+    try {
+      entries = readdirSync(join(ROOT, rel), { withFileTypes: true })
+    } catch {
+      return
+    }
+    for (const e of entries) {
+      if (e.name.startsWith('#') || e.name.startsWith('.') || e.name.startsWith('@')) continue
+      const r = rel ? `${rel}/${e.name}` : e.name
+      if (e.isDirectory()) {
+        if (depth < 4) walk(r, depth + 1)
+      } else if (TYPES[extname(e.name).toLowerCase()]) {
+        const when = dateFromName(e.name) || dateFromExif(join(ROOT, r))
+        if (when) out.push({ folder: rel, name: e.name, ...when })
+        if (out.length > 50000) return
+      }
+    }
+  }
+  walk('', 0)
+  dateIndex = out
+  console.log(`on-this-day index: ${out.length} dated photos`)
+}
+setTimeout(buildDateIndex, 5000)
+setInterval(buildDateIndex, 6 * 60 * 60 * 1000)
+
+// Photos from this month/day in earlier years; with ?spread=3, also up to 3
+// days either side.
+function onThisDay(month, day, year, spread) {
+  const target = Date.UTC(2000, month - 1, day)
+  return dateIndex
+    .filter((p) => p.y < year)
+    .filter((p) => Math.abs(Date.UTC(2000, p.m - 1, p.d) - target) <= spread * 86400000)
+    .map((p) => ({ folder: p.folder, name: p.name, year: p.y, month: p.m, day: p.d }))
+}
+
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -92,6 +154,17 @@ const server = createServer((req, res) => {
     }
     res.writeHead(200, { ...cors, 'Content-Type': TYPES[extname(file).toLowerCase()], 'Cache-Control': 'public, max-age=3600' })
     createReadStream(file).pipe(res)
+    return
+  }
+
+  if (url.pathname === '/onthisday') {
+    const now = new Date()
+    const month = Number(url.searchParams.get('month')) || now.getMonth() + 1
+    const day = Number(url.searchParams.get('day')) || now.getDate()
+    const year = Number(url.searchParams.get('year')) || now.getFullYear()
+    const spread = Math.min(7, Math.max(0, Number(url.searchParams.get('spread')) || 0))
+    res.writeHead(200, { ...cors, 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ photos: onThisDay(month, day, year, spread), indexed: dateIndex.length }))
     return
   }
 

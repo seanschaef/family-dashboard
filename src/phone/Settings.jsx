@@ -194,6 +194,8 @@ export default function Settings() {
         <Link to="/app/wall-preview" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>See how the wall looks ›</Link>
         <Link to="/app/arrange" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Arrange the wall: hub and each person's page ›</Link>
         <Link to="/app/wall-display" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Monitor schedule and night colours ›</Link>
+        <Link to="/app/notes" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Family notes on the wall ›</Link>
+        <Link to="/app/waste" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Garbage and recycling days ›</Link>
       </div>
 
       {!configured && <div style={{ fontSize: 13, color: C.muted }}>Demo mode: changes are not saved.</div>}

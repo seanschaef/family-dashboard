@@ -60,6 +60,33 @@ export async function fetchFolderImages(folder) {
   }
 }
 
+// Photos taken on today's date in earlier years (from the Pi agent's index).
+// If none, widens to 3 days either side. Returns [{ url, year, month, day }].
+export async function fetchOnThisDay(now = new Date()) {
+  if (!AGENT_URL) return []
+  const q = (spread) =>
+    fetch(`${AGENT_URL}/onthisday?month=${now.getMonth() + 1}&day=${now.getDate()}&year=${now.getFullYear()}&spread=${spread}`)
+      .then((r) => (r.ok ? r.json() : { photos: [] }))
+      .then((j) => j.photos || [])
+  try {
+    let photos = await q(0)
+    let exact = true
+    if (!photos.length) {
+      photos = await q(3)
+      exact = false
+    }
+    return photos.map((p) => ({
+      url: `${AGENT_URL}/img?folder=${encodeURIComponent(p.folder)}&name=${encodeURIComponent(p.name)}`,
+      year: p.year,
+      month: p.month,
+      day: p.day,
+      exact,
+    }))
+  } catch {
+    return []
+  }
+}
+
 const sampleSvg = (a, b) =>
   `data:image/svg+xml,${encodeURIComponent(
     `<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${a}'/><stop offset='1' stop-color='${b}'/></linearGradient></defs><rect width='1200' height='800' fill='url(#g)'/><text x='50%' y='50%' fill='rgba(255,255,255,0.8)' font-family='sans-serif' font-size='52' font-weight='700' text-anchor='middle' dominant-baseline='middle'>Sample photo</text></svg>`,

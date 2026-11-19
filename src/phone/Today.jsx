@@ -126,6 +126,7 @@ export default function Today() {
 
 
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', fontSize: 14, paddingTop: 4 }}>
+        <Link to="/app/notes" style={{ color: C.tealText, fontWeight: 700 }}>Notes for the wall</Link>
         <Link to="/app/calendars" style={{ color: C.tealText, fontWeight: 700 }}>Calendar links</Link>
         <Link to="/app/wall-display" style={{ color: C.tealText, fontWeight: 700 }}>Wall display</Link>
         <Link to="/app/widgets" style={{ color: C.tealText, fontWeight: 700 }}>Wall widgets</Link>

@@ -18,6 +18,7 @@ import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone, useRedemptions, pointsBalance, pointsThisWeek } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import PetBlock from './PetBlock.jsx'
+import { GoalsBlock, LeaderboardBlock, MealsWeekBlock, GroceriesBlock, NotesBlock, NextUpBlock, ForecastBlock, AirBlock, WasteBlock, OnThisDayBlock } from './HubWidgets.jsx'
 import { useMeals, mealFor } from '../lib/kitchen.js'
 import { normalizeHubLayout, blockHeight, WIDTH_SPAN, ROW_UNIT, packedStyle, entryHeight } from './hubLayout.js'
 
@@ -77,6 +78,16 @@ export default function Hub() {
       </div>
     ),
     pet: () => <PetBlock chores={chores} logs={logs} />,
+    goals: () => <GoalsBlock />,
+    leaderboard: () => <LeaderboardBlock />,
+    mealsweek: () => <MealsWeekBlock />,
+    groceries: () => <GroceriesBlock />,
+    notes: () => <NotesBlock />,
+    nextup: () => <NextUpBlock />,
+    forecast: () => <ForecastBlock />,
+    air: () => <AirBlock />,
+    waste: () => <WasteBlock />,
+    onthisday: () => <OnThisDayBlock />,
     points: () => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 14, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Points</div>

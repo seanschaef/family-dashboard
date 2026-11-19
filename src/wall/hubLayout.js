@@ -15,6 +15,16 @@ export const HUB_BLOCK_LABELS = {
   reminders: 'Reminders',
   birthdays: 'Coming up (birthdays and dates)',
   points: 'Points (everyone’s totals)',
+  goals: 'Saving for (reward goals)',
+  leaderboard: 'Chore leaderboard (this week)',
+  mealsweek: 'This week’s meals',
+  groceries: 'Grocery list',
+  notes: 'Family notes',
+  nextup: 'Next up (whole family)',
+  forecast: 'Weather forecast',
+  air: 'Air quality (AQHI)',
+  waste: 'Garbage and recycling',
+  onthisday: 'On this day (photos)',
 }
 
 // Size (S, M, L, XL) is a window's height; width (quarter, half, full) is
@@ -43,6 +53,16 @@ export const DEFAULT_HUB_LAYOUT = [
   { id: 'reminders', size: 'm', width: 'half', visible: false },
   { id: 'birthdays', size: 'm', width: 'half', visible: true },
   { id: 'points', size: 'l', width: 'half', visible: false },
+  { id: 'goals', size: 'm', width: 'half', visible: false },
+  { id: 'leaderboard', size: 'm', width: 'half', visible: false },
+  { id: 'mealsweek', size: 'l', width: 'half', visible: false },
+  { id: 'groceries', size: 'l', width: 'half', visible: false },
+  { id: 'notes', size: 'm', width: 'half', visible: false },
+  { id: 'nextup', size: 'm', width: 'half', visible: false },
+  { id: 'forecast', size: 'l', width: 'half', visible: false },
+  { id: 'air', size: 'm', width: 'quarter', visible: false },
+  { id: 'waste', size: 'm', width: 'half', visible: false },
+  { id: 'onthisday', size: 'm', width: 'half', visible: false },
 ]
 
 // Layouts saved before widths existed: 'l' meant full width, 's'/'m' half.
