@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ChoresPopover from './ChoresPopover.jsx'
 import RecipePopover from './RecipePopover.jsx'
+import FitText from '../components/FitText.jsx'
 import { C, card } from '../theme.js'
 import Icon from '../components/Icon.jsx'
 import { LiveCheck, ProgressRow } from './parts.jsx'
@@ -51,8 +52,10 @@ export default function Hub() {
       const t = { s: [24, 84, 22], m: [30, 110, 28], l: [34, 140, 32], xl: [38, 170, 36] }[size] || [24, 84, 22]
       return (
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, height: blockHeight('header', size), overflow: 'hidden' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          <div style={{ fontSize: t[0], fontWeight: 600, color: C.rust, lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{hubGreeting({ now, familyName, petName, members, dates: importantDates, temp: weatherNow?.temp })}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: '1 1 0' }}>
+          {/* The greeting has a fixed box (beside the weather) and its text
+              shrinks to fit rather than being cut off. */}
+          <FitText max={t[0]} style={{ fontWeight: 600, color: C.rust, lineHeight: 1.15 }}>{hubGreeting({ now, familyName, petName, members, dates: importantDates, temp: weatherNow?.temp })}</FitText>
           <div style={{ fontSize: t[1], fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
           <div style={{ fontSize: t[2], color: C.muted, lineHeight: 1.15 }}>{formatLongDate(now)}</div>
         </div>
