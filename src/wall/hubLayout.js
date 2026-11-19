@@ -26,6 +26,7 @@ export const HUB_BLOCK_LABELS = {
   waste: 'Garbage and Recycling',
   onthisday: 'On This Day (photos)',
   ink: 'Ink (draw or write)',
+  joke: 'Joke of the Hour',
 }
 
 // Size (S, M, L, XL) is a window's height; width (quarter, half, full) is
@@ -67,6 +68,7 @@ export const DEFAULT_HUB_LAYOUT = [
   { id: 'waste', size: 'm', width: 'half', visible: false },
   { id: 'onthisday', size: 'm', width: 'half', visible: false },
   { id: 'ink', size: 'l', width: 'half', visible: false },
+  { id: 'joke', size: 'm', width: 'half', visible: false },
 ]
 
 // Layouts saved before widths existed: 'l' meant full width, 's'/'m' half.

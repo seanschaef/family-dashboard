@@ -21,7 +21,7 @@ import { useChores, useChoreLogs, dueChores, isDone, useRedemptions, pointsBalan
 import { useReminders } from '../lib/household.js'
 import PetBlock from './PetBlock.jsx'
 import InkBoard from '../components/InkBoard.jsx'
-import { ComingUpBlock, GoalsBlock, LeaderboardBlock, MealsWeekBlock, GroceriesBlock, NotesBlock, NextUpBlock, ForecastBlock, AirBlock, WasteBlock, OnThisDayBlock } from './HubWidgets.jsx'
+import { JokeBlock, ComingUpBlock, GoalsBlock, LeaderboardBlock, MealsWeekBlock, GroceriesBlock, NotesBlock, NextUpBlock, ForecastBlock, AirBlock, WasteBlock, OnThisDayBlock } from './HubWidgets.jsx'
 import { useMeals, mealFor } from '../lib/kitchen.js'
 import { normalizeHubLayout, blockHeight, WIDTH_SPAN, ROW_UNIT, packedStyle, entryHeight } from './hubLayout.js'
 
@@ -100,6 +100,7 @@ export default function Hub() {
     waste: () => <WasteBlock />,
     onthisday: () => <OnThisDayBlock />,
     ink: () => <InkBoard title="Ink" big />,
+    joke: () => <JokeBlock />,
     points: () => (
       <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Points</div>

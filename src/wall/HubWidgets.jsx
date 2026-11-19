@@ -13,6 +13,7 @@ import { upcomingPickups, dayWord } from '../lib/waste.js'
 import { useForecast, wearHint, useAqhi, aqhiRisk } from '../lib/weather.js'
 import { fetchOnThisDay, photoAgentConfigured } from '../lib/photos.js'
 import { useDragScroll } from './dragScroll.js'
+import { jokeOfTheHour } from '../lib/jokes.js'
 import { useImportantDates, upcomingCountdowns } from '../lib/dates.js'
 import EventPopover from './EventPopover.jsx'
 import RecipePopover from './RecipePopover.jsx'
@@ -466,5 +467,26 @@ export function ComingUpBlock() {
         })}
       </Scroll>
     </div>
+  )
+}
+
+// ---------- Joke of the hour ----------
+// A new (kid-safe) joke every hour. The punchline stays hidden until someone
+// taps the window; it hides again when the next joke arrives.
+export function JokeBlock() {
+  const now = useNow(60000)
+  const joke = jokeOfTheHour(now)
+  const [shown, setShown] = useState(null) // key of the joke whose punchline is showing
+  const reveal = shown === joke.key
+  return (
+    <button type="button" onClick={() => setShown(reveal ? null : joke.key)} style={{ all: 'unset', cursor: 'pointer', display: 'block', height: '100%' }}>
+      <div style={box({ gap: 10 })}>
+        <Title right={reveal ? 'Tap to hide' : 'Tap for the answer'}>Joke of the Hour</Title>
+        <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.25 }}>{joke.setup}</div>
+        <div style={{ fontSize: 24, lineHeight: 1.25, color: reveal ? C.rust : C.muted, fontWeight: reveal ? 800 : 500, transition: 'color 300ms ease' }}>
+          {reveal ? joke.punchline : '…'}
+        </div>
+      </div>
+    </button>
   )
 }
