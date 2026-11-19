@@ -1,22 +1,23 @@
-import { greeting } from './time.js'
-
 // The hub's greeting line. In order of priority:
 //   1. birthdays today (family members and important dates marked Birthday,
 //      e.g. the dog): "Happy Birthday, Lewis!"
 //   2. anniversaries today: "Happy Anniversary!" / "Happy Anniversary, <title>!"
 //   3. a holiday or an odd little observance: "Happy Pi Day, Schaefers!"
-//   4. otherwise the time of day: "Good Morning, Schaefers!"
+//   4. otherwise a rotating everyday greeting: plain ("Good Morning,
+//      Schaefers!") or a bit of whimsy that fits the time of day, the
+//      weekday, the weather or the dog. It changes every three hours and
+//      never flickers in between.
 // Dates are Edmonton local dates.
 
 const TZ = 'America/Edmonton'
 
 function localParts(now) {
   const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' })
+    new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', hourCycle: 'h23' })
       .formatToParts(now)
       .map((p) => [p.type, p.value]),
   )
-  return { y: +parts.year, m: +parts.month, d: +parts.day }
+  return { y: +parts.year, m: +parts.month, d: +parts.day, hour: +parts.hour % 24, weekday: parts.weekday }
 }
 
 // nth weekday (0=Sun) of a month; n = -1 for the last one.
@@ -116,6 +117,89 @@ function moving(y) {
   return out
 }
 
+// ---------- everyday whimsy ----------
+// {family} and {pet} are filled in. Lines that mention the pet are skipped
+// when there's no pet name.
+const BY_TIME = {
+  morning: [
+    'Rise and shine, {family}!',
+    'Top of the morning, {family}!',
+    'Morning, {family}. Coffee first, questions later.',
+    'Good morning, sunshines!',
+    'Up and at ’em, {family}!',
+    'Fresh day, fresh socks, {family}.',
+    '{pet} says good morning. Loudly.',
+    'Breakfast is the most important meal. Says {pet}.',
+  ],
+  afternoon: [
+    'Afternoon, {family}. Snack o’clock approaches.',
+    'Halfway there, {family}!',
+    'Hope the day’s treating you well, {family}.',
+    '{pet} is guarding the house. Mostly napping.',
+    'Hydrate, {family}! Water counts.',
+  ],
+  evening: [
+    'Evening, {family}. What’s for dinner?',
+    'Home sweet home, {family}.',
+    'Shoes off, feet up, {family}.',
+    'Has {pet} been walked? Just asking.',
+    'Golden hour, {family}.',
+  ],
+  night: [
+    'Good night, {family}. Sleep tight.',
+    'Lights out soon, {family}.',
+    'The house is sleepy, {family}.',
+    'Night owls, {family}?',
+    '{pet} is dreaming of squirrels.',
+  ],
+}
+const BY_DAY = {
+  Mon: ['Happy Monday, {family}. You’ve got this.', 'Fresh week, {family}!'],
+  Wed: ['Happy Hump Day, {family}!', 'Halfway through the week, {family}!'],
+  Thu: ['Happy Friday Eve, {family}!'],
+  Fri: ['Happy Friday, {family}!', 'TGIF, {family}!', 'Weekend loading, {family}…'],
+  Sat: ['Happy Saturday, {family}!', 'Weekend mode: on, {family}.'],
+  Sun: ['Happy Sunday, {family}!', 'Slow Sunday, {family}.'],
+}
+function byWeather(temp) {
+  if (temp == null) return []
+  if (temp <= -30) return ['It’s −30ish. Stay in, {family}. Seriously.', 'Too cold for {pet}’s walk. Maybe.']
+  if (temp <= -20) return ['It’s frosty out, {family}. Toques are not optional.', 'Plug in the car, {family}!', 'Brrr, {family}! Mitts on.']
+  if (temp <= -10) return ['Bundle up, {family}!', 'Toque weather, {family}.']
+  if (temp >= 28) return ['Scorcher today, {family}! Sunscreen up.', 'Hot one, {family}. Freezies in the freezer?']
+  if (temp >= 20) return ['Beautiful day out there, {family}!', 'Patio weather, {family}!']
+  return []
+}
+
+function partOfDay(hour) {
+  if (hour < 5) return 'night'
+  if (hour < 12) return 'morning'
+  if (hour < 17) return 'afternoon'
+  if (hour < 21) return 'evening'
+  return 'night'
+}
+
+// Small stable hash so the choice holds for a three-hour block.
+function pickIndex(seed, n) {
+  let h = 2166136261
+  for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619)
+  return Math.abs(h) % n
+}
+
+function everyday({ y, m, d, hour, weekday }, familyName, petName, temp) {
+  const part = partOfDay(hour)
+  const plain = `${{ morning: 'Good Morning', afternoon: 'Good Afternoon', evening: 'Good Evening', night: 'Good Night' }[part]}, {family}!`
+  const pool = [
+    plain,
+    plain, // plain stays the most common line
+    ...BY_TIME[part],
+    ...(part === 'morning' || part === 'afternoon' ? BY_DAY[weekday] || [] : []),
+    ...byWeather(temp),
+  ].filter((line) => petName || !line.includes('{pet}'))
+  const line = pool[pickIndex(`${y}-${m}-${d}-${Math.floor(hour / 3)}`, pool.length)]
+  return line.replaceAll('{family}', familyName).replaceAll('{pet}', petName)
+}
+
 // Same day and month, ignoring the year (YYYY-MM-DD strings).
 const sameDay = (iso, m, d) => {
   if (!iso) return false
@@ -125,8 +209,9 @@ const sameDay = (iso, m, d) => {
 
 const joinNames = (names) => (names.length <= 1 ? names[0] : `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`)
 
-export function hubGreeting({ now = new Date(), familyName = 'family', petName = '', members = [], dates = [] } = {}) {
-  const { y, m, d } = localParts(now)
+export function hubGreeting({ now = new Date(), familyName = 'family', petName = '', members = [], dates = [], temp = null } = {}) {
+  const parts = localParts(now)
+  const { y, m, d } = parts
 
   const birthdays = [
     ...members.filter((x) => sameDay(x.birthday, m, d)).map((x) => x.name),
@@ -146,5 +231,5 @@ export function hubGreeting({ now = new Date(), familyName = 'family', petName =
     return special.replace('{family}', familyName).replace('{pet}', petName || 'pup')
   }
 
-  return `${greeting(now)}, ${familyName}!`
+  return everyday(parts, familyName, petName, temp)
 }

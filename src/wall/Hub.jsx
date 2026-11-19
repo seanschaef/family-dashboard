@@ -14,6 +14,7 @@ import WeatherCard from './WeatherCard.jsx'
 import { formatClock, formatLongDate, useNow } from '../lib/time.js'
 import { hubGreeting } from '../lib/greetings.js'
 import { useImportantDates } from '../lib/dates.js'
+import { useWeather } from '../lib/weather.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone, useRedemptions, pointsBalance, pointsThisWeek } from '../lib/chores.js'
@@ -40,6 +41,7 @@ export default function Hub() {
   const familyReminders = reminders.filter((r) => r.member_key === null && !r.done)
   const dinner = mealFor(meals, T)?.title
   const { rows: importantDates } = useImportantDates()
+  const { data: weatherNow } = useWeather() // for weather-aware greetings
 
   // Block content by id. Rendered in the order/size the layout specifies.
   const blocks = {
@@ -50,7 +52,7 @@ export default function Hub() {
       return (
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, height: blockHeight('header', size), overflow: 'hidden' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          <div style={{ fontSize: t[0], fontWeight: 600, color: C.rust, lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{hubGreeting({ now, familyName, petName, members, dates: importantDates })}</div>
+          <div style={{ fontSize: t[0], fontWeight: 600, color: C.rust, lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{hubGreeting({ now, familyName, petName, members, dates: importantDates, temp: weatherNow?.temp })}</div>
           <div style={{ fontSize: t[1], fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
           <div style={{ fontSize: t[2], color: C.muted, lineHeight: 1.15 }}>{formatLongDate(now)}</div>
         </div>
