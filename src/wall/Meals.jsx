@@ -2,7 +2,8 @@ import { QRCodeSVG } from 'qrcode.react'
 import { C, card } from '../theme.js'
 import { Clock, LiveCheck } from './parts.jsx'
 import { todayISO } from '../lib/db.js'
-import { useMeals, mealFor, weekDates, useGroceries, addGrocery, toggleGrocery, addIngredientsToGroceries, GROCERY_SECTIONS, removeGrocery } from '../lib/kitchen.js'
+import RecipePopover from './RecipePopover.jsx'
+import { useMeals, mealFor, weekAt, useGroceries, addGrocery, toggleGrocery, addIngredientsToGroceries, GROCERY_SECTIONS, removeGrocery } from '../lib/kitchen.js'
 import { useLongPress } from '../lib/longPress.js'
 import ConfirmSheet from '../components/ConfirmSheet.jsx'
 import { useState } from 'react'
@@ -14,9 +15,10 @@ const STAPLES = ['Milk', 'Eggs', 'Bread', 'Bananas', 'Dog food']
 const PUBLIC_URL = import.meta.env.VITE_PUBLIC_URL
 const GROCERY_URL = `${PUBLIC_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/app/groceries`
 
-function weekOfLabel() {
-  const d = new Date(weekDates()[0] + 'T00:00:00')
-  return `Week of ${d.toLocaleDateString('en-CA', { month: 'long', day: 'numeric' })}`
+function weekOfLabel(week, offset) {
+  const d = new Date(week[0] + 'T00:00:00')
+  const date = d.toLocaleDateString('en-CA', { month: 'long', day: 'numeric' })
+  return offset === 0 ? `This Week · ${date}` : offset === 1 ? `Next Week · ${date}` : `Week of ${date}`
 }
 
 export default function Meals() {
@@ -24,7 +26,9 @@ export default function Meals() {
   const { rows: meals } = useMeals()
   const { rows: groceries } = useGroceries()
   const [removing, setRemoving] = useState(null)
-  const week = weekDates()
+  const [offset, setOffset] = useState(0) // weeks from this one (plan ahead on the phone)
+  const [recipe, setRecipe] = useState(null)
+  const week = weekAt(offset)
   const T = todayISO()
 
   const bySection = {}
@@ -48,24 +52,29 @@ export default function Meals() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 110 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ fontSize: 62, fontWeight: 800 }}>Meals</div>
-          <div style={{ fontSize: 24, color: C.muted }}>{weekOfLabel()}</div>
+          <div style={{ fontSize: 24, color: C.muted }}>{weekOfLabel(week, offset)}</div>
         </div>
         <Clock />
       </div>
 
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 10 })}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <div style={{ fontSize: 26, fontWeight: 800 }}>Dinner This Week</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button type="button" aria-label="Previous week" disabled={offset <= 0} onClick={() => setOffset((o) => Math.max(0, o - 1))} style={{ all: 'unset', cursor: offset > 0 ? 'pointer' : 'default', width: 52, height: 52, borderRadius: 26, border: `2px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, fontWeight: 800, opacity: offset > 0 ? 1 : 0.3 }}>‹</button>
+            <div style={{ fontSize: 26, fontWeight: 800 }}>{offset === 0 ? 'Dinner This Week' : offset === 1 ? 'Dinner Next Week' : 'Dinner'}</div>
+            <button type="button" aria-label="Next week" disabled={offset >= 8} onClick={() => setOffset((o) => Math.min(8, o + 1))} style={{ all: 'unset', cursor: 'pointer', width: 52, height: 52, borderRadius: 26, border: `2px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, fontWeight: 800, opacity: offset < 8 ? 1 : 0.3 }}>›</button>
+          </div>
           <button type="button" onClick={pushIngredients} style={{ all: 'unset', cursor: 'pointer', fontSize: 20, fontWeight: 700, color: C.tealText }}>Add ingredients to list</button>
         </div>
         {week.map((iso, i) => {
           const m = mealFor(meals, iso)
           const isToday = iso === T
           return (
-            <div key={iso} style={{ background: isToday ? C.meals : C.cream, color: isToday ? '#FFFFFF' : C.ink, borderRadius: 18, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button key={iso} type="button" disabled={!m} onClick={() => setRecipe(m)} style={{ all: 'unset', cursor: m ? 'pointer' : 'default', background: isToday ? C.meals : C.cream, color: isToday ? '#FFFFFF' : C.ink, borderRadius: 18, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 22, fontWeight: 800, width: 80 }}>{DOW[i]}</span>
               <span style={{ fontSize: 24, flexGrow: 1 }}>{m?.title || 'Not planned'}</span>
-            </div>
+              {m?.recipe && <span style={{ fontSize: 18, fontWeight: 700, opacity: 0.85 }}>Recipe ›</span>}
+            </button>
           )
         })}
       </div>
@@ -107,6 +116,7 @@ export default function Meals() {
           </div>
         )}
       </div>
+      <RecipePopover meal={recipe} onClose={() => setRecipe(null)} />
       <ConfirmSheet
         open={!!removing}
         scale={2}

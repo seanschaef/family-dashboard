@@ -14,6 +14,7 @@ import { useForecast, wearHint, useAqhi, aqhiRisk } from '../lib/weather.js'
 import { fetchOnThisDay, photoAgentConfigured } from '../lib/photos.js'
 import { useDragScroll } from './dragScroll.js'
 import EventPopover from './EventPopover.jsx'
+import RecipePopover from './RecipePopover.jsx'
 
 // The newer hub windows. Each fills the fixed height its size gives it
 // (see hubLayout.js) and scrolls inside if it has more to show.
@@ -125,28 +126,32 @@ export function LeaderboardBlock() {
 }
 
 // ---------- This week's meals ----------
+// Tap a dinner for its recipe; the title opens the Meals page.
 export function MealsWeekBlock() {
   const navigate = useNavigate()
   const { rows: meals } = useMeals()
+  const [open, setOpen] = useState(null)
   const T = todayISO()
   const days = weekDates()
   return (
-    <button type="button" onClick={() => navigate('/wall/meals')} style={{ all: 'unset', cursor: 'pointer', display: 'block', height: '100%' }}>
-      <div style={box({ gap: 6 })}>
+    <div style={box({ gap: 6 })}>
+      <button type="button" onClick={() => navigate('/wall/meals')} style={{ all: 'unset', cursor: 'pointer', display: 'block' }}>
         <Title right="Meals ›">This Week&apos;s Meals</Title>
-        {days.map((iso) => {
-          const d = new Date(iso + 'T12:00:00')
-          const isToday = iso === T
-          const meal = mealFor(meals, iso)?.title
-          return (
-            <div key={iso} style={{ display: 'flex', gap: 12, alignItems: 'baseline', fontSize: 19, padding: '3px 10px', borderRadius: 10, background: isToday ? C.tealTint : 'transparent', opacity: iso < T ? 0.5 : 1, minWidth: 0 }}>
-              <span style={{ width: 44, fontWeight: 800, flexShrink: 0 }}>{d.toLocaleDateString('en-CA', { weekday: 'short' })}</span>
-              <span style={{ color: meal ? C.ink : C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{meal || '—'}</span>
-            </div>
-          )
-        })}
-      </div>
-    </button>
+      </button>
+      {days.map((iso) => {
+        const d = new Date(iso + 'T12:00:00')
+        const isToday = iso === T
+        const meal = mealFor(meals, iso)
+        return (
+          <button key={iso} type="button" disabled={!meal} onClick={() => setOpen(meal)} style={{ all: 'unset', cursor: meal ? 'pointer' : 'default', display: 'flex', gap: 12, alignItems: 'baseline', fontSize: 19, padding: '3px 10px', borderRadius: 10, background: isToday ? C.tealTint : 'transparent', opacity: iso < T ? 0.5 : 1, minWidth: 0 }}>
+            <span style={{ width: 44, fontWeight: 800, flexShrink: 0 }}>{d.toLocaleDateString('en-CA', { weekday: 'short' })}</span>
+            <span style={{ color: meal ? C.ink : C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{meal?.title || '—'}</span>
+            {meal?.recipe && <span style={{ marginLeft: 'auto', fontSize: 14, color: C.tealText, fontWeight: 700, flexShrink: 0 }}>Recipe</span>}
+          </button>
+        )
+      })}
+      <RecipePopover meal={open} onClose={() => setOpen(null)} />
+    </div>
   )
 }
 

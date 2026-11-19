@@ -26,12 +26,91 @@ export const SAMPLE_MEALS = [
 export const useMeals = () => useFamilyTable('meals', { order: { column: 'meal_date' }, sample: SAMPLE_MEALS })
 export const mealFor = (meals, iso) => meals.find((m) => m.meal_date === iso)
 
-export async function setMeal(existingId, meal_date, title, ingredients) {
-  const patch = { title, ingredients: ingredients || null }
+// Save a day's dinner: { title, ingredients, recipe_url, recipe }.
+export async function setMeal(existingId, meal_date, fields) {
+  const patch = {
+    title: fields.title,
+    ingredients: fields.ingredients || null,
+    recipe_url: fields.recipe_url || null,
+    recipe: fields.recipe || null,
+  }
   if (existingId) await updateRow('meals', existingId, patch)
   else await insertRow('meals', { meal_date, ...patch })
 }
 export const removeMeal = (id) => deleteRow('meals', id)
+
+// Monday-start weeks: the 7 dates of the week `offset` weeks from this one.
+export function weekAt(offset = 0) {
+  const d = new Date()
+  d.setDate(d.getDate() + offset * 7)
+  return weekDates(d)
+}
+
+// Every dinner planned before, once each (by name), most used first, then
+// most recent; each carries its latest ingredients and recipe.
+export function pastMeals(meals) {
+  const byName = new Map()
+  for (const m of [...meals].sort((a, b) => (a.meal_date < b.meal_date ? -1 : 1))) {
+    if (!m.title?.trim()) continue
+    const key = m.title.trim().toLowerCase()
+    const prev = byName.get(key)
+    byName.set(key, { title: m.title.trim(), ingredients: m.ingredients || prev?.ingredients || '', recipe_url: m.recipe_url || prev?.recipe_url || null, recipe: m.recipe || prev?.recipe || null, count: (prev?.count || 0) + 1, last: m.meal_date })
+  }
+  return [...byName.values()].sort((a, b) => b.count - a.count || (a.last < b.last ? 1 : -1))
+}
+
+// Read a recipe from a web page (server-side; see the import-recipe function).
+// Returns { recipe } or { error }.
+export async function importRecipe(url) {
+  if (!isSupabaseConfigured) return { error: 'Not connected.' }
+  const { data, error } = await supabase.functions.invoke('import-recipe', { body: { url } })
+  if (error) return { error: 'Couldn’t read that page.' }
+  return data || { error: 'Couldn’t read that page.' }
+}
+
+// Recipe lines ("2 cups (250 g) all-purpose flour, sifted") to grocery names
+// ("all-purpose flour"): drop amounts, units, notes in brackets and anything
+// after a comma.
+const UNITS = new Set('cup cups c tbsp tbs tablespoon tablespoons tsp teaspoon teaspoons g gram grams kg ml l litre litres liter liters lb lbs pound pounds oz ounce ounces can cans package packages pkg jar jars clove cloves pinch dash bunch bunches slice slices stick sticks large medium small whole of x handful sprig sprigs piece pieces fl'.split(' '))
+export function groceryNames(lines) {
+  const out = []
+  for (const line of lines || []) {
+    let t = String(line).toLowerCase().replace(/\([^)]*\)/g, ' ').split(',')[0]
+    t = t.replace(/[¼-¾⅐-⅞]/g, ' ').replace(/\d+([./-]\d+)?/g, ' ')
+    const words = t.split(/\s+/).filter(Boolean)
+    while (words.length && UNITS.has(words[0].replace(/\.$/, ''))) words.shift()
+    const name = words.join(' ').replace(/^(of|a|an)\s+/, '').trim()
+    if (name && name.length < 40 && !out.includes(name)) out.push(name)
+  }
+  return out
+}
+
+// ---------- saved meal plans ----------
+export const useMealPlans = () => useFamilyTable('meal_plans', { order: { column: 'created_at', ascending: false }, sample: [] })
+export const deleteMealPlan = (id) => deleteRow('meal_plans', id)
+
+// Save a week (its 7 dates) as a named plan.
+export function saveMealPlan(name, week, meals) {
+  const days = week
+    .map((iso, dow) => ({ dow, m: mealFor(meals, iso) }))
+    .filter((d) => d.m?.title)
+    .map(({ dow, m }) => ({ dow, title: m.title, ingredients: m.ingredients || '', recipe_url: m.recipe_url || null, recipe: m.recipe || null }))
+  return insertRow('meal_plans', { name: String(name).trim().slice(0, 80), days })
+}
+
+// Put a plan's dinners into a week. Days that already have a dinner are kept
+// unless replace is true. Returns how many days were filled.
+export async function applyMealPlan(plan, week, meals, { replace = false } = {}) {
+  let n = 0
+  for (const d of plan.days || []) {
+    const iso = week[d.dow]
+    const existing = mealFor(meals, iso)
+    if (existing?.title && !replace) continue
+    await setMeal(existing?.id, iso, d)
+    n++
+  }
+  return n
+}
 
 // ---------- groceries ----------
 // Store sections in a shelf-friendly order.

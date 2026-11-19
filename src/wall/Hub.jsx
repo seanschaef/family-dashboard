@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ChoresPopover from './ChoresPopover.jsx'
+import RecipePopover from './RecipePopover.jsx'
 import { C, card } from '../theme.js'
 import Icon from '../components/Icon.jsx'
 import { LiveCheck, ProgressRow } from './parts.jsx'
@@ -27,6 +28,7 @@ export default function Hub() {
   const now = useNow()
   const navigate = useNavigate()
   const [choresFor, setChoresFor] = useState(null) // member whose chore pop-up is open
+  const [recipeFor, setRecipeFor] = useState(null) // meal whose recipe pop-up is open
   const { members, familyName, petName, wallLayout } = useMembers()
   const T = todayISO()
   const { rows: chores } = useChores()
@@ -57,12 +59,14 @@ export default function Hub() {
     today: (size) => <TodayBlock height={blockHeight('today', size)} />,
     legend: () => <LegendBlock />,
     dinner: () => (
-      <button type="button" onClick={() => navigate('/wall/meals')} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.tealTint, borderRadius: 16, padding: '16px 22px', color: C.ink }}>
-        <span style={{ fontSize: 24 }}>
+      // Tap the dinner for its recipe; "Meals ›" opens the week.
+      <div style={{ boxSizing: 'border-box', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, background: C.tealTint, borderRadius: 16, padding: '16px 22px', color: C.ink }}>
+        <button type="button" onClick={() => (mealFor(meals, T) ? setRecipeFor(mealFor(meals, T)) : navigate('/wall/meals'))} style={{ all: 'unset', cursor: 'pointer', fontSize: 24, minWidth: 0, flex: 1 }}>
           <span style={{ fontWeight: 800 }}>Dinner Tonight:</span> {dinner || 'Not planned yet'}
-        </span>
-        <span style={{ fontSize: 20, color: C.tealText, fontWeight: 700 }}>Meals ›</span>
-      </button>
+          {mealFor(meals, T)?.recipe && <span style={{ fontSize: 18, color: C.tealText, fontWeight: 700 }}> · Recipe</span>}
+        </button>
+        <button type="button" onClick={() => navigate('/wall/meals')} style={{ all: 'unset', cursor: 'pointer', fontSize: 20, color: C.tealText, fontWeight: 700, whiteSpace: 'nowrap' }}>Meals ›</button>
+      </div>
     ),
     chores: () => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16, height: '100%' })}>
@@ -150,6 +154,7 @@ export default function Hub() {
           </div>
         ))}
       </div>
+      <RecipePopover meal={recipeFor} onClose={() => setRecipeFor(null)} />
       <ChoresPopover person={choresFor} chores={chores} logs={logs} onClose={() => setChoresFor(null)} />
     </>
   )
