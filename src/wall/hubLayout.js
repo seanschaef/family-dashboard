@@ -14,6 +14,7 @@ export const HUB_BLOCK_LABELS = {
   today: 'Today (schedule)',
   reminders: 'Reminders',
   birthdays: 'Coming up (birthdays and dates)',
+  points: 'Points (everyone’s totals)',
 }
 
 // Size (S, M, L, XL) is a window's height; width (quarter, half, full) is
@@ -41,6 +42,7 @@ export const DEFAULT_HUB_LAYOUT = [
   { id: 'today', size: 'l', width: 'half', visible: true },
   { id: 'reminders', size: 'l', width: 'half', visible: false },
   { id: 'birthdays', size: 'l', width: 'half', visible: true },
+  { id: 'points', size: 'l', width: 'half', visible: false },
 ]
 
 // Layouts saved before widths existed: 'l' meant full width, 's'/'m' half.
@@ -97,7 +99,8 @@ export function normalizeLayout(stored, { labels, defaults, legacy }) {
         out.push({
           id: b.id || `group-${members.join('-')}`,
           group: members,
-          interval: [5, 10, 15, 20, 30, 60].includes(b.interval) ? b.interval : 10,
+          // 0 = manual: only changes when someone swipes or taps a dot/arrow.
+          interval: [0, 5, 10, 15, 20, 30, 60].includes(b.interval) ? b.interval : 10,
           transition: ['fade', 'slide', 'none'].includes(b.transition) ? b.transition : 'fade',
           ...sized(b),
         })
@@ -131,7 +134,7 @@ export function combineEntries(items, i, j) {
   const merged = {
     id: a.group ? a.id : `group-${Date.now().toString(36)}`,
     group: members,
-    interval: a.interval || 10,
+    interval: a.interval ?? 10,
     transition: a.transition || 'fade',
     size: a.size,
     width: a.width,

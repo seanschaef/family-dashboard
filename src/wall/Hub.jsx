@@ -15,7 +15,7 @@ import { hubGreeting } from '../lib/greetings.js'
 import { useImportantDates, upcomingCountdowns, countdownText } from '../lib/dates.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, useRedemptions, pointsBalance, pointsThisWeek } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import PetBlock from './PetBlock.jsx'
 import { useMeals, mealFor } from '../lib/kitchen.js'
@@ -31,6 +31,7 @@ export default function Hub() {
   const { rows: logs } = useChoreLogs()
   const { rows: reminders } = useReminders()
   const { rows: meals } = useMeals()
+  const { rows: redemptions } = useRedemptions()
 
   const familyReminders = reminders.filter((r) => r.member_key === null && !r.done)
   const dinner = mealFor(meals, T)?.title
@@ -76,6 +77,22 @@ export default function Hub() {
       </div>
     ),
     pet: () => <PetBlock chores={chores} logs={logs} />,
+    points: () => (
+      <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 14, height: '100%' })}>
+        <div style={{ fontSize: 26, fontWeight: 800 }}>Points</div>
+        {[...members]
+          .map((m) => ({ m, total: pointsBalance(logs, redemptions, m.key), week: pointsThisWeek(logs, m.key) }))
+          .sort((a, b) => b.total - a.total)
+          .map(({ m, total, week }) => (
+            <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 24, minWidth: 0 }}>
+              <span style={{ width: 18, height: 18, borderRadius: 9, background: m.color, flexShrink: 0 }} />
+              <span style={{ fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{m.name}</span>
+              <span style={{ marginLeft: 'auto', fontWeight: 800, whiteSpace: 'nowrap' }}>{total}</span>
+              <span style={{ color: C.muted, fontSize: 18, whiteSpace: 'nowrap', minWidth: 90, textAlign: 'right' }}>+{week} this wk</span>
+            </div>
+          ))}
+      </div>
+    ),
     reminders: () => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 10, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Reminders</div>

@@ -18,7 +18,7 @@ import {
 } from '../wall/hubLayout.js'
 import { PERSON_BLOCK_LABELS, normalizePersonLayout, personApproxHeight } from '../wall/personLayout.js'
 
-const INTERVALS = [5, 10, 15, 20, 30, 60]
+const INTERVALS = [0, 5, 10, 15, 20, 30, 60] // 0 = manual (swipe or tap to change)
 const TRANSITIONS = [
   { v: 'fade', label: 'Fade' },
   { v: 'slide', label: 'Slide' },
@@ -385,10 +385,10 @@ export default function Arrange() {
                   </button>
                 ))}
               </div>
-              <div style={rowLabel}>Change every</div>
+              <div style={rowLabel}>Change every (Manual: swipe or tap the arrows on the wall)</div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {INTERVALS.map((s) => (
-                  <Pick key={s} active={b.interval === s} disabled={!canEdit} onClick={() => update(b.id, { interval: s })}>{s < 60 ? `${s}s` : '1 min'}</Pick>
+                  <Pick key={s} active={b.interval === s} disabled={!canEdit} onClick={() => update(b.id, { interval: s })}>{s === 0 ? 'Manual' : s < 60 ? `${s}s` : '1 min'}</Pick>
                 ))}
               </div>
               <div style={rowLabel}>Transition</div>
