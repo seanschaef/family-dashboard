@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { C, card } from '../theme.js'
+import { C, card, eventBlock } from '../theme.js'
 import { useEvents } from '../lib/eventsource.js'
 import { useMembers } from '../lib/members.jsx'
 import { rangeFor, eventsOn } from '../lib/calendar.js'
@@ -28,8 +28,7 @@ export default function TodayBlock({ height }) {
       <div ref={drag.ref} {...drag.handlers} className={drag.className} style={{ ...drag.style, flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {list.length ? (
           list.map((ev) => (
-            <button key={ev.id} type="button" onClick={() => setOpen(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 12, alignItems: 'center', background: C.cream, borderRadius: 14, padding: '10px 14px', flexShrink: 0 }}>
-              <div style={{ width: 6, alignSelf: 'stretch', borderRadius: 3, background: colorFor(ev), flexShrink: 0 }} />
+            <button key={ev.id} type="button" onClick={() => setOpen(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0, ...eventBlock(colorFor(ev), { padding: '10px 14px' }) }}>
               <div style={{ width: 64, fontSize: 18, color: C.muted, flexShrink: 0 }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.2 }}>{ev.title}</div>

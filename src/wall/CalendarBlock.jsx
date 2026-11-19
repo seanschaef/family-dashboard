@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { C, card } from '../theme.js'
+import { C, card, eventBlock } from '../theme.js'
 import { useEvents } from '../lib/eventsource.js'
 import { ownsEvent } from '../lib/calendars.js'
 import { useMembers } from '../lib/members.jsx'
@@ -94,8 +94,7 @@ function DayView({ events, anchor, colorFor, onEventClick }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {list.length ? (
         list.map((ev) => (
-          <button key={ev.id} type="button" onClick={() => onEventClick(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 16, alignItems: 'center', background: C.cream, borderRadius: 14, padding: '12px 16px' }}>
-            <div style={{ width: 8, height: 40, borderRadius: 4, background: colorFor(ev) }} />
+          <button key={ev.id} type="button" onClick={() => onEventClick(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 16, alignItems: 'center', ...eventBlock(colorFor(ev), { padding: '12px 16px' }) }}>
             <div style={{ width: 90, fontSize: 22, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 24, fontWeight: 600 }}>{ev.title}</div>
@@ -146,8 +145,7 @@ function WeekView({ events, anchor, colorFor, today, onDayClick }) {
               {DOW[i]} {day.getDate()}
             </div>
             {list.map((ev) => (
-              <div key={ev.id} style={{ display: 'flex', gap: 6, alignItems: 'baseline', minWidth: 0 }}>
-                <span style={{ width: big ? 9 : 6, height: big ? 9 : 6, borderRadius: 5, background: colorFor(ev), flexShrink: 0, alignSelf: 'center' }} />
+              <div key={ev.id} style={{ display: 'flex', minWidth: 0, ...eventBlock(colorFor(ev), { borderLeftWidth: big ? 5 : 3, borderRadius: 6, padding: big ? '4px 8px' : '2px 4px' }) }}>
                 <span style={{ fontSize: big ? 17 : 12, lineHeight: 1.2, minWidth: 0, transition: 'font-size 450ms ease', overflowWrap: 'break-word', hyphens: 'auto' }}>
                   <span style={{ color: C.muted }}>{ev.all_day ? '' : timeOfDay(ev.starts_at) + ' '}</span>
                   {ev.title}

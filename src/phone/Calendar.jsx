@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { C } from '../theme.js'
+import { C, eventBlock } from '../theme.js'
 import { Pill } from './parts.jsx'
 import { useEvents } from '../lib/eventsource.js'
 import { useMembers } from '../lib/members.jsx'
@@ -54,8 +54,7 @@ function WeekView({ events, anchor }) {
             </div>
             {list.length ? (
               list.map((ev) => (
-                <div key={ev.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 15 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: 4, background: colorFor(ev), flexShrink: 0 }} />
+                <div key={ev.id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 15, ...eventBlock(colorFor(ev), { borderLeftWidth: 4, borderRadius: 6, padding: '5px 8px' }) }}>
                   <span style={{ color: C.muted, width: 52, flexShrink: 0 }}>{ev.all_day ? '—' : timeOfDay(ev.starts_at)}</span>
                   <span style={{ minWidth: 0 }}>
                     {ev.title}

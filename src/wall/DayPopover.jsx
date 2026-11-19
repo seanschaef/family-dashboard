@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { C } from '../theme.js'
+import { C, eventBlock } from '../theme.js'
 import EventPopover from './EventPopover.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { eventsOn } from '../lib/calendar.js'
@@ -59,8 +59,7 @@ export default function DayPopover({ day, events, onClose }) {
 
         {list.length ? (
           list.map((ev) => (
-            <button key={ev.id} type="button" onClick={() => setOpen(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 18, alignItems: 'center', background: C.cream, borderRadius: 16, padding: '16px 20px' }}>
-              <div style={{ width: 8, height: 48, borderRadius: 4, background: colorFor(ev) }} />
+            <button key={ev.id} type="button" onClick={() => setOpen(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 18, alignItems: 'center', ...eventBlock(colorFor(ev), { borderLeftWidth: 8, borderRadius: 12, padding: '16px 20px' }) }}>
               <div style={{ width: 130, fontSize: 24, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
               <div style={{ flexGrow: 1 }}>
                 <div style={{ fontSize: 26, fontWeight: 600 }}>

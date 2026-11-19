@@ -71,6 +71,16 @@ export const card = (extra = {}) => ({
   ...extra,
 })
 
+// A calendar entry as a coloured block: a light wash of the calendar's colour
+// with a solid bar down the left. Same look everywhere events are listed.
+// (color-mix keeps it right in dark mode too.)
+export const eventBlock = (color, extra = {}) => ({
+  background: `color-mix(in srgb, ${color} 18%, ${C.card})`,
+  borderLeft: `6px solid ${color}`,
+  borderRadius: 8,
+  ...extra,
+})
+
 export const resetButton = {
   all: 'unset',
   cursor: 'pointer',

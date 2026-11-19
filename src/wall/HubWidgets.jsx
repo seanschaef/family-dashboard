@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { C, card } from '../theme.js'
+import { C, card, eventBlock } from '../theme.js'
 import WeatherIcon from '../components/WeatherIcon.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { useNow, timeOfDay } from '../lib/time.js'
@@ -252,8 +252,7 @@ export function NextUpBlock() {
       <Title>Next Up</Title>
       {!next && <Muted>Nothing in the next week.</Muted>}
       {next && (
-        <button type="button" onClick={() => setOpen(next)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', gap: 14, flexShrink: 0 }}>
-          <div style={{ width: 8, borderRadius: 4, background: colorFor(next), flexShrink: 0 }} />
+        <button type="button" onClick={() => setOpen(next)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', gap: 14, flexShrink: 0, ...eventBlock(colorFor(next), { padding: '10px 14px' }) }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.15 }}>{next.title}</div>
             <div style={{ fontSize: 21, color: C.rust, fontWeight: 700 }}>
@@ -267,8 +266,7 @@ export function NextUpBlock() {
       {rest.length > 0 && (
         <Scroll gap={6}>
           {rest.slice(0, 6).map((e) => (
-            <button key={e.id} type="button" onClick={() => setOpen(e)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center', fontSize: 18, flexShrink: 0, minWidth: 0 }}>
-              <span style={{ width: 10, height: 10, borderRadius: 5, background: colorFor(e), flexShrink: 0 }} />
+            <button key={e.id} type="button" onClick={() => setOpen(e)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center', fontSize: 18, flexShrink: 0, minWidth: 0, ...eventBlock(colorFor(e), { borderLeftWidth: 4, borderRadius: 6, padding: '4px 10px' }) }}>
               <span style={{ color: C.muted, whiteSpace: 'nowrap', flexShrink: 0 }}>{when(e)}</span>
               <span style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{e.title}</span>
             </button>

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { C, card } from '../theme.js'
+import { C, card, eventBlock } from '../theme.js'
 import { Clock } from './parts.jsx'
 import { useEvents } from '../lib/eventsource.js'
 import { useMembers } from '../lib/members.jsx'
@@ -118,8 +118,7 @@ function WeekView({ events, anchor, onDayClick }) {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, flexGrow: 1 }}>
               {list.length ? (
                 list.map((ev) => (
-                  <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: C.cream, borderRadius: 12, padding: '8px 14px' }}>
-                    <span style={{ width: 10, height: 10, borderRadius: 5, background: colorFor(ev) }} />
+                  <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 10, ...eventBlock(colorFor(ev), { padding: '8px 14px' }) }}>
                     <span style={{ fontSize: 22, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</span>
                     <span style={{ fontSize: 22, fontWeight: 600 }}>{ev.title}</span>
                     {ev.location && <span style={{ fontSize: 20, color: C.muted }}>· {ev.location}</span>}
@@ -143,8 +142,7 @@ function DayView({ events, anchor, onEventClick }) {
     <div style={card({ minHeight: '100%', padding: 32, display: 'flex', flexDirection: 'column', gap: 16 })}>
       {list.length ? (
         list.map((ev) => (
-          <button key={ev.id} type="button" onClick={() => onEventClick(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 24, alignItems: 'center', background: C.cream, borderRadius: 18, padding: '18px 24px' }}>
-            <div style={{ width: 10, height: 56, borderRadius: 5, background: colorFor(ev) }} />
+          <button key={ev.id} type="button" onClick={() => onEventClick(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 24, alignItems: 'center', ...eventBlock(colorFor(ev), { borderLeftWidth: 8, borderRadius: 12, padding: '18px 24px' }) }}>
             <div style={{ width: 160, fontSize: 28, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
             <div>
               <div style={{ fontSize: 30, fontWeight: 600 }}>{ev.title}</div>
