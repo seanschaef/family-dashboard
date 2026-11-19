@@ -148,7 +148,7 @@ function WeekView({ events, anchor, colorFor, today, onDayClick }) {
             {list.map((ev) => (
               <div key={ev.id} style={{ display: 'flex', gap: 6, alignItems: 'baseline', minWidth: 0 }}>
                 <span style={{ width: big ? 9 : 6, height: big ? 9 : 6, borderRadius: 5, background: colorFor(ev), flexShrink: 0, alignSelf: 'center' }} />
-                <span style={{ fontSize: big ? 17 : 12, lineHeight: 1.2, minWidth: 0, transition: 'font-size 450ms ease', overflowWrap: 'anywhere' }}>
+                <span style={{ fontSize: big ? 17 : 12, lineHeight: 1.2, minWidth: 0, transition: 'font-size 450ms ease', overflowWrap: 'break-word', hyphens: 'auto' }}>
                   <span style={{ color: C.muted }}>{ev.all_day ? '' : timeOfDay(ev.starts_at) + ' '}</span>
                   {ev.title}
                   {big && ev.location && (
