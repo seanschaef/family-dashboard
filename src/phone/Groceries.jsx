@@ -10,6 +10,58 @@ import {
 } from '../lib/kitchen.js'
 import { useLongPress } from '../lib/longPress.js'
 import ConfirmSheet from '../components/ConfirmSheet.jsx'
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js'
+
+// Send the list to a store. Instacart (Real Canadian Superstore and others):
+// opens the list there; you pick the store, adjust and check out in Instacart.
+// Copy / Share: paste into any store's app (e.g. Save-On-Foods).
+function OrderBar({ items }) {
+  const [msg, setMsg] = useState('')
+  const [busy, setBusy] = useState(false)
+  const open = items.filter((it) => !it.done)
+  const text = open.map((it) => `${it.label}${(it.qty || 1) > 1 ? ` x${it.qty}` : ''}`).join(String.fromCharCode(10))
+
+  async function instacart() {
+    if (!isSupabaseConfigured || !open.length) return
+    // Open the tab now (phones block pop-ups opened after a wait), then point it at the list.
+    const tab = window.open('', '_blank')
+    setBusy(true)
+    setMsg('Making your Instacart list…')
+    const { data, error } = await supabase.functions.invoke('instacart-list', { body: { linkback: `${window.location.origin}/app/groceries` } })
+    setBusy(false)
+    if (error || !data?.url) {
+      tab?.close()
+      setMsg(data?.error || 'Couldn’t reach Instacart. Try again.')
+      return
+    }
+    setMsg(`Opened ${data.items} item${data.items === 1 ? '' : 's'} in Instacart. Pick Superstore there, then check out.`)
+    if (tab) tab.location.href = data.url
+    else window.location.href = data.url
+  }
+  async function copy() {
+    try {
+      if (navigator.share) await navigator.share({ title: 'Groceries', text })
+      else {
+        await navigator.clipboard.writeText(text)
+        setMsg('Copied. Paste it into the Save-On-Foods app or any store.')
+      }
+    } catch {
+      /* share sheet closed */
+    }
+  }
+
+  if (!open.length) return null
+  const b = (bg) => ({ all: 'unset', cursor: 'pointer', flex: 1, textAlign: 'center', background: bg, color: '#FFFFFF', borderRadius: 12, padding: '12px 10px', fontSize: 15, fontWeight: 700 })
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button type="button" disabled={busy} onClick={instacart} style={{ ...b('#0AAD0A'), opacity: busy ? 0.6 : 1 }}>Order on Instacart</button>
+        <button type="button" onClick={copy} style={b(C.tealText)}>{navigator.share ? 'Share List' : 'Copy List'}</button>
+      </div>
+      {msg && <div role="status" style={{ fontSize: 13, color: C.muted, textAlign: 'center' }}>{msg}</div>}
+    </div>
+  )
+}
 
 const stepBtn = { all: 'unset', cursor: 'pointer', width: 30, height: 30, borderRadius: 15, border: `2px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: C.ink, boxSizing: 'border-box' }
 
@@ -138,6 +190,8 @@ export default function Groceries() {
         onCancel={() => setRemoving(null)}
         onConfirm={async () => { const id = removing.id; setRemoving(null); await removeGrocery(id) }}
       />
+
+      <OrderBar items={items} />
 
       {items.some((it) => it.done) && (
         <button type="button" onClick={() => clearCheckedGroceries()} style={{ all: 'unset', cursor: 'pointer', textAlign: 'center', fontSize: 15, fontWeight: 700, color: C.tealText, padding: 8 }}>Clear checked items</button>
