@@ -258,16 +258,22 @@ export default function Arrange() {
   // You can arrange your own page; admins can arrange the hub and anyone's.
   const canEdit = person ? isAdmin || me?.id === person.id : isAdmin
 
-  const [items, setItems] = useState(() => load(person ? person.page_layout : wallLayout))
+  // Unsaved edits are kept per page, so the windows shown always belong to
+  // the page picked (a person's page opened by link renders only once the
+  // family has loaded; before, it briefly mixed the hub's windows with the
+  // person's names and crashed).
+  const pageKey = who === 'hub' ? 'hub' : person ? person.key : null
+  const [draft, setDraft] = useState(null) // { key, items }
   const [selected, setSelected] = useState(null)
   const wide = useWide()
   const [status, setStatus] = useState(null) // null | 'saved' | 'reset' | 'error'
   useEffect(() => {
-    setItems(load(person ? person.page_layout : wallLayout))
+    setDraft(null)
     setStatus(null)
     setSelected(null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wallLayout, who, person?.page_layout, person?.role])
+  const items = draft?.key === pageKey ? draft.items : load(person ? person.page_layout : wallLayout)
+  const setItems = (next) => setDraft({ key: pageKey, items: next })
 
   const change = (next) => { setItems(next); setStatus(null) }
   const update = (id, p) => change(items.map((b) => (b.id === id ? { ...b, ...p } : b)))
@@ -316,6 +322,16 @@ export default function Arrange() {
       {status && <span style={{ fontSize: 14, color: status === 'error' ? C.rust : C.tealText }}>{status === 'saved' ? 'Saved' : status === 'reset' ? 'Reset and saved' : 'Couldn’t save'}</span>}
     </div>
   )
+
+  if (!pageKey) {
+    return (
+      <>
+        <PhoneHeader title="Arrange the wall" subtitle="Drag, resize, combine and hide windows" />
+        <div style={{ fontSize: 15, color: C.muted }}>{members.length ? 'That person isn’t in the family any more.' : 'Loading…'}</div>
+        <Link to="/app/arrange" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Arrange the family hub ›</Link>
+      </>
+    )
+  }
 
   return (
     <>
