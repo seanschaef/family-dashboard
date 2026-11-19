@@ -17,7 +17,7 @@ export default function ChoresPopover({ person, chores, logs, onClose }) {
   const doneCount = due.filter((c) => isDone(logs, c, T, person.key)).length
   // An 'Anyone' tick from the wall isn't credited to a particular person.
   const who = person.key === ANYONE ? null : person.key
-  const heading = person.key === ANYONE ? 'Chores for anyone' : `${person.name}'s chores`
+  const heading = person.key === ANYONE ? 'Chores for Anyone' : `${person.name}'s Chores`
 
   return (
     <div

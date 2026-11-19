@@ -71,7 +71,7 @@ export default function WallPreview() {
 
   return (
     <>
-      <PhoneHeader title="Wall preview" subtitle="How the wall looks right now" />
+      <PhoneHeader title="Wall Preview" subtitle="How the wall looks right now" />
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {tabs.map((t) => (
@@ -83,7 +83,7 @@ export default function WallPreview() {
         {scale > 0 && (
           <iframe
             key={screen}
-            title="Wall preview"
+            title="Wall Preview"
             src={src}
             style={{ width: WALL_W, height: WALL_H, border: 'none', transform: `scale(${scale})`, transformOrigin: 'top left', pointerEvents: 'none' }}
           />

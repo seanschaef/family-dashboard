@@ -38,7 +38,7 @@ export default function Meals() {
 
   return (
     <>
-      <PhoneHeader title="Meals" subtitle="Dinner this week" />
+      <PhoneHeader title="Meals" subtitle="Dinner This Week" />
 
       {week.map((iso, i) => {
         const m = mealFor(meals, iso)

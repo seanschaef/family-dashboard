@@ -49,7 +49,7 @@ function RedeemSheet({ reward, members, balanceOf, onClose }) {
     <div onClick={() => onClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.45)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 120 }}>
       <div role="dialog" aria-label={`Redeem ${reward.title}`} onClick={(e) => e.stopPropagation()} style={{ background: C.card, borderRadius: '20px 20px 0 0', padding: 20, width: '100%', maxWidth: 560, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ fontSize: 18, fontWeight: 800 }}>Redeem “{reward.title}” · {reward.cost} pts</div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.muted }}>Who is spending their points?</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.muted }}>Who Is Spending Their Points?</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {members.map((m) => {
             const bal = balanceOf(m.key)
@@ -108,7 +108,7 @@ export default function Rewards() {
 
   return (
     <>
-      <PhoneHeader title="Rewards & points" subtitle="Earn points with chores, spend them on rewards" />
+      <PhoneHeader title="Rewards & Points" subtitle="Earn points with chores, spend them on rewards" />
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {members.map((m) => (

@@ -127,7 +127,7 @@ export default function Photos() {
         Each collection points at a folder on your NAS. Route it to a person, a season, or a time of day. Photos stay on the NAS and only show on the wall.
       </div>
 
-      <div style={{ fontSize: 16, fontWeight: 800 }}>New collection</div>
+      <div style={{ fontSize: 16, fontWeight: 800 }}>New Collection</div>
       <Field label="Name">
         <input aria-label="Collection name" type="text" placeholder="Holidays" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
       </Field>

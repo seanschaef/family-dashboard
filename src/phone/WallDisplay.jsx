@@ -51,7 +51,7 @@ export default function WallDisplay() {
 
   return (
     <>
-      <PhoneHeader title="Wall display" subtitle="Screen off at night, dark colours" />
+      <PhoneHeader title="Wall Display" subtitle="Screen off at night, dark colours" />
 
       <div style={{ fontSize: 14, color: C.muted }}>
         Outside these hours the wall&apos;s monitor powers off, and it comes back

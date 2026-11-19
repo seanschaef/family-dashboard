@@ -194,12 +194,12 @@ export default function Accounts() {
 
   return (
     <>
-      <PhoneHeader title="Accounts" subtitle="Who can sign in" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
+      <PhoneHeader title="Accounts" subtitle="Who Can Sign In" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
 
       {error && <div style={{ background: C.dangerTint, color: C.danger, borderRadius: 12, padding: 12, fontSize: 14 }}>{error}</div>}
 
       <form onSubmit={onCreate} style={cardStyle}>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>New login</div>
+        <div style={{ fontSize: 16, fontWeight: 800 }}>New Login</div>
         <div>
           <div style={label}>Email</div>
           <input aria-label="Email" type="email" required autoComplete="off" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} style={input} />

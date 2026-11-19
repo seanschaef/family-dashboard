@@ -27,7 +27,7 @@ function Header({ person }) {
           {(person.name[0] || '?').toUpperCase()}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ fontSize: 62, fontWeight: 800, lineHeight: 1.05 }}>{person.name}'s day</div>
+          <div style={{ fontSize: 62, fontWeight: 800, lineHeight: 1.05 }}>{person.name}'s Day</div>
           <div style={{ fontSize: 26, color: C.muted }}>{formatLongDate(now)}</div>
         </div>
       </div>
@@ -42,7 +42,7 @@ function ChoresCard({ person, due, logs, T, points, actions }) {
   return (
     <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16, flexGrow: 1 })}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <div style={{ fontSize: 26, fontWeight: 800 }}>My chores</div>
+        <div style={{ fontSize: 26, fontWeight: 800 }}>My Chores</div>
         <div style={{ fontSize: 20, color: C.muted }}>{done} of {due.length}</div>
       </div>
       {due.length ? (
@@ -82,7 +82,7 @@ function BirthdayCountdown({ person, big = true }) {
   if (!bc) return null
   return (
     <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', flexGrow: 1 })}>
-      <div style={{ fontSize: 26, fontWeight: 800 }}>Birthday countdown</div>
+      <div style={{ fontSize: 26, fontWeight: 800 }}>Birthday Countdown</div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
         <div style={{ fontSize: big ? 96 : 80, fontWeight: 800, color: person.color, lineHeight: 1 }}>{bc.days}</div>
         <div style={{ fontSize: 28, color: C.muted }}>days until {person.name} turns {bc.turning}</div>
@@ -119,7 +119,7 @@ export default function Member() {
   const myReminders = reminders.filter((r) => r.member_key === person.key)
   const points = { week: pointsThisWeek(logs, person.key), balance: pointsBalance(logs, redemptions, person.key) }
   const hasPhotos = activeCollectionsFor(photoCollections, { memberKey: person.key }).length > 0
-  const reminderTitle = person.role === 'teen' ? 'Homework and reminders' : person.role === 'child' ? 'Reminders' : 'My reminders'
+  const reminderTitle = person.role === 'teen' ? 'Homework and Reminders' : person.role === 'child' ? 'Reminders' : 'My Reminders'
 
   // Each window, by id (see personLayout.js). The page is arranged from the
   // phone (Settings › Arrange); the defaults match the old fixed layouts.
@@ -130,7 +130,7 @@ export default function Member() {
     jobs: (size) => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 18, height: personBlockHeight('jobs', size) })}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 30, fontWeight: 800 }}>My jobs</div>
+          <div style={{ fontSize: 30, fontWeight: 800 }}>My Jobs</div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 30, fontWeight: 800 }}>
             <StarIcon size={44} />
             <span>{points.balance} stars</span>

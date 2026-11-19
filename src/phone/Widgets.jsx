@@ -82,7 +82,7 @@ export default function Widgets() {
   const { configured } = useAuth()
   return (
     <>
-      <PhoneHeader title="Wall widgets" subtitle="Each person's wall-page widget" />
+      <PhoneHeader title="Wall Widgets" subtitle="Each person's wall-page widget" />
       <div style={{ fontSize: 14, color: C.muted }}>
         Pick what shows in the open slot on each person's wall page. Changes
         appear on the wall right away.

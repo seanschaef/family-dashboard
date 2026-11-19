@@ -326,7 +326,7 @@ export default function Arrange() {
   if (!pageKey) {
     return (
       <>
-        <PhoneHeader title="Arrange the wall" subtitle="Drag, resize, combine and hide windows" />
+        <PhoneHeader title="Arrange the Wall" subtitle="Drag, resize, combine and hide windows" />
         <div style={{ fontSize: 15, color: C.muted }}>{members.length ? 'That person isn’t in the family any more.' : 'Loading…'}</div>
         <Link to="/app/arrange" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Arrange the family hub ›</Link>
       </>
@@ -335,15 +335,15 @@ export default function Arrange() {
 
   return (
     <>
-      <PhoneHeader title="Arrange the wall" subtitle="Drag, resize, combine and hide windows" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
+      <PhoneHeader title="Arrange the Wall" subtitle="Drag, resize, combine and hide windows" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
 
       {/* Which page to arrange */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {[{ key: 'hub', name: 'Family hub', color: C.family }, ...members].map((m) => {
+        {[{ key: 'hub', name: 'Family Hub', color: C.family }, ...members].map((m) => {
           const active = who === m.key
           return (
             <button key={m.key} type="button" aria-pressed={active} onClick={() => setParams(m.key === 'hub' ? {} : { who: m.key })} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', height: 36, padding: '0 14px', display: 'inline-flex', alignItems: 'center', background: active ? m.color : C.card, color: active ? '#FFFFFF' : C.ink, border: `2px solid ${active ? m.color : C.border}`, borderRadius: 999, fontSize: 14, fontWeight: 700 }}>
-              {m.key === 'hub' ? m.name : `${m.name}'s page`}
+              {m.key === 'hub' ? m.name : `${m.name}'s Page`}
             </button>
           )
         })}

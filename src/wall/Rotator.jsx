@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { C } from '../theme.js'
 
-// A combined hub window: shows one of its windows at a time and moves to the
+// A combined window: shows one of its windows at a time and moves to the
 // next every `interval` seconds (0 = manual: it only changes when someone
-// swipes, or taps an arrow or dot). Transition: 'fade', 'slide' or 'none'.
-// Tap a dot to jump; touching the window pauses the rotation for a minute so
-// you can read or tick something.
+// swipes or taps a dot). Transition: 'fade', 'slide' or 'none'.
+// Swipe sideways to change; tap a dot to jump. Touching the window pauses
+// the rotation for a minute so you can read or tick something.
 //
 // All windows sit in the same grid cell, so the combined window is as tall as
 // its tallest part and nothing jumps when it changes.
@@ -13,55 +13,49 @@ import { C } from '../theme.js'
 const PAUSE_MS = 60 * 1000
 
 export default function Rotator({ items, interval = 10, transition = 'fade' }) {
-  const [idx, setIdx] = useState(0)
+  const [state, setState] = useState({ cur: 0, prev: null, dir: 1 })
   const [pausedUntil, setPausedUntil] = useState(0)
   const n = items.length
+  const cur = state.cur % Math.max(n, 1)
+
+  const show = (next, dir) => setState((s) => (next === s.cur ? s : { cur: next, prev: s.cur, dir }))
+  const go = (dir) => show((cur + dir + n) % n, dir)
+  const pause = () => setPausedUntil(Date.now() + PAUSE_MS)
 
   useEffect(() => {
     if (n < 2 || !interval) return undefined
     const id = setInterval(() => {
       if (Date.now() < pausedUntil) return
-      setIdx((i) => (i + 1) % n)
+      setState((s) => ({ cur: (s.cur + 1) % n, prev: s.cur, dir: 1 }))
     }, interval * 1000)
     return () => clearInterval(id)
   }, [n, interval, pausedUntil])
 
-  const pause = () => setPausedUntil(Date.now() + PAUSE_MS)
-  const cur = idx % Math.max(n, 1)
-  const go = (dir) => { setIdx((i) => (i + dir + n) % n); pause() }
-
   // Swipe sideways to change (a clear horizontal swipe, so vertical
-  // scrolling inside a window still works).
+  // scrolling inside a window still works). A calendar inside handles its
+  // own swipes (previous/next week) and they don't reach here.
   const [start, setStart] = useState(null)
-  const down = (e) => { pause(); setStart({ x: e.clientX, y: e.clientY }) }
+  const down = (e) => {
+    pause()
+    setStart({ x: e.clientX, y: e.clientY })
+  }
   const up = (e) => {
     if (!start || n < 2) return
     const dx = e.clientX - start.x
     const dy = e.clientY - start.y
     setStart(null)
-    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      go(dx < 0 ? 1 : -1)
-      e.stopPropagation() // this window's swipe, not the wall's page swipe
-    }
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1)
   }
-  const arrow = (dir) => (
-    <button
-      type="button"
-      aria-label={dir > 0 ? 'Next' : 'Previous'}
-      onClick={() => go(dir)}
-      style={{ all: 'unset', cursor: 'pointer', position: 'absolute', top: '50%', [dir > 0 ? 'right' : 'left']: 6, transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: 22, background: C.card, border: `2px solid ${C.border}`, color: C.ink, fontSize: 28, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.85, zIndex: 2 }}
-    >
-      {dir > 0 ? '›' : '‹'}
-    </button>
-  )
 
   const layer = (i) => {
     const on = i === cur
     const base = { gridArea: '1 / 1', minWidth: 0, display: 'flex', flexDirection: 'column' }
     if (transition === 'slide') {
-      // Off-screen windows wait to the right; the one leaving goes left.
-      const offset = i === cur ? 0 : (i - cur + n) % n === 1 ? 100 : -100
-      return { ...base, transform: `translateX(${offset}%)`, transition: 'transform 600ms ease', visibility: on || Math.abs(offset) === 100 ? 'visible' : 'hidden' }
+      // The new window comes in from the side you swiped towards; the old one
+      // leaves the other way. The rest wait, hidden, on the incoming side.
+      const leaving = i === state.prev
+      const offset = on ? 0 : leaving ? -100 * state.dir : 100 * state.dir
+      return { ...base, transform: `translateX(${offset}%)`, transition: on || leaving ? 'transform 500ms ease' : 'none', visibility: on || leaving ? 'visible' : 'hidden' }
     }
     if (transition === 'none') return { ...base, visibility: on ? 'visible' : 'hidden' }
     return { ...base, opacity: on ? 1 : 0, transition: 'opacity 700ms ease', pointerEvents: on ? 'auto' : 'none' }
@@ -74,19 +68,22 @@ export default function Rotator({ items, interval = 10, transition = 'fade' }) {
           <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>{el}</div>
         </div>
       ))}
-      {n > 1 && !interval && arrow(-1)}
-      {n > 1 && !interval && arrow(1)}
       {n > 1 && (
-        <div style={{ position: 'absolute', bottom: 10, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 4, pointerEvents: 'none' }}>
+        // Small page dots: the current one is a longer pill. Each has a
+        // finger-sized tap area, but only the dot itself is drawn.
+        <div style={{ position: 'absolute', bottom: 4, left: 0, right: 0, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
           {items.map((_, i) => (
             <button
               key={i}
               type="button"
               aria-label={`Show part ${i + 1} of ${n}`}
-              onClick={() => { setIdx(i); pause() }}
-              style={{ all: 'unset', cursor: 'pointer', pointerEvents: 'auto', padding: 6 }}
+              onClick={() => {
+                show(i, i > cur ? 1 : -1)
+                pause()
+              }}
+              style={{ all: 'unset', cursor: 'pointer', pointerEvents: 'auto', padding: '10px 6px', display: 'flex', alignItems: 'center' }}
             >
-              <span style={{ display: 'block', width: 10, height: 10, borderRadius: 5, background: i === cur ? C.ink : C.border }} />
+              <span style={{ display: 'block', width: i === cur ? 26 : 10, height: 10, borderRadius: 5, background: i === cur ? C.ink : C.border, opacity: i === cur ? 0.7 : 1, transition: 'width 300ms ease' }} />
             </button>
           ))}
         </div>

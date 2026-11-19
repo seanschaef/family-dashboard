@@ -5,12 +5,12 @@ import { normalizeLayout, GENERIC_HEIGHT } from './hubLayout.js'
 // means the default for their role, which matches the original fixed pages.
 
 export const PERSON_BLOCK_LABELS = {
-  header: 'Name, date and clock',
+  header: 'Name, Date and Clock',
   calendar: 'Calendar',
   chores: 'Chores (list)',
   jobs: 'Jobs (big tiles and stars)',
   reminders: 'Reminders',
-  birthday: 'Birthday countdown',
+  birthday: 'Birthday Countdown',
   widget: 'Widget (set under Wall widgets)',
   photo: 'Photos',
 }

@@ -111,7 +111,7 @@ function NextWidget({ shell, personKey }) {
 
   return shell(
     <>
-      <Title>Next up</Title>
+      <Title>Next Up</Title>
       {next ? (
         <>
           <div style={{ fontSize: 30, fontWeight: 600 }}>{next.title}</div>
@@ -131,7 +131,7 @@ function NextWidget({ shell, personKey }) {
 function NoteWidget({ shell, cfg, name }) {
   return shell(
     <>
-      <Title>{cfg.title || `${name}'s note`}</Title>
+      <Title>{cfg.title || `${name}'s Note`}</Title>
       <div style={{ fontSize: 30, lineHeight: 1.3 }}>{cfg.text || 'Add a note in the app'}</div>
     </>,
   )

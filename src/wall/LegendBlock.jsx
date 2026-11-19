@@ -14,18 +14,20 @@ export default function LegendBlock() {
 
   return (
     <div style={card({ padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
-      <div style={{ fontSize: 22, fontWeight: 800 }}>Calendar key</div>
+      <div style={{ fontSize: 22, fontWeight: 800, flexShrink: 0 }}>Calendar Key</div>
       {shown.length ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 22px' }}>
+        // Fills the window's height first, then starts another column; every
+        // column is the same width.
+        <div style={{ flex: '1 1 0', minHeight: 0, columnWidth: 210, columnGap: 22, columnFill: 'auto', overflow: 'hidden' }}>
           {shown.map((c) => {
             const owners = c.person_keys?.length ? c.person_keys : c.person_key ? [c.person_key] : []
             const color = c.color || colorFor(owners[0])
             const who = owners.map(nameFor).filter(Boolean).join(' & ')
             return (
-              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, breakInside: 'avoid', paddingBottom: 10 }}>
                 <span style={{ width: 18, height: 18, borderRadius: 9, background: color, flexShrink: 0 }} />
-                <span style={{ fontSize: 20, fontWeight: 600, whiteSpace: 'nowrap' }}>{c.name}</span>
-                {who && who !== c.name && <span style={{ fontSize: 17, color: C.muted, whiteSpace: 'nowrap' }}>{who}</span>}
+                <span style={{ fontSize: 20, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{c.name}</span>
+                {who && who !== c.name && <span style={{ fontSize: 17, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{who}</span>}
               </div>
             )
           })}

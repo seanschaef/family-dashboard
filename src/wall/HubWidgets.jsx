@@ -61,7 +61,7 @@ export function GoalsBlock() {
   })
   return (
     <div style={box()}>
-      <Title>Saving for</Title>
+      <Title>Saving For</Title>
       {!rewards.length && <Muted>Add rewards on the phone (Rewards) to set goals.</Muted>}
       <Scroll gap={8}>
         {rewards.length > 0 &&
@@ -133,7 +133,7 @@ export function MealsWeekBlock() {
   return (
     <button type="button" onClick={() => navigate('/wall/meals')} style={{ all: 'unset', cursor: 'pointer', display: 'block', height: '100%' }}>
       <div style={box({ gap: 6 })}>
-        <Title right="Meals ›">This week&apos;s meals</Title>
+        <Title right="Meals ›">This Week&apos;s Meals</Title>
         {days.map((iso) => {
           const d = new Date(iso + 'T12:00:00')
           const isToday = iso === T
@@ -240,7 +240,7 @@ export function NextUpBlock() {
   }
   return (
     <div style={box()}>
-      <Title>Next up</Title>
+      <Title>Next Up</Title>
       {!next && <Muted>Nothing in the next week.</Muted>}
       {next && (
         <button type="button" onClick={() => setOpen(next)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', gap: 14, flexShrink: 0 }}>
@@ -329,7 +329,7 @@ export function AirBlock() {
   const later = forecast?.max != null ? aqhiRisk(forecast.max) : null
   return (
     <div style={box()}>
-      <Title>Air quality</Title>
+      <Title>Air Quality</Title>
       {v == null ? (
         <Muted>{error ? 'Air quality unavailable right now.' : 'Loading…'}</Muted>
       ) : (
@@ -353,7 +353,7 @@ export function WasteBlock() {
   const days = upcomingPickups(wasteSchedule, now, 3)
   return (
     <div style={box()}>
-      <Title>Collection day</Title>
+      <Title>Collection Day</Title>
       {!days.length && <Muted>Set your pickup days on the phone (Settings › Garbage and recycling).</Muted>}
       {days.map((d, i) => {
         const word = dayWord(d.date, now)
@@ -394,7 +394,7 @@ export function OnThisDayBlock() {
   if (!p) {
     return (
       <div style={box()}>
-        <Title>On this day</Title>
+        <Title>On This Day</Title>
         <Muted>{photoAgentConfigured() ? 'No photos from this time of year in past years yet. They show up as older photos are added to the NAS.' : 'Shows on the wall (photos come from the NAS).'}</Muted>
       </div>
     )
@@ -405,7 +405,7 @@ export function OnThisDayBlock() {
       <img src={p.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
       <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '28px 22px 16px', background: 'linear-gradient(transparent, rgba(0,0,0,0.65))', color: '#FFFFFF' }}>
         <div style={{ fontSize: 22, fontWeight: 800 }}>
-          {p.exact ? 'On this day' : 'This week'} · {ago} {ago === 1 ? 'year' : 'years'} ago
+          {p.exact ? 'On This Day' : 'This Week'} · {ago} {ago === 1 ? 'year' : 'years'} ago
         </div>
         <div style={{ fontSize: 16, opacity: 0.85 }}>{new Date(p.year, p.month - 1, p.day).toLocaleDateString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
       </div>

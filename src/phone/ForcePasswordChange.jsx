@@ -34,7 +34,7 @@ export default function ForcePasswordChange() {
   return (
     <div style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <form onSubmit={save} style={{ width: '100%', maxWidth: 420, background: C.card, border: `2px solid ${C.border}`, borderRadius: 24, padding: 28, display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ fontSize: 26, fontWeight: 800 }}>Set your password</div>
+        <div style={{ fontSize: 26, fontWeight: 800 }}>Set Your Password</div>
         <div style={{ fontSize: 15, color: C.muted }}>Replace the temporary password with one only you know. At least 6 characters.</div>
         <input aria-label="New password" type="password" autoComplete="new-password" placeholder="New password" value={pw} onChange={(e) => setPw(e.target.value)} style={input} />
         <input aria-label="Confirm password" type="password" autoComplete="new-password" placeholder="Confirm password" value={confirm} onChange={(e) => setConfirm(e.target.value)} style={input} />

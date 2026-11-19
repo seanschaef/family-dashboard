@@ -8,7 +8,8 @@ import { useRef } from 'react'
 // - vertical drag scrolls it;
 // - a quick horizontal swipe calls onSwipeX(+1 for left, -1 for right);
 // - a drag never counts as a tap on whatever it started on.
-// Pointer events stop here so the wall's page-swipe doesn't also fire.
+// A swipe this element handles (onSwipeX) stops here, so a combined window
+// around it doesn't also change; anything else bubbles up to it.
 
 const MOVE = 8 // px before a press becomes a drag
 const SWIPE = 60 // px for a horizontal swipe
@@ -20,7 +21,6 @@ export function useDragScroll({ onSwipeX } = {}) {
 
   const handlers = {
     onPointerDown(e) {
-      e.stopPropagation()
       st.current = { x: e.clientX, y: e.clientY, top: ref.current?.scrollTop ?? 0, mode: null, id: e.pointerId }
     },
     onPointerMove(e) {
@@ -39,13 +39,15 @@ export function useDragScroll({ onSwipeX } = {}) {
       if (s.mode === 'y' && ref.current) ref.current.scrollTop = s.top - dy
     },
     onPointerUp(e) {
-      e.stopPropagation()
       const s = st.current
       st.current = null
       if (!s) return
       const dx = e.clientX - s.x
       const dy = e.clientY - s.y
-      if (s.mode === 'x' && Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(dy) && onSwipeX) onSwipeX(dx < 0 ? 1 : -1)
+      if (s.mode === 'x' && Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(dy) && onSwipeX) {
+        onSwipeX(dx < 0 ? 1 : -1)
+        e.stopPropagation()
+      }
       if (s.mode) {
         suppressClick.current = true
         setTimeout(() => {

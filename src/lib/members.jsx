@@ -139,6 +139,9 @@ export function MembersProvider({ children }) {
     }
     const { error } = await supabase.from('members').update(patch).eq('id', id)
     if (error) throw error
+    // Show the change straight away (don't wait for the live update, which
+    // doesn't always arrive for this table).
+    setMembers((ms) => ms.map((m) => (m.id === id ? { ...m, ...patch } : m)))
   }
   async function removeMember(id) {
     if (!isSupabaseConfigured) {

@@ -181,7 +181,7 @@ export default function Calendars() {
 
   return (
     <>
-      <PhoneHeader title="Calendar links" subtitle="Private ICS feeds · read-only" />
+      <PhoneHeader title="Calendar Links" subtitle="Private ICS feeds · read-only" />
 
       <div style={{ fontSize: 14, color: C.muted }}>
         Paste the private ICS link from Google Calendar or Outlook. Events are
@@ -236,7 +236,7 @@ export default function Calendars() {
       </form>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 18, fontWeight: 800 }}>Linked calendars</div>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>Linked Calendars</div>
         {configured && list.length > 0 && (
           <button type="button" onClick={onSync} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.tealText }}>
             Refresh events now

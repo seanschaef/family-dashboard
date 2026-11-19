@@ -105,7 +105,7 @@ export default function Home() {
             </div>
 
             <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16 })}>
-              <div style={{ fontSize: 26, fontWeight: 800 }}>Doors and locks</div>
+              <div style={{ fontSize: 26, fontWeight: 800 }}>Doors and Locks</div>
               {security.length ? (
                 security.map((d) => (
                   <div key={d.entity_id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 24 }}>

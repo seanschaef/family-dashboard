@@ -51,7 +51,7 @@ export default function Dates() {
 
   return (
     <>
-      <PhoneHeader title="Important dates" subtitle="Counted down on the hub" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
+      <PhoneHeader title="Important Dates" subtitle="Counted down on the hub" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
 
       <div style={{ fontSize: 14, color: C.muted }}>
         Birthdays of people who aren&apos;t in the family list, {petName ? `${petName}'s` : 'the pet’s'} birthday,
@@ -105,7 +105,7 @@ export default function Dates() {
         </button>
       </form>
 
-      <div style={{ fontSize: 18, fontWeight: 800, paddingTop: 8 }}>Saved dates</div>
+      <div style={{ fontSize: 18, fontWeight: 800, paddingTop: 8 }}>Saved Dates</div>
       {sorted.length === 0 ? (
         <div style={{ fontSize: 15, color: C.muted }}>None yet.</div>
       ) : (

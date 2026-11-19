@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import WallNav from '../components/WallNav.jsx'
-import { buildWallNav } from '../config/people.js'
-import { useMembers } from '../lib/members.jsx'
 import { C } from '../theme.js'
 import { useWallNightTheme } from '../lib/theme.jsx'
 import NightScreen from './NightScreen.jsx'
@@ -14,12 +12,10 @@ const FRAME_H = 1920
 // OPEN ITEM in the brief: confirm this timing. Easy to change.
 const IDLE_RETURN_MS = 120000
 const SOCCER_IDLE_RETURN_MS = 10 * 60 * 1000
-const SWIPE_THRESHOLD = 60 // px
 
 export default function WallLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { members } = useMembers()
   const [scale, setScale] = useState(1)
   useWallNightTheme() // dark at night, per the schedule set on the phone
 
@@ -36,34 +32,9 @@ export default function WallLayout() {
     return () => window.removeEventListener('resize', recompute)
   }, [])
 
-  // ---- Swipe left/right to move between pages in nav order ----
-  const order = buildWallNav(members).map((n) => n.to)
-  const currentIndex = Math.max(
-    0,
-    order.findIndex((to) => location.pathname.startsWith(to)),
-  )
-
-  const goBy = useCallback(
-    (delta) => {
-      const next = currentIndex + delta
-      if (next >= 0 && next < order.length) navigate(order[next])
-    },
-    [currentIndex, navigate, order],
-  )
-
-  const start = useRef(null)
-  const onPointerDown = (e) => {
-    start.current = { x: e.clientX, y: e.clientY }
-  }
-  const onPointerUp = (e) => {
-    if (!start.current) return
-    const dx = e.clientX - start.current.x
-    const dy = e.clientY - start.current.y
-    start.current = null
-    if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
-      goBy(dx < 0 ? 1 : -1) // swipe left -> next page
-    }
-  }
+  // Pages change only from the tabs at the bottom (no page swipe), so a
+  // swipe is always for the window under your finger: a combined window, or a
+  // calendar's previous/next period.
 
   // ---- Auto-return to hub after inactivity ----
   useEffect(() => {
@@ -99,8 +70,6 @@ export default function WallLayout() {
         justifyContent: 'center',
         touchAction: 'none',
       }}
-      onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
     >
       <div
         style={{

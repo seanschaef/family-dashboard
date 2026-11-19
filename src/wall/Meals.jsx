@@ -55,7 +55,7 @@ export default function Meals() {
 
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 10 })}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <div style={{ fontSize: 26, fontWeight: 800 }}>Dinner this week</div>
+          <div style={{ fontSize: 26, fontWeight: 800 }}>Dinner This Week</div>
           <button type="button" onClick={pushIngredients} style={{ all: 'unset', cursor: 'pointer', fontSize: 20, fontWeight: 700, color: C.tealText }}>Add ingredients to list</button>
         </div>
         {week.map((iso, i) => {
@@ -72,7 +72,7 @@ export default function Meals() {
 
       <div style={card({ flexGrow: 1, padding: 28, display: 'flex', flexDirection: 'column', gap: 14 })}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <div style={{ fontSize: 26, fontWeight: 800 }}>Grocery list</div>
+          <div style={{ fontSize: 26, fontWeight: 800 }}>Grocery List</div>
           <div style={{ fontSize: 20, color: C.muted }}>Synced to everyone's phone</div>
         </div>
 

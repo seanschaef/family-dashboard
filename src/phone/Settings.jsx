@@ -117,7 +117,7 @@ export default function Settings() {
 
   return (
     <>
-      <PhoneHeader title="Settings" subtitle={isAdmin ? 'You are an admin' : 'Your account'} />
+      <PhoneHeader title="Settings" subtitle={isAdmin ? 'You Are an Admin' : 'Your Account'} />
       <SaveToast at={savedAt} />
 
       <div style={card}>
@@ -147,7 +147,7 @@ export default function Settings() {
       </div>
 
       <div style={card}>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>Important dates</div>
+        <div style={{ fontSize: 16, fontWeight: 800 }}>Important Dates</div>
         <Link to="/app/dates" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Birthdays, anniversaries and other dates ›</Link>
         <div style={{ fontSize: 12, color: C.muted }}>Counted down on the hub with the family&apos;s birthdays.</div>
       </div>
@@ -190,7 +190,7 @@ export default function Settings() {
       </div>
 
       <div style={card}>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>Wall display</div>
+        <div style={{ fontSize: 16, fontWeight: 800 }}>Wall Display</div>
         <Link to="/app/wall-preview" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>See how the wall looks ›</Link>
         <Link to="/app/arrange" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Arrange the wall: hub and each person's page ›</Link>
         <Link to="/app/wall-display" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Monitor schedule and night colours ›</Link>

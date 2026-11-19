@@ -32,7 +32,7 @@ export default function Waste() {
 
   return (
     <>
-      <PhoneHeader title="Garbage and recycling" subtitle="Pickup days for the wall" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
+      <PhoneHeader title="Garbage and Recycling" subtitle="Pickup days for the wall" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
       <div style={{ fontSize: 13, color: C.muted }}>
         For each one, enter any pickup date you know (from the City&apos;s collection calendar or the Waste Wise app) and how often it comes. Nothing is looked up online.
       </div>

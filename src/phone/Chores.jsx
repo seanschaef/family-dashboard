@@ -101,10 +101,10 @@ export default function Chores() {
 
   return (
     <>
-      <PhoneHeader title="Chores" action={<Link to="/app/rewards" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Rewards & points ›</Link>} />
+      <PhoneHeader title="Chores" action={<Link to="/app/rewards" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Rewards & Points ›</Link>} />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>{editing ? 'Edit chore' : 'New chore'}</div>
+        <div style={{ fontSize: 16, fontWeight: 800 }}>{editing ? 'Edit Chore' : 'New Chore'}</div>
         {editing && <button type="button" onClick={resetForm} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.muted }}>Cancel edit</button>}
       </div>
       <Field label="Chore">
@@ -169,7 +169,7 @@ export default function Chores() {
       </div>
       {!configured && <div style={{ fontSize: 13, color: C.muted }}>Connect Supabase to save chores.</div>}
 
-      <div style={{ fontSize: 18, fontWeight: 800, paddingTop: 8 }}>All chores</div>
+      <div style={{ fontSize: 18, fontWeight: 800, paddingTop: 8 }}>All Chores</div>
       {chores.length === 0 ? (
         <div style={{ fontSize: 15, color: C.muted }}>No chores yet.</div>
       ) : (

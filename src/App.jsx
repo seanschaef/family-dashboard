@@ -28,6 +28,7 @@ import Accounts from './phone/Accounts.jsx'
 import Dates from './phone/Dates.jsx'
 import Notes from './phone/Notes.jsx'
 import Waste from './phone/Waste.jsx'
+import Ink from './phone/Ink.jsx'
 
 // On the Pi we set VITE_DEVICE_MODE=wall so the root boots straight to the wall.
 const DEVICE_MODE = import.meta.env.VITE_DEVICE_MODE
@@ -90,6 +91,7 @@ export default function App() {
         <Route path="dates" element={<Dates />} />
         <Route path="notes" element={<Notes />} />
         <Route path="waste" element={<Waste />} />
+        <Route path="ink" element={<Ink />} />
       </Route>
 
       <Route path="*" element={<Navigate to={HOME_ROUTE} replace />} />

@@ -18,6 +18,7 @@ import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone, useRedemptions, pointsBalance, pointsThisWeek } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import PetBlock from './PetBlock.jsx'
+import InkBoard from '../components/InkBoard.jsx'
 import { GoalsBlock, LeaderboardBlock, MealsWeekBlock, GroceriesBlock, NotesBlock, NextUpBlock, ForecastBlock, AirBlock, WasteBlock, OnThisDayBlock } from './HubWidgets.jsx'
 import { useMeals, mealFor } from '../lib/kitchen.js'
 import { normalizeHubLayout, blockHeight, WIDTH_SPAN, ROW_UNIT, packedStyle, entryHeight } from './hubLayout.js'
@@ -52,20 +53,20 @@ export default function Hub() {
       </div>
     ),
     photo: (size, opts) => <PhotoFrame height={blockHeight('photo', size)} fit={opts?.fit} />,
-    calendar: (size) => <CalendarBlock title="Family calendar" height={blockHeight('calendar', size)} />,
+    calendar: (size) => <CalendarBlock title="Family Calendar" height={blockHeight('calendar', size)} />,
     today: (size) => <TodayBlock height={blockHeight('today', size)} />,
     legend: () => <LegendBlock />,
     dinner: () => (
       <button type="button" onClick={() => navigate('/wall/meals')} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.tealTint, borderRadius: 16, padding: '16px 22px', color: C.ink }}>
         <span style={{ fontSize: 24 }}>
-          <span style={{ fontWeight: 800 }}>Dinner tonight:</span> {dinner || 'Not planned yet'}
+          <span style={{ fontWeight: 800 }}>Dinner Tonight:</span> {dinner || 'Not planned yet'}
         </span>
         <span style={{ fontSize: 20, color: C.tealText, fontWeight: 700 }}>Meals ›</span>
       </button>
     ),
     chores: () => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16, height: '100%' })}>
-        <div style={{ fontSize: 26, fontWeight: 800 }}>Chores today</div>
+        <div style={{ fontSize: 26, fontWeight: 800 }}>Chores Today</div>
         {members.map((m) => {
           const due = dueChores(chores, logs, m.key, T)
           const done = due.filter((c) => isDone(logs, c, T, m.key)).length
@@ -88,6 +89,7 @@ export default function Hub() {
     air: () => <AirBlock />,
     waste: () => <WasteBlock />,
     onthisday: () => <OnThisDayBlock />,
+    ink: () => <InkBoard title="Ink" big />,
     points: () => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 14, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Points</div>
@@ -116,7 +118,7 @@ export default function Hub() {
     ),
     birthdays: () => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
-        <div style={{ fontSize: 26, fontWeight: 800 }}>Coming up</div>
+        <div style={{ fontSize: 26, fontWeight: 800 }}>Coming Up</div>
         {coming.length ? (
           coming.map((b) => (
             <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 22, minWidth: 0 }}>

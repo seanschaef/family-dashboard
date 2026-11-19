@@ -73,7 +73,7 @@ export default function Today() {
 
       {needsWho && (
         <div style={{ background: C.tealTint, borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>Who are you?</div>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>Who Are You?</div>
           <div style={{ fontSize: 14, color: C.muted }}>Pick yourself so Today shows your chores and reminders.</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {members.map((m) => (
@@ -91,7 +91,7 @@ export default function Today() {
       </div>
 
       <PhoneCard style={{ gap: 4 }}>
-        <div style={{ fontSize: 18, fontWeight: 800 }}>{scope === 'me' ? 'My chores' : 'Chores today'}</div>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>{scope === 'me' ? 'My Chores' : 'Chores Today'}</div>
         {scope === 'me' && !me ? (
           <div style={{ fontSize: 15, color: C.muted }}>Pick who you are above.</div>
         ) : choreList.length === 0 ? (
@@ -127,6 +127,7 @@ export default function Today() {
 
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', fontSize: 14, paddingTop: 4 }}>
         <Link to="/app/notes" style={{ color: C.tealText, fontWeight: 700 }}>Notes for the wall</Link>
+        <Link to="/app/ink" style={{ color: C.tealText, fontWeight: 700 }}>Ink board</Link>
         <Link to="/app/calendars" style={{ color: C.tealText, fontWeight: 700 }}>Calendar links</Link>
         <Link to="/app/wall-display" style={{ color: C.tealText, fontWeight: 700 }}>Wall display</Link>
         <Link to="/app/widgets" style={{ color: C.tealText, fontWeight: 700 }}>Wall widgets</Link>

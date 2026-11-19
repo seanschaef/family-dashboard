@@ -4,27 +4,28 @@
 // phone (Settings › Arrange the hub).
 
 export const HUB_BLOCK_LABELS = {
-  header: 'Clock and weather',
+  header: 'Clock and Weather',
   photo: 'Photos',
   calendar: 'Calendar',
-  legend: 'Calendar key (colours)',
-  dinner: 'Dinner tonight',
+  legend: 'Calendar Key (colours)',
+  dinner: 'Dinner Tonight',
   chores: 'Chores',
   pet: 'Pet',
   today: 'Today (schedule)',
   reminders: 'Reminders',
-  birthdays: 'Coming up (birthdays and dates)',
+  birthdays: 'Coming Up (birthdays and dates)',
   points: 'Points (everyone’s totals)',
-  goals: 'Saving for (reward goals)',
-  leaderboard: 'Chore leaderboard (this week)',
-  mealsweek: 'This week’s meals',
-  groceries: 'Grocery list',
-  notes: 'Family notes',
-  nextup: 'Next up (whole family)',
-  forecast: 'Weather forecast',
-  air: 'Air quality (AQHI)',
-  waste: 'Garbage and recycling',
-  onthisday: 'On this day (photos)',
+  goals: 'Saving For (reward goals)',
+  leaderboard: 'Chore Leaderboard (this week)',
+  mealsweek: 'This Week’s Meals',
+  groceries: 'Grocery List',
+  notes: 'Family Notes',
+  nextup: 'Next Up (whole family)',
+  forecast: 'Weather Forecast',
+  air: 'Air Quality (AQHI)',
+  waste: 'Garbage and Recycling',
+  onthisday: 'On This Day (photos)',
+  ink: 'Ink (draw or write)',
 }
 
 // Size (S, M, L, XL) is a window's height; width (quarter, half, full) is
@@ -63,6 +64,7 @@ export const DEFAULT_HUB_LAYOUT = [
   { id: 'air', size: 'm', width: 'quarter', visible: false },
   { id: 'waste', size: 'm', width: 'half', visible: false },
   { id: 'onthisday', size: 'm', width: 'half', visible: false },
+  { id: 'ink', size: 'l', width: 'half', visible: false },
 ]
 
 // Layouts saved before widths existed: 'l' meant full width, 's'/'m' half.
