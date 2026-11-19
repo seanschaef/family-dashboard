@@ -67,3 +67,9 @@ const FIXED = {
 export function personBlockHeight(id, size) {
   return FIXED[id]?.[size]
 }
+
+// Roughly how tall a window is on a person's page (px), for the phone preview.
+const APPROX = { s: 130, m: 200, l: 260, xl: 440 }
+export function personApproxHeight(id, size) {
+  return FIXED[id]?.[size] ?? APPROX[size] ?? 200
+}

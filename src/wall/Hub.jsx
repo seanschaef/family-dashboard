@@ -109,7 +109,7 @@ export default function Hub() {
   return (
     <>
       {/* 4-column grid: full = 4, half = 2, quarter = 1 (see hubLayout.js). */}
-      <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row dense', gap: 24, alignContent: 'start' }}>
+      <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row', gap: 24, alignContent: 'start' }}>
         {layout.map((b) => (
           <div key={b.id} style={{ gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`, minHeight: MIN_HEIGHT[b.size], minWidth: 0 }}>
             {b.group ? (

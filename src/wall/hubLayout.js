@@ -16,18 +16,19 @@ export const HUB_BLOCK_LABELS = {
   birthdays: 'Coming up (birthdays and dates)',
 }
 
-// Sizes, shortest to tallest, and the widths each one can take. The hub is a
-// 4-column grid: full = 4 columns, half = 2, quarter = 1.
+// Size (S, M, L, XL) is a window's height; width (quarter, half, full) is
+// separate, so any window can be any size at any width. The hub is a
+// 4-column grid: full = 4 columns, half = 2, quarter = 1. Windows flow left to
+// right in order, so narrower ones sit side by side.
 export const SIZES = [
-  { v: 's', label: 'S', widths: ['full', 'quarter'] },
-  { v: 'm', label: 'M', widths: ['full', 'quarter'] },
-  { v: 'l', label: 'L', widths: ['half'] },
-  { v: 'xl', label: 'XL', widths: ['full', 'half'] },
+  { v: 's', label: 'S' },
+  { v: 'm', label: 'M' },
+  { v: 'l', label: 'L' },
+  { v: 'xl', label: 'XL' },
 ]
+export const WIDTHS = ['quarter', 'half', 'full']
 export const WIDTH_LABELS = { full: 'Full', half: 'Half', quarter: 'Quarter' }
 export const WIDTH_SPAN = { full: 4, half: 2, quarter: 1 }
-
-const widthsFor = (size) => SIZES.find((s) => s.v === size)?.widths || ['full']
 
 export const DEFAULT_HUB_LAYOUT = [
   { id: 'header', size: 's', width: 'full', visible: true },
@@ -84,7 +85,7 @@ export function normalizeLayout(stored, { labels, defaults, legacy }) {
     let { size, width } = b
     if (!width && legacy) ({ size, width } = legacy(b.id, size))
     if (!SIZES.some((s) => s.v === size)) size = 'm'
-    if (!widthsFor(size).includes(width)) width = widthsFor(size)[0]
+    if (!WIDTHS.includes(width)) width = 'full'
     return { size, width, visible: b.visible !== false }
   }
   for (const b of stored) {
@@ -149,12 +150,6 @@ export function separateEntry(items, i, memberId) {
   return items.flatMap((x, k) => (k === i ? [kept, out] : [x]))
 }
 
-// Change a block's size, keeping its width if the new size allows it.
-export function withSize(block, size) {
-  const widths = widthsFor(size)
-  return { ...block, size, width: widths.includes(block.width) ? block.width : widths[0] }
-}
-export const widthOptions = widthsFor
 
 // Fixed heights (px) for blocks that need one, within the 1080x1920 wall.
 const FIXED = {
@@ -165,6 +160,13 @@ const FIXED = {
 }
 export function blockHeight(id, size) {
   return FIXED[id]?.[size]
+}
+
+// Roughly how tall a window is on the wall (px), for the phone's preview.
+// Content-sized windows grow past this when they have more to show.
+const APPROX = { s: 130, m: 200, l: 260, xl: 440 }
+export function approxHeight(id, size) {
+  return FIXED[id]?.[size] ?? APPROX[size] ?? 200
 }
 
 // Everything else is content-sized, with a minimum per size.

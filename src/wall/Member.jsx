@@ -157,7 +157,7 @@ export default function Member() {
   const layout = normalizePersonLayout(person.page_layout, person.role).filter((b) => b.visible && (b.group || blocks[b.id]))
 
   return (
-    <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row dense', gap: 24, alignContent: 'start' }}>
+    <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row', gap: 24, alignContent: 'start' }}>
       {layout.map((b) => (
         <div key={b.id} style={{ gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`, minHeight: b.id === 'header' ? undefined : MIN_HEIGHT[b.size], minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           {b.group ? (
