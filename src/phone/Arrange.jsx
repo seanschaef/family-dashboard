@@ -36,6 +36,20 @@ function Pick({ active, disabled, onClick, children }) {
   )
 }
 
+// True when the screen is wide enough for the preview and settings to sit
+// side by side (matches the flex-wrap breakpoint below: 320 + 300 + 16 + margins).
+function useWide() {
+  const query = '(min-width: 680px)'
+  const [wide, setWide] = useState(() => window.matchMedia(query).matches)
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const on = () => setWide(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return wide
+}
+
 const rowLabel = { fontSize: 12, fontWeight: 700, color: C.muted, marginTop: 10, marginBottom: 4 }
 
 // The wall drawn to scale. Tap a window to select it; press and hold (or drag
@@ -227,6 +241,7 @@ export default function Arrange() {
 
   const [items, setItems] = useState(() => load(person ? person.page_layout : wallLayout))
   const [selected, setSelected] = useState(null)
+  const wide = useWide()
   const [status, setStatus] = useState(null) // null | 'saved' | 'reset' | 'error'
   useEffect(() => {
     setItems(load(person ? person.page_layout : wallLayout))
@@ -273,6 +288,16 @@ export default function Arrange() {
   const visible = items.filter((x) => x.visible)
   const vIndex = b ? visible.findIndex((x) => x.id === b.id) : -1
 
+  // Save / Reset: in the right-hand column (always in view) when the preview
+  // and settings sit side by side; otherwise stuck to the bottom of the screen.
+  const saveBar = (
+    <div style={{ position: 'sticky', bottom: wide ? undefined : 92, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 12, padding: '10px 12px', background: C.card, border: `2px solid ${C.border}`, borderRadius: 16, zIndex: 5 }}>
+      <button type="button" onClick={save} style={{ all: 'unset', cursor: 'pointer', background: C.meals, color: '#FFF', borderRadius: 14, padding: '12px 22px', fontSize: 16, fontWeight: 700 }}>Save to wall</button>
+      <button type="button" onClick={reset} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.muted }}>Reset to default</button>
+      {status && <span style={{ fontSize: 14, color: status === 'error' ? C.rust : C.tealText }}>{status === 'saved' ? 'Saved' : status === 'reset' ? 'Reset and saved' : 'Couldn’t save'}</span>}
+    </div>
+  )
+
   return (
     <>
       <PhoneHeader title="Arrange the wall" subtitle="Drag, resize, combine and hide windows" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
@@ -305,6 +330,7 @@ export default function Arrange() {
       />
       </div>
       <div style={{ flex: '1 1 300px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 14, position: 'sticky', top: 16 }}>
+      {canEdit && wide && saveBar}
 
       {!canEdit && <div style={{ fontSize: 13, color: C.muted }}>{person ? `Only ${person.name} or an admin can change this page.` : 'Only an admin can change the hub.'}</div>}
       {person && <div style={{ fontSize: 13, color: C.muted }}>Big job tiles with stars suit younger kids; the chores list suits everyone else. Photos show when {person.name} has a photo collection.</div>}
@@ -416,13 +442,7 @@ export default function Arrange() {
       </div>
       </div>
 
-      {canEdit && (
-        <div style={{ position: 'sticky', bottom: 92, display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: C.card, border: `2px solid ${C.border}`, borderRadius: 16, zIndex: 5 }}>
-          <button type="button" onClick={save} style={{ all: 'unset', cursor: 'pointer', background: C.meals, color: '#FFF', borderRadius: 14, padding: '12px 22px', fontSize: 16, fontWeight: 700 }}>Save to wall</button>
-          <button type="button" onClick={reset} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.muted }}>Reset to default</button>
-          {status && <span style={{ fontSize: 14, color: status === 'error' ? C.rust : C.tealText }}>{status === 'saved' ? 'Saved' : status === 'reset' ? 'Reset and saved' : 'Couldn’t save'}</span>}
-        </div>
-      )}
+      {canEdit && !wide && saveBar}
       <Link to="/app/wall-preview" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Open full wall preview ›</Link>
     </>
   )
