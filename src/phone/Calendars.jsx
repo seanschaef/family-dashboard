@@ -92,6 +92,15 @@ function CalendarRow({ cal, members, colorFor, nameFor, onChanged }) {
               Show on the family hub
             </label>
           )}
+          {cal.kind === 'work' && (
+            <>
+              <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15 }}>
+                <input type="checkbox" checked={!!cal.show_details} onChange={(e) => save({ show_details: e.target.checked })} style={{ marginTop: 3 }} />
+                <span>Show event titles (not just “Busy”) on {owners.map(nameFor).join(' & ') || 'the owner'}&apos;s wall page and to the family</span>
+              </label>
+              <div style={{ fontSize: 12, color: C.muted }}>Off: only the owner sees titles, on their own phone. Work calendars never show on the family hub either way.</div>
+            </>
+          )}
           <button type="button" onClick={() => removeCalendar(cal.id).then(onChanged)} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.danger, alignSelf: 'flex-start' }}>
             Remove calendar
           </button>

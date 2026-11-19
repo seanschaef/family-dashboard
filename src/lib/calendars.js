@@ -9,7 +9,7 @@ export async function listCalendars() {
   if (!isSupabaseConfigured) return []
   const { data, error } = await supabase
     .from('calendars')
-    .select('id, name, ics_url, person_key, person_keys, kind, show_on_hub, color, last_synced_at')
+    .select('id, name, ics_url, person_key, person_keys, kind, show_on_hub, show_details, color, last_synced_at')
     .order('created_at', { ascending: true })
   if (error) throw error
   return data ?? []
@@ -72,7 +72,7 @@ export async function listEvents({ from, to } = {}) {
   if (!isSupabaseConfigured) return []
   let q = supabase
     .from('calendar_events')
-    .select('id, calendar_id, title, starts_at, ends_at, all_day, location, person_key, kind, calendar:calendars(name, person_keys, color, show_on_hub)')
+    .select('id, calendar_id, title, starts_at, ends_at, all_day, location, person_key, kind, calendar:calendars(name, person_keys, color, show_on_hub, show_details)')
     .order('starts_at', { ascending: true })
   if (from) q = q.gte('starts_at', from)
   if (to) q = q.lte('starts_at', to)
@@ -86,7 +86,7 @@ export async function listEvents({ from, to } = {}) {
 function withCalendarInfo(e) {
   const cal = e.calendar || {}
   const owners = cal.person_keys?.length ? cal.person_keys : e.person_key ? [e.person_key] : []
-  return { ...e, calendar: undefined, owners, color: cal.color || null, show_on_hub: cal.show_on_hub !== false, calendarName: cal.name || null }
+  return { ...e, calendar: undefined, owners, color: cal.color || null, show_on_hub: cal.show_on_hub !== false, calendarName: cal.name || null, show_details: cal.show_details === true }
 }
 
 // Does this event belong on a person's page? Their own calendars plus the

@@ -44,7 +44,7 @@ export function useEvents(from, to) {
   }, [fromMs, toMs])
 
   // Confidentiality: a work calendar's details (titles, locations) show only to
-  // its owner on their own phone. The wall (a shared screen, including the
+  // its owner on their own phone, unless its owner turned on show_details. The wall (a shared screen, including the
   // phone's Wall preview) and everyone else see "Busy" at the same times.
   const { me } = useMembers()
   const { pathname } = useLocation()
@@ -52,7 +52,7 @@ export function useEvents(from, to) {
   const shown = useMemo(
     () =>
       events.map((e) =>
-        e.kind === 'work' && (onWall || !(e.owners || [e.person_key]).includes(me?.key))
+        e.kind === 'work' && !e.show_details && (onWall || !(e.owners || [e.person_key]).includes(me?.key))
           ? { ...e, title: 'Busy', location: null }
           : e,
       ),
