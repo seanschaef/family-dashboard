@@ -63,6 +63,7 @@ export default function InkBoard({ title = 'Ink', big = false }) {
   const [color, setColor] = useState(null)
   const [thick, setThick] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [tools, setTools] = useState(false) // pen tools tucked away until tapped
   const pen = color || colors[0]
 
   const wrapRef = useRef(null)
@@ -134,6 +135,7 @@ export default function InkBoard({ title = 'Ink', big = false }) {
         /* ignore */
       }
       setConfirmClear(false)
+      setTools(false)
       const width = (thick ? 0.018 : 0.007) * (big ? 0.7 : 1)
       liveRef.current = { c: pen, w: width, p: [point(e)] }
       const { w, h } = sizeRef.current
@@ -181,16 +183,27 @@ export default function InkBoard({ title = 'Ink', big = false }) {
 
   return (
     <div style={card({ padding: big ? 24 : 16, display: 'flex', flexDirection: 'column', gap: 10, height: '100%', minHeight: 0, boxSizing: 'border-box' })}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
-        {title && <div style={{ fontSize: big ? 26 : 20, fontWeight: 800, marginRight: 4 }}>{title}</div>}
-        {colors.map((c) => (
-          <button key={c} type="button" aria-label="Pen colour" aria-pressed={pen === c} onClick={() => setColor(c)} style={{ all: 'unset', cursor: 'pointer', width: dot, height: dot, borderRadius: dot / 2, background: c, boxShadow: pen === c ? `0 0 0 3px ${C.card}, 0 0 0 6px ${c}` : 'none', flexShrink: 0 }} />
-        ))}
-        <button type="button" aria-pressed={thick} onClick={() => setThick((t) => !t)} style={btn}>{thick ? 'Thick' : 'Thin'}</button>
+      {/* Tools stay tucked into one small button (showing the pen colour)
+          until tapped; they fold away again when you start drawing. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        {title && <div style={{ fontSize: big ? 26 : 20, fontWeight: 800 }}>{title}</div>}
         <span style={{ flexGrow: 1 }} />
-        <button type="button" onClick={undo} disabled={!strokes.length} style={{ ...btn, opacity: strokes.length ? 1 : 0.4 }}>Undo</button>
-        <button type="button" onClick={clear} disabled={!strokes.length} style={{ ...btn, opacity: strokes.length ? 1 : 0.4, background: confirmClear ? C.rust : C.cream, color: confirmClear ? '#FFFFFF' : C.ink }}>{confirmClear ? 'Tap to Clear' : 'Clear'}</button>
+        <button type="button" aria-expanded={tools} aria-label="Pen tools" onClick={() => setTools((t) => !t)} style={{ ...btn, display: 'flex', alignItems: 'center', gap: 8, background: tools ? C.tealTint : C.cream }}>
+          <span style={{ width: dot * 0.7, height: dot * 0.7, borderRadius: dot, background: pen, border: `2px solid ${C.card}`, boxShadow: `0 0 0 2px ${pen}` }} />
+          {tools ? 'Done' : 'Pen'}
+        </button>
       </div>
+      {tools && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
+          {colors.map((c) => (
+            <button key={c} type="button" aria-label="Pen colour" aria-pressed={pen === c} onClick={() => setColor(c)} style={{ all: 'unset', cursor: 'pointer', width: dot, height: dot, borderRadius: dot / 2, background: c, boxShadow: pen === c ? `0 0 0 3px ${C.card}, 0 0 0 6px ${c}` : 'none', flexShrink: 0 }} />
+          ))}
+          <button type="button" aria-pressed={thick} onClick={() => setThick((t) => !t)} style={btn}>{thick ? 'Thick' : 'Thin'}</button>
+          <span style={{ flexGrow: 1 }} />
+          <button type="button" onClick={undo} disabled={!strokes.length} style={{ ...btn, opacity: strokes.length ? 1 : 0.4 }}>Undo</button>
+          <button type="button" onClick={clear} disabled={!strokes.length} style={{ ...btn, opacity: strokes.length ? 1 : 0.4, background: confirmClear ? C.rust : C.cream, color: confirmClear ? '#FFFFFF' : C.ink }}>{confirmClear ? 'Tap to Clear' : 'Clear'}</button>
+        </div>
+      )}
       <div ref={wrapRef} style={{ position: 'relative', flex: '1 1 0', minHeight: 0, borderRadius: 16, background: C.cream, overflow: 'hidden' }}>
         <canvas ref={canvasRef} {...handlers} style={{ position: 'absolute', inset: 0, touchAction: 'none', cursor: 'crosshair' }} />
         {!strokes.length && (
