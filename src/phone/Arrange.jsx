@@ -289,6 +289,10 @@ export default function Arrange() {
         })}
       </div>
 
+      {/* Preview and the selected window's settings side by side when the
+          screen is wide enough (laptop, tablet); stacked on a phone. */}
+      <div style={{ alignSelf: 'center', width: 'min(1000px, calc(100vw - 40px))', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
+      <div style={{ flex: '1 1 320px', maxWidth: 480, minWidth: 0 }}>
       <Preview
         items={items}
         labels={labels}
@@ -299,6 +303,8 @@ export default function Arrange() {
         onMove={moveTo}
         onResize={(id, p) => update(id, p)}
       />
+      </div>
+      <div style={{ flex: '1 1 300px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 14, position: 'sticky', top: 16 }}>
 
       {!canEdit && <div style={{ fontSize: 13, color: C.muted }}>{person ? `Only ${person.name} or an admin can change this page.` : 'Only an admin can change the hub.'}</div>}
       {person && <div style={{ fontSize: 13, color: C.muted }}>Big job tiles with stars suit younger kids; the chores list suits everyone else. Photos show when {person.name} has a photo collection.</div>}
@@ -392,7 +398,7 @@ export default function Arrange() {
           )}
         </div>
       ) : (
-        canEdit && <div style={{ fontSize: 14, color: C.muted, textAlign: 'center' }}>Tap a window above to change its size, width or other settings.</div>
+        canEdit && <div style={{ fontSize: 14, color: C.muted, textAlign: 'center' }}>Tap a window in the preview to change its size, width or other settings.</div>
       )}
 
       {hidden.length > 0 && (
@@ -407,6 +413,8 @@ export default function Arrange() {
           </div>
         </div>
       )}
+      </div>
+      </div>
 
       {canEdit && (
         <div style={{ position: 'sticky', bottom: 92, display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: C.card, border: `2px solid ${C.border}`, borderRadius: 16, zIndex: 5 }}>

@@ -55,13 +55,19 @@ export default function App() {
         <Route path="soccer" element={<WallSoccer />} />
       </Route>
 
-      {/* Phone / computer app (installable PWA on Vercel) */}
+      {/* Phone / computer app (installable PWA on Vercel). Not on the wall
+          itself: everything is set up from a phone or computer, so the Pi
+          sends any /app address back to the hub. */}
       <Route
         path="/app"
         element={
-          <Protected>
-            <PhoneLayout />
-          </Protected>
+          DEVICE_MODE === 'wall' ? (
+            <Navigate to="/wall/hub" replace />
+          ) : (
+            <Protected>
+              <PhoneLayout />
+            </Protected>
+          )
         }
       >
         <Route index element={<Navigate to="today" replace />} />
