@@ -11,8 +11,8 @@ import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone, pointsThisWeek, pointsBalance, useRedemptions, doneByText, assigneesOf } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import { usePhotoCollections, activeCollectionsFor } from '../lib/photos.js'
-import { normalizePersonLayout, personBlockHeight } from './personLayout.js'
-import { WIDTH_SPAN, MIN_HEIGHT } from './hubLayout.js'
+import { normalizePersonLayout, personBlockHeight, personApproxHeight } from './personLayout.js'
+import { WIDTH_SPAN, ROW_UNIT, packedStyle, entryHeight } from './hubLayout.js'
 import Rotator from './Rotator.jsx'
 import { useDragScroll } from './dragScroll.js'
 import { useChoreActions } from '../lib/choreActions.jsx'
@@ -157,9 +157,9 @@ export default function Member() {
   const layout = normalizePersonLayout(person.page_layout, person.role).filter((b) => b.visible && (b.group || blocks[b.id]))
 
   return (
-    <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row', gap: 24, alignContent: 'start' }}>
+    <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoRows: ROW_UNIT, columnGap: 24, rowGap: 0, alignContent: 'start' }}>
       {layout.map((b) => (
-        <div key={b.id} style={{ gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`, minHeight: b.id === 'header' ? undefined : MIN_HEIGHT[b.size], minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <div key={b.id} style={packedStyle(WIDTH_SPAN[b.width] || 4, entryHeight(b, personApproxHeight), 24)}>
           {b.group ? (
             <Rotator items={b.group.filter((id) => blocks[id]).map((id) => blocks[id](b.size, b))} interval={b.interval} transition={b.transition} />
           ) : (

@@ -19,7 +19,7 @@ import { useChores, useChoreLogs, dueChores, isDone } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import PetBlock from './PetBlock.jsx'
 import { useMeals, mealFor } from '../lib/kitchen.js'
-import { normalizeHubLayout, blockHeight, WIDTH_SPAN, MIN_HEIGHT } from './hubLayout.js'
+import { normalizeHubLayout, blockHeight, WIDTH_SPAN, ROW_UNIT, packedStyle, entryHeight } from './hubLayout.js'
 
 export default function Hub() {
   const now = useNow()
@@ -109,9 +109,9 @@ export default function Hub() {
   return (
     <>
       {/* 4-column grid: full = 4, half = 2, quarter = 1 (see hubLayout.js). */}
-      <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row', gap: 24, alignContent: 'start' }}>
+      <div style={{ flexGrow: 1, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoRows: ROW_UNIT, columnGap: 24, rowGap: 0, alignContent: 'start' }}>
         {layout.map((b) => (
-          <div key={b.id} style={{ gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`, minHeight: MIN_HEIGHT[b.size], minWidth: 0 }}>
+          <div key={b.id} style={packedStyle(WIDTH_SPAN[b.width] || 4, entryHeight(b), 24)}>
             {b.group ? (
               <Rotator items={b.group.filter((id) => blocks[id]).map((id) => blocks[id](b.size, b))} interval={b.interval} transition={b.transition} />
             ) : (

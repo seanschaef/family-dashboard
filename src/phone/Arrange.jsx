@@ -14,6 +14,7 @@ import {
   combineEntries,
   separateEntry,
   approxHeight,
+  entryHeight,
 } from '../wall/hubLayout.js'
 import { PERSON_BLOCK_LABELS, normalizePersonLayout, personApproxHeight } from '../wall/personLayout.js'
 
@@ -79,7 +80,7 @@ function Preview({ items, labels, heightFor, canEdit, selected, onSelect, onMove
   const scale = width / WALL_WIDTH
   const colW = (width - GAP * 3) / 4
   const spanPx = (n) => colW * n + GAP * (n - 1)
-  const tileHeight = (b) => Math.max(26, Math.round(heightFor(b.group ? b.group[0] : b.id, b.size) * scale))
+  const tileHeight = (b) => Math.max(26, Math.round(entryHeight(b, heightFor) * scale))
   const visible = items.filter((b) => b.visible)
 
   const endDrag = () => {
@@ -163,7 +164,8 @@ function Preview({ items, labels, heightFor, canEdit, selected, onSelect, onMove
 
   return (
     <div style={{ background: C.cream, border: `3px solid ${C.ink}`, borderRadius: 16, padding: 10 }}>
-      <div ref={gridRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoFlow: 'row', gap: GAP, alignItems: 'start' }}>
+      {/* Same packing as the wall: tiny rows, each tile spans its height + gap. */}
+      <div ref={gridRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoRows: 2, columnGap: GAP, rowGap: 0, alignItems: 'start' }}>
         {visible.map((b) => {
           const isSel = selected === b.id
           const isDrag = drag?.id === b.id
@@ -179,6 +181,7 @@ function Preview({ items, labels, heightFor, canEdit, selected, onSelect, onMove
               style={{
                 position: 'relative',
                 gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`,
+                gridRow: `span ${Math.ceil((tileHeight(b) + GAP) / 2)}`,
                 height: tileHeight(b),
                 background: b.group ? C.tealTint : C.card,
                 border: `2px ${b.group ? 'dashed' : 'solid'} ${isSel ? C.rust : b.group ? C.meals : C.border}`,

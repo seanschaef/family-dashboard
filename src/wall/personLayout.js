@@ -1,4 +1,4 @@
-import { normalizeLayout } from './hubLayout.js'
+import { normalizeLayout, GENERIC_HEIGHT } from './hubLayout.js'
 
 // The windows on a person's wall page, arranged like the hub (same sizes,
 // widths, combined windows). Stored per person in members.page_layout; null
@@ -68,8 +68,7 @@ export function personBlockHeight(id, size) {
   return FIXED[id]?.[size]
 }
 
-// Roughly how tall a window is on a person's page (px), for the phone preview.
-const APPROX = { s: 130, m: 200, l: 260, xl: 440 }
+// Every window's height on a person's page (px); see approxHeight in hubLayout.js.
 export function personApproxHeight(id, size) {
-  return FIXED[id]?.[size] ?? APPROX[size] ?? 200
+  return FIXED[id]?.[size] ?? GENERIC_HEIGHT[size] ?? 220
 }

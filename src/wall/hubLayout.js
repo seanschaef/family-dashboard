@@ -157,17 +157,30 @@ const FIXED = {
   photo: { s: 200, m: 270, l: 300, xl: 440 },
   calendar: { s: 260, m: 400, l: 430, xl: 560 },
   today: { s: 160, m: 240, l: 260, xl: 440 },
+  dinner: { s: 80, m: 120, l: 160, xl: 220 },
 }
 export function blockHeight(id, size) {
   return FIXED[id]?.[size]
 }
 
-// Roughly how tall a window is on the wall (px), for the phone's preview.
-// Content-sized windows grow past this when they have more to show.
-const APPROX = { s: 130, m: 200, l: 260, xl: 440 }
+// Every window has a fixed height for its size (px on the 1080-wide wall), so
+// windows pack like widgets: each one slots into the first space it fits,
+// in order, including gaps beside a taller neighbour. The phone's preview
+// uses the same numbers, scaled down.
+export const GENERIC_HEIGHT = { s: 140, m: 220, l: 320, xl: 460 }
 export function approxHeight(id, size) {
-  return FIXED[id]?.[size] ?? APPROX[size] ?? 200
+  return FIXED[id]?.[size] ?? GENERIC_HEIGHT[size] ?? 220
+}
+// A combined window is as tall as its tallest member.
+export function entryHeight(b, heightOf = approxHeight) {
+  return Math.max(...(b.group || [b.id]).map((id) => heightOf(id, b.size)))
 }
 
-// Everything else is content-sized, with a minimum per size.
-export const MIN_HEIGHT = { s: undefined, m: 200, l: 240, xl: 440 }
+// The packing grid: tiny rows, each window spans enough of them for its
+// height plus the gap below it. Grid auto-placement (not "dense") then puts
+// each window in the first free spot after the one before it.
+export const ROW_UNIT = 4
+export function packedStyle(span, height, gap, unit = ROW_UNIT) {
+  return { gridColumn: `span ${span}`, gridRow: `span ${Math.ceil((height + gap) / unit)}`, height, alignSelf: 'start', minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }
+}
+
