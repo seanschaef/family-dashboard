@@ -1,23 +1,26 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase, isSupabaseConfigured } from './supabase.js'
+import { isDaylight } from './sun.js'
 
 // Light / dark theme. The colours themselves live in index.css; this only sets
 // <html data-theme="light|dark">.
 //
-// Phones and computers: follow the device's setting by default ("auto"), or the
-// user's choice in Settings. The choice is per device (localStorage).
-// The wall: dark between wall_settings.dark_start and dark_end (set from the
-// phone), light otherwise. WallLayout turns this on while the wall is showing.
+// Phones and computers: by default dark from sunset to sunrise in Edmonton
+// ("sun"); or follow the device ("auto"), or always light / dark. The choice is
+// per device (localStorage).
+// The wall: dark from sunset to sunrise too (wall_settings.dark_follow_sun), or
+// between fixed times set from the phone. WallLayout turns this on while the
+// wall is showing.
 
-const PREF_KEY = 'theme-pref' // 'auto' | 'light' | 'dark'
+const PREF_KEY = 'theme-pref' // 'sun' | 'auto' | 'light' | 'dark'
 const THEME_COLOR = { light: '#B4532A', dark: '#1B1714' }
 
 function readPref() {
   try {
     const v = localStorage.getItem(PREF_KEY)
-    return v === 'light' || v === 'dark' ? v : 'auto'
+    return v === 'light' || v === 'dark' || v === 'auto' ? v : 'sun'
   } catch {
-    return 'auto'
+    return 'sun'
   }
 }
 
@@ -42,7 +45,14 @@ export function ThemeProvider({ children }) {
     return () => mq.removeEventListener('change', on)
   }, [])
 
-  const deviceTheme = pref === 'auto' ? (systemDark ? 'dark' : 'light') : pref
+  // Re-check the sun every minute.
+  const [daylight, setDaylight] = useState(() => isDaylight())
+  useEffect(() => {
+    const id = setInterval(() => setDaylight(isDaylight()), 60000)
+    return () => clearInterval(id)
+  }, [])
+
+  const deviceTheme = pref === 'sun' ? (daylight ? 'light' : 'dark') : pref === 'auto' ? (systemDark ? 'dark' : 'light') : pref
   const theme = wallTheme || deviceTheme
 
   useEffect(() => applyTheme(theme), [theme])
@@ -83,13 +93,13 @@ export function inWindow(start, end, now = new Date()) {
 // every minute and re-reading the schedule when it changes on a phone.
 export function useWallNightTheme() {
   const { setWallTheme } = useTheme()
-  const [sched, setSched] = useState({ dark_enabled: true, dark_start: '19:30', dark_end: '07:00' })
+  const [sched, setSched] = useState({ dark_enabled: true, dark_follow_sun: true, dark_start: '19:30', dark_end: '07:00' })
 
   useEffect(() => {
     if (!isSupabaseConfigured) return undefined
     let active = true
     const load = async () => {
-      const { data } = await supabase.from('wall_settings').select('dark_enabled, dark_start, dark_end').limit(1).maybeSingle()
+      const { data } = await supabase.from('wall_settings').select('dark_enabled, dark_follow_sun, dark_start, dark_end').limit(1).maybeSingle()
       if (active && data) setSched(data)
     }
     load()
@@ -104,7 +114,8 @@ export function useWallNightTheme() {
   }, [])
 
   useEffect(() => {
-    const tick = () => setWallTheme(sched.dark_enabled && inWindow(sched.dark_start, sched.dark_end) ? 'dark' : 'light')
+    const night = () => (sched.dark_follow_sun !== false ? !isDaylight() : inWindow(sched.dark_start, sched.dark_end))
+    const tick = () => setWallTheme(sched.dark_enabled && night() ? 'dark' : 'light')
     tick()
     const id = setInterval(tick, 30000)
     return () => {

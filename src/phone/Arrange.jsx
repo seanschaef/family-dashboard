@@ -337,7 +337,7 @@ export default function Arrange() {
       <>
         <PhoneHeader title="Arrange the Wall" subtitle="Drag, resize, combine and hide windows" />
         <div style={{ fontSize: 15, color: C.muted }}>{members.length ? 'That person isn’t in the family any more.' : 'Loading…'}</div>
-        <Link to="/app/arrange" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Arrange the family hub ›</Link>
+        <Link to="/app/arrange" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Arrange the Family Hub ›</Link>
       </>
     )
   }
@@ -503,7 +503,7 @@ export default function Arrange() {
       </div>
 
       {canEdit && !wide && saveBar}
-      <Link to="/app/wall-preview" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Open full wall preview ›</Link>
+      <Link to="/app/wall-preview" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Wall Preview ›</Link>
     </>
   )
 }

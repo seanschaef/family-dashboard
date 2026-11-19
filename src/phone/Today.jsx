@@ -126,11 +126,11 @@ export default function Today() {
 
 
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', fontSize: 14, paddingTop: 4 }}>
-        <Link to="/app/notes" style={{ color: C.tealText, fontWeight: 700 }}>Notes for the wall</Link>
-        <Link to="/app/ink" style={{ color: C.tealText, fontWeight: 700 }}>Ink board</Link>
-        <Link to="/app/calendars" style={{ color: C.tealText, fontWeight: 700 }}>Calendar links</Link>
-        <Link to="/app/wall-display" style={{ color: C.tealText, fontWeight: 700 }}>Wall display</Link>
-        <Link to="/app/widgets" style={{ color: C.tealText, fontWeight: 700 }}>Wall widgets</Link>
+        <Link to="/app/notes" style={{ color: C.tealText, fontWeight: 700 }}>Family Notes</Link>
+        <Link to="/app/ink" style={{ color: C.tealText, fontWeight: 700 }}>Ink</Link>
+        <Link to="/app/calendars" style={{ color: C.tealText, fontWeight: 700 }}>Calendar Links</Link>
+        <Link to="/app/wall-display" style={{ color: C.tealText, fontWeight: 700 }}>Wall Display</Link>
+        <Link to="/app/widgets" style={{ color: C.tealText, fontWeight: 700 }}>Wall Widgets</Link>
         <button type="button" onClick={() => signOut()} style={{ ...linkBtn, color: C.muted, marginLeft: 'auto' }}>Sign out</button>
       </div>
     </>

@@ -136,6 +136,7 @@ export default function Settings() {
         <div style={{ fontSize: 16, fontWeight: 800 }}>Appearance</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {[
+            ['sun', 'Sunset to sunrise'],
             ['auto', 'Match device'],
             ['light', 'Light'],
             ['dark', 'Dark'],
@@ -148,7 +149,7 @@ export default function Settings() {
 
       <div style={card}>
         <div style={{ fontSize: 16, fontWeight: 800 }}>Important Dates</div>
-        <Link to="/app/dates" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Birthdays, anniversaries and other dates ›</Link>
+        <Link to="/app/dates" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Important Dates: Birthdays, Anniversaries and More ›</Link>
         <div style={{ fontSize: 12, color: C.muted }}>Counted down on the hub with the family&apos;s birthdays.</div>
       </div>
 
@@ -157,7 +158,7 @@ export default function Settings() {
       {isAdmin && (
         <div style={card}>
           <div style={{ fontSize: 16, fontWeight: 800 }}>Accounts</div>
-          <Link to="/app/accounts" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Manage logins ›</Link>
+          <Link to="/app/accounts" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Manage Logins ›</Link>
           <div style={{ fontSize: 12, color: C.muted }}>Create logins, reset passwords, link a login to a person, make someone an admin.</div>
         </div>
       )}
@@ -191,11 +192,11 @@ export default function Settings() {
 
       <div style={card}>
         <div style={{ fontSize: 16, fontWeight: 800 }}>Wall Display</div>
-        <Link to="/app/wall-preview" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>See how the wall looks ›</Link>
-        <Link to="/app/arrange" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Arrange the wall: hub and each person's page ›</Link>
-        <Link to="/app/wall-display" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Monitor schedule and night colours ›</Link>
-        <Link to="/app/notes" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Family notes on the wall ›</Link>
-        <Link to="/app/waste" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Garbage and recycling days ›</Link>
+        <Link to="/app/wall-preview" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Wall Preview ›</Link>
+        <Link to="/app/arrange" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Arrange the Wall ›</Link>
+        <Link to="/app/wall-display" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Wall Display: Screen Schedule and Dark Mode ›</Link>
+        <Link to="/app/notes" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Family Notes ›</Link>
+        <Link to="/app/waste" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Garbage and Recycling ›</Link>
       </div>
 
       {!configured && <div style={{ fontSize: 13, color: C.muted }}>Demo mode: changes are not saved.</div>}

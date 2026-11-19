@@ -10,13 +10,14 @@ export const DEFAULT_WALL_SETTINGS = {
   dark_enabled: true,
   dark_start: '19:30',
   dark_end: '07:00',
+  dark_follow_sun: true,
 }
 
 export async function getWallSettings() {
   if (!isSupabaseConfigured) return { ...DEFAULT_WALL_SETTINGS }
   const { data, error } = await supabase
     .from('wall_settings')
-    .select('display_enabled, mode, on_time, off_time, weekend_on_time, weekend_off_time, dark_enabled, dark_start, dark_end')
+    .select('display_enabled, mode, on_time, off_time, weekend_on_time, weekend_off_time, dark_enabled, dark_start, dark_end, dark_follow_sun')
     .limit(1)
     .maybeSingle()
   if (error) throw error

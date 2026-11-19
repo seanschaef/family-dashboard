@@ -3,6 +3,7 @@ import { C } from '../theme.js'
 import { PhoneHeader } from './parts.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import { getWallSettings, saveWallSettings, DEFAULT_WALL_SETTINGS } from '../lib/wallSettings.js'
+import { sunTimes, sunText } from '../lib/sun.js'
 
 function TimeField({ label, value, onChange }) {
   return (
@@ -87,8 +88,23 @@ export default function WallDisplay() {
           Switch the wall to dark colours
         </label>
         <div style={{ opacity: s.dark_enabled ? 1 : 0.5, pointerEvents: s.dark_enabled ? 'auto' : 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <TimeField label="Dark from" value={s.dark_start} onChange={set('dark_start')} />
-          <TimeField label="Light again at" value={s.dark_end} onChange={set('dark_end')} />
+          <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15 }}>
+            <input type="radio" name="darkwhen" checked={s.dark_follow_sun !== false} onChange={() => set('dark_follow_sun')(true)} style={{ marginTop: 3 }} />
+            <span>
+              From sunset to sunrise in Edmonton
+              <span style={{ display: 'block', fontSize: 13, color: C.muted }}>Today: dark at {sunText(sunTimes().sunset)}, light at {sunText(sunTimes(new Date(Date.now() + 86400000)).sunrise)}</span>
+            </span>
+          </label>
+          <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15 }}>
+            <input type="radio" name="darkwhen" checked={s.dark_follow_sun === false} onChange={() => set('dark_follow_sun')(false)} />
+            At set times
+          </label>
+          {s.dark_follow_sun === false && (
+            <>
+              <TimeField label="Dark from" value={s.dark_start} onChange={set('dark_start')} />
+              <TimeField label="Light again at" value={s.dark_end} onChange={set('dark_end')} />
+            </>
+          )}
         </div>
       </div>
 
