@@ -15,10 +15,37 @@ import {
   separateEntry,
   approxHeight,
   entryHeight,
+  PHOTO_SECONDS,
   ROW_UNIT,
 } from '../wall/hubLayout.js'
 import { PERSON_BLOCK_LABELS, normalizePersonLayout, personApproxHeight } from '../wall/personLayout.js'
 
+// Where each window's own content is set up (opened from Arrange).
+const WINDOW_SETTINGS = {
+  photo: ['/app/photos', 'Photos: Choose Folders'],
+  onthisday: ['/app/photos', 'Photos: Choose Folders'],
+  calendar: ['/app/calendars', 'Calendar Links and Colours'],
+  legend: ['/app/calendars', 'Calendar Links and Colours'],
+  today: ['/app/calendars', 'Calendar Links and Colours'],
+  nextup: ['/app/calendars', 'Calendar Links and Colours'],
+  dinner: ['/app/meals', 'Meals'],
+  mealsweek: ['/app/meals', 'Meals'],
+  groceries: ['/app/groceries', 'Groceries'],
+  chores: ['/app/chores', 'Chores'],
+  jobs: ['/app/chores', 'Chores'],
+  pet: ['/app/chores', 'Chores (Pet Chores)'],
+  leaderboard: ['/app/chores', 'Chores and Points'],
+  points: ['/app/rewards', 'Rewards & Points'],
+  goals: ['/app/rewards', 'Rewards: Who Is Saving for What'],
+  birthdays: ['/app/dates', 'Important Dates'],
+  birthday: ['/app/settings', 'Birthdays (Settings › People)'],
+  notes: ['/app/notes', 'Family Notes'],
+  ink: ['/app/ink', 'Ink'],
+  waste: ['/app/waste', 'Garbage and Recycling Days'],
+  reminders: ['/app/today', 'Reminders (Today)'],
+  widget: ['/app/widgets', 'Wall Widgets'],
+  header: ['/app/settings', 'Family Name (Greeting)'],
+}
 const INTERVALS = [0, 5, 10, 15, 20, 30, 60] // 0 = manual (swipe or tap to change)
 const TRANSITIONS = [
   { v: 'fade', label: 'Fade' },
@@ -428,6 +455,25 @@ export default function Arrange() {
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <Pick active={b.fit !== 'contain'} disabled={!canEdit} onClick={() => update(b.id, { fit: 'cover' })}>Fill (crop)</Pick>
                 <Pick active={b.fit === 'contain'} disabled={!canEdit} onClick={() => update(b.id, { fit: 'contain' })}>Fit (whole photo)</Pick>
+              </div>
+              <div style={rowLabel}>Change photo every</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {PHOTO_SECONDS.map((sec) => (
+                  <Pick key={sec} active={(b.seconds || 8) === sec} disabled={!canEdit} onClick={() => update(b.id, { seconds: sec })}>{sec < 60 ? `${sec}s` : `${sec / 60} min`}</Pick>
+                ))}
+              </div>
+            </>
+          )}
+
+          {(b.group || [b.id]).filter((id) => WINDOW_SETTINGS[id]).length > 0 && (
+            <>
+              <div style={rowLabel}>Window settings</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {(b.group || [b.id]).filter((id) => WINDOW_SETTINGS[id]).map((id) => (
+                  <Link key={id} to={WINDOW_SETTINGS[id][0]} onClick={(e) => { if (dirty && !window.confirm('Leave without saving your layout changes?')) e.preventDefault() }} style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>
+                    {WINDOW_SETTINGS[id][1]} ›
+                  </Link>
+                ))}
               </div>
             </>
           )}

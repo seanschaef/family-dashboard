@@ -24,7 +24,7 @@ function shuffle(a) {
 // seasonal and time-of-day collections); a member key = that person's page.
 // Images come from the Pi's NAS agent; in the unconfigured demo it shows sample
 // frames, and on a real deployment with no agent yet it shows a gentle hint.
-export default function PhotoFrame({ memberKey = null, height = 380, radius = 36, fit = 'cover' }) {
+export default function PhotoFrame({ memberKey = null, height = 380, radius = 36, fit = 'cover', seconds = SECONDS }) {
   const { rows: collections } = usePhotoCollections()
   const [images, setImages] = useState([])
   const [idx, setIdx] = useState(0)
@@ -58,9 +58,9 @@ export default function PhotoFrame({ memberKey = null, height = 380, radius = 36
 
   useEffect(() => {
     if (images.length < 2) return undefined
-    const t = setInterval(() => setIdx((i) => (i + 1) % images.length), SECONDS * 1000)
+    const t = setInterval(() => setIdx((i) => (i + 1) % images.length), (seconds || SECONDS) * 1000)
     return () => clearInterval(t)
-  }, [images])
+  }, [images, seconds])
 
   const frame = {
     height,

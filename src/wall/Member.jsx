@@ -40,7 +40,7 @@ function ChoresCard({ person, due, logs, T, points, actions }) {
   const { nameFor } = useMembers()
   const done = due.filter((c) => isDone(logs, c, T, person.key)).length
   return (
-    <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16, flexGrow: 1 })}>
+    <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, flexGrow: 1 })}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>My Chores</div>
         <div style={{ fontSize: 20, color: C.muted }}>{done} of {due.length}</div>
@@ -66,7 +66,7 @@ function ChoresCard({ person, due, logs, T, points, actions }) {
 
 function ReminderCard({ title, reminders }) {
   return (
-    <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 12, flexGrow: 1 })}>
+    <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, flexGrow: 1 })}>
       <div style={{ fontSize: 26, fontWeight: 800 }}>{title}</div>
       {reminders.length ? (
         reminders.map((r) => <div key={r.id} style={{ fontSize: 23, textDecoration: r.done ? 'line-through' : 'none', color: r.done ? C.muted : C.ink }}>{r.text}</div>)
@@ -81,7 +81,7 @@ function BirthdayCountdown({ person, big = true }) {
   const bc = birthdayCountdown(person.birthday)
   if (!bc) return null
   return (
-    <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', flexGrow: 1 })}>
+    <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'center', flexGrow: 1 })}>
       <div style={{ fontSize: 26, fontWeight: 800 }}>Birthday Countdown</div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
         <div style={{ fontSize: big ? 96 : 80, fontWeight: 800, color: person.color, lineHeight: 1 }}>{bc.days}</div>
@@ -128,9 +128,9 @@ export default function Member() {
     calendar: (size) => <CalendarBlock personKey={person.key} includeWork title="Calendar" height={personBlockHeight('calendar', size)} />,
     chores: () => <ChoresCard person={person} due={due} logs={logs} T={T} points={points} actions={actions} />,
     jobs: (size) => (
-      <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 18, height: personBlockHeight('jobs', size) })}>
+      <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: personBlockHeight('jobs', size) })}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 30, fontWeight: 800 }}>My Jobs</div>
+          <div style={{ fontSize: 26, fontWeight: 800 }}>My Jobs</div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 30, fontWeight: 800 }}>
             <StarIcon size={44} />
             <span>{points.balance} stars</span>
@@ -151,7 +151,7 @@ export default function Member() {
     reminders: () => <ReminderCard title={reminderTitle} reminders={myReminders} />,
     birthday: () => <BirthdayCountdown person={person} big />,
     widget: () => <MemberWidget member={person} />,
-    photo: (size, opts) => (hasPhotos ? <PhotoFrame memberKey={person.key} height={personBlockHeight('photo', size)} radius={28} fit={opts?.fit} /> : null),
+    photo: (size, opts) => (hasPhotos ? <PhotoFrame memberKey={person.key} height={personBlockHeight('photo', size)} radius={28} fit={opts?.fit} seconds={opts?.seconds} /> : null),
   }
 
   const layout = normalizePersonLayout(person.page_layout, person.role).filter((b) => b.visible && (b.group || blocks[b.id]))

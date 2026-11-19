@@ -13,8 +13,8 @@ export default function LegendBlock() {
   const shown = rows.filter((c) => c.kind !== 'work' && c.show_on_hub !== false)
 
   return (
-    <div style={card({ padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
-      <div style={{ fontSize: 22, fontWeight: 800, flexShrink: 0 }}>Calendar Key</div>
+    <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
+      <div style={{ fontSize: 26, fontWeight: 800, flexShrink: 0 }}>Calendar Key</div>
       {shown.length ? (
         // Fills the window's height first, then starts another column; every
         // column is the same width.

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { C, card } from '../theme.js'
 import WeatherIcon from '../components/WeatherIcon.jsx'
@@ -37,6 +37,11 @@ function Scroll({ children, gap = 8 }) {
   )
 }
 
+// Shared spacing for the list windows: one person per row, columns lined up
+// across rows, a progress bar under each row.
+const ROWS = { display: 'grid', columnGap: 14, rowGap: 4, alignItems: 'baseline', fontSize: 19, flexShrink: 0 }
+const BAR_ROW = { gridColumn: '1 / -1', marginBottom: 8 }
+
 function Bar({ value, max, color }) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0
   return (
@@ -64,22 +69,20 @@ export function GoalsBlock() {
     <div style={box()}>
       <Title>Saving For</Title>
       {!rewards.length && <Muted>Add rewards on the phone (Rewards) to set goals.</Muted>}
-      <Scroll gap={8}>
-        {rewards.length > 0 &&
-          rows.map(({ m, balance, goal }) => (
-            <div key={m.key} style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, fontSize: 19, minWidth: 0 }}>
+      <Scroll>
+        {rewards.length > 0 && (
+          // One grid for everyone, so names, goals and amounts line up in columns.
+          <div style={{ ...ROWS, gridTemplateColumns: 'max-content minmax(0, 1fr) max-content' }}>
+            {rows.map(({ m, balance, goal }) => (
+              <Fragment key={m.key}>
                 <span style={{ fontWeight: 800, whiteSpace: 'nowrap' }}>{m.name}</span>
-                <span style={{ color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{goal ? goal.title : 'Every reward unlocked'}</span>
-                {goal && (
-                  <span style={{ marginLeft: 'auto', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                    {balance >= goal.cost ? 'Ready!' : `${goal.cost - balance} to go`}
-                  </span>
-                )}
-              </div>
-              {goal && <Bar value={balance} max={goal.cost} color={m.color} />}
-            </div>
-          ))}
+                <span style={{ color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{goal ? goal.title : 'Every reward unlocked'}</span>
+                <span style={{ fontWeight: 700, whiteSpace: 'nowrap', textAlign: 'right' }}>{goal ? (balance >= goal.cost ? 'Ready!' : `${goal.cost - balance} to go`) : ''}</span>
+                <div style={BAR_ROW}>{goal && <Bar value={balance} max={goal.cost} color={m.color} />}</div>
+              </Fragment>
+            ))}
+          </div>
+        )}
       </Scroll>
     </div>
   )
@@ -106,20 +109,20 @@ export function LeaderboardBlock() {
   return (
     <div style={box()}>
       <Title right="This week · resets Monday">Leaderboard</Title>
-      <Scroll gap={8}>
-        {rows.map(({ m, pts, done }, i) => (
-          <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 15, background: i === 0 && pts > 0 ? C.rust : C.cream, color: i === 0 && pts > 0 ? '#FFFFFF' : C.ink, fontSize: 18, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
-            <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 18 }}>
-                <span style={{ fontWeight: 800 }}>{m.name}</span>
-                <span style={{ color: C.muted, fontSize: 16 }}>{done} {done === 1 ? 'chore' : 'chores'}</span>
-                <span style={{ marginLeft: 'auto', fontWeight: 800 }}>{pts} pts</span>
+      <Scroll>
+        <div style={{ ...ROWS, gridTemplateColumns: '30px max-content minmax(0, 1fr) max-content' }}>
+          {rows.map(({ m, pts, done }, i) => (
+            <Fragment key={m.key}>
+              <span style={{ width: 30, height: 30, borderRadius: 15, background: i === 0 && pts > 0 ? C.rust : C.cream, color: i === 0 && pts > 0 ? '#FFFFFF' : C.ink, fontSize: 17, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'center' }}>{i + 1}</span>
+              <span style={{ fontWeight: 800, whiteSpace: 'nowrap' }}>{m.name}</span>
+              <span style={{ color: C.muted, whiteSpace: 'nowrap' }}>{done} {done === 1 ? 'chore' : 'chores'}</span>
+              <span style={{ fontWeight: 800, whiteSpace: 'nowrap', textAlign: 'right' }}>{pts} pts</span>
+              <div style={{ ...BAR_ROW, gridColumn: '2 / -1' }}>
+                <Bar value={pts} max={top} color={m.color} />
               </div>
-              <Bar value={pts} max={top} color={m.color} />
-            </div>
-          </div>
-        ))}
+            </Fragment>
+          ))}
+        </div>
       </Scroll>
     </div>
   )

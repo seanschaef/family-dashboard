@@ -41,6 +41,8 @@ export const SIZES = [
 export const WIDTHS = ['quarter', 'half', 'full']
 export const WIDTH_LABELS = { full: 'Full', half: 'Half', quarter: 'Quarter' }
 export const WIDTH_SPAN = { full: 4, half: 2, quarter: 1 }
+// How long each photo shows, in seconds (Arrange › Photos).
+export const PHOTO_SECONDS = [5, 8, 15, 30, 60, 120, 300]
 
 export const DEFAULT_HUB_LAYOUT = [
   { id: 'header', size: 's', width: 'full', visible: true },
@@ -134,7 +136,10 @@ export function normalizeLayout(stored, { labels, defaults, legacy }) {
     if (!known.has(b.id) || seen.has(b.id)) continue
     seen.add(b.id)
     const entry = { id: b.id, ...sized(b) }
-    if (b.id === 'photo') entry.fit = b.fit === 'contain' ? 'contain' : 'cover'
+    if (b.id === 'photo') {
+      entry.fit = b.fit === 'contain' ? 'contain' : 'cover'
+      entry.seconds = PHOTO_SECONDS.includes(b.seconds) ? b.seconds : 8
+    }
     out.push(entry)
   }
   // Append any block missing from the stored layout (e.g. a newly added feature).

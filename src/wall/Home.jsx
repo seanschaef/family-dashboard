@@ -86,7 +86,7 @@ export default function Home() {
           )}
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 24, flexGrow: 1 }}>
-            <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center', justifyContent: 'center' })}>
+            <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', justifyContent: 'center' })}>
               <div style={{ fontSize: 26, fontWeight: 800 }}>{thermostat?.attributes.friendly_name || 'Thermostat'}</div>
               {thermostat ? (
                 <>
@@ -104,7 +104,7 @@ export default function Home() {
               )}
             </div>
 
-            <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16 })}>
+            <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12 })}>
               <div style={{ fontSize: 26, fontWeight: 800 }}>Doors and Locks</div>
               {security.length ? (
                 security.map((d) => (

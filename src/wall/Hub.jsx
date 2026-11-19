@@ -44,17 +44,22 @@ export default function Hub() {
 
   // Block content by id. Rendered in the order/size the layout specifies.
   const blocks = {
-    header: (size) => (
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap', height: blockHeight('header', size) }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 30, fontWeight: 600, color: C.rust }}>{hubGreeting({ now, familyName, petName, members, dates: importantDates })}</div>
-          <div style={{ fontSize: 104, fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
-          <div style={{ fontSize: 26, color: C.muted }}>{formatLongDate(now)}</div>
+    // Text sizes follow the window's size so greeting, clock and date always
+    // fit (S is 160 px tall).
+    header: (size) => {
+      const t = { s: [24, 84, 22], m: [30, 110, 28], l: [34, 140, 32], xl: [38, 170, 36] }[size] || [24, 84, 22]
+      return (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, height: blockHeight('header', size), overflow: 'hidden' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <div style={{ fontSize: t[0], fontWeight: 600, color: C.rust, lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{hubGreeting({ now, familyName, petName, members, dates: importantDates })}</div>
+          <div style={{ fontSize: t[1], fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
+          <div style={{ fontSize: t[2], color: C.muted, lineHeight: 1.15 }}>{formatLongDate(now)}</div>
         </div>
         <WeatherCard />
       </div>
-    ),
-    photo: (size, opts) => <PhotoFrame height={blockHeight('photo', size)} fit={opts?.fit} />,
+      )
+    },
+    photo: (size, opts) => <PhotoFrame height={blockHeight('photo', size)} fit={opts?.fit} seconds={opts?.seconds} />,
     calendar: (size) => <CalendarBlock title="Family Calendar" height={blockHeight('calendar', size)} />,
     today: (size) => <TodayBlock height={blockHeight('today', size)} />,
     legend: () => <LegendBlock />,
@@ -69,7 +74,7 @@ export default function Hub() {
       </div>
     ),
     chores: () => (
-      <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16, height: '100%' })}>
+      <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Chores Today</div>
         {members.map((m) => {
           const due = dueChores(chores, logs, m.key, T)
@@ -95,7 +100,7 @@ export default function Hub() {
     onthisday: () => <OnThisDayBlock />,
     ink: () => <InkBoard title="Ink" big />,
     points: () => (
-      <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 14, height: '100%' })}>
+      <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Points</div>
         {[...members]
           .map((m) => ({ m, total: pointsBalance(logs, redemptions, m.key), week: pointsThisWeek(logs, m.key) }))
@@ -111,7 +116,7 @@ export default function Hub() {
       </div>
     ),
     reminders: () => (
-      <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 10, height: '100%' })}>
+      <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Reminders</div>
         {familyReminders.length ? (
           familyReminders.map((r) => <div key={r.id} style={{ fontSize: 22 }}>{r.text}</div>)
@@ -121,7 +126,7 @@ export default function Hub() {
       </div>
     ),
     birthdays: () => (
-      <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
+      <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Coming Up</div>
         {coming.length ? (
           coming.map((b) => (

@@ -57,7 +57,7 @@ export default function Meals() {
         <Clock />
       </div>
 
-      <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 10 })}>
+      <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12 })}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button type="button" aria-label="Previous week" disabled={offset <= 0} onClick={() => setOffset((o) => Math.max(0, o - 1))} style={{ all: 'unset', cursor: offset > 0 ? 'pointer' : 'default', width: 52, height: 52, borderRadius: 26, border: `2px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, fontWeight: 800, opacity: offset > 0 ? 1 : 0.3 }}>‹</button>

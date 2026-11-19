@@ -54,8 +54,11 @@ export default function Rotator({ items, interval = 10, transition = 'fade' }) {
       // The new window comes in from the side you swiped towards; the old one
       // leaves the other way. The rest wait, hidden, on the incoming side.
       const leaving = i === state.prev
-      const offset = on ? 0 : leaving ? -100 * state.dir : 100 * state.dir
-      return { ...base, transform: `translateX(${offset}%)`, transition: on || leaving ? 'transform 500ms ease' : 'none', visibility: on || leaving ? 'visible' : 'hidden' }
+      const offset = leaving ? -100 * state.dir : 100 * state.dir
+      // The window on show has no transform at all (not even translateX(0)):
+      // a transform would trap its pop-ups inside the window instead of the
+      // middle of the screen.
+      return { ...base, transform: on ? 'none' : `translateX(${offset}%)`, transition: on || leaving ? 'transform 500ms ease' : 'none', visibility: on || leaving ? 'visible' : 'hidden' }
     }
     if (transition === 'none') return { ...base, visibility: on ? 'visible' : 'hidden' }
     return { ...base, opacity: on ? 1 : 0, transition: 'opacity 700ms ease', pointerEvents: on ? 'auto' : 'none' }

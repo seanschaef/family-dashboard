@@ -29,7 +29,7 @@ export default function PetBlock({ chores, logs }) {
   }
 
   return (
-    <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
+    <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <Icon name="paw" size={32} color={C.ink} />
         <div style={{ fontSize: 26, fontWeight: 800 }}>{petName || 'Pet'}</div>
