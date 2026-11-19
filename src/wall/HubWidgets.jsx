@@ -13,6 +13,7 @@ import { upcomingPickups, dayWord } from '../lib/waste.js'
 import { useForecast, wearHint, useAqhi, aqhiRisk } from '../lib/weather.js'
 import { fetchOnThisDay, photoAgentConfigured } from '../lib/photos.js'
 import { useDragScroll } from './dragScroll.js'
+import { useImportantDates, upcomingCountdowns } from '../lib/dates.js'
 import EventPopover from './EventPopover.jsx'
 import RecipePopover from './RecipePopover.jsx'
 
@@ -417,6 +418,55 @@ export function OnThisDayBlock() {
         </div>
         <div style={{ fontSize: 16, opacity: 0.85 }}>{new Date(p.year, p.month - 1, p.day).toLocaleDateString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
       </div>
+    </div>
+  )
+}
+
+// ---------- Coming up (birthdays, anniversaries, other dates) ----------
+// Each row says what it is: a date badge, "Sandi's Birthday" / "Sean & Sandi's
+// Anniversary", the age or years, and how long until it.
+export function ComingUpBlock() {
+  const { members } = useMembers()
+  const { rows: dates } = useImportantDates()
+  const now = useNow(10 * 60000)
+  const list = upcomingCountdowns(members, dates, now)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const possessive = (t) => (/s$/i.test(t) ? `${t}’` : `${t}’s`)
+  const label = (b) => {
+    if (b.kind === 'birthday') return `${possessive(b.title)} Birthday`
+    if (b.kind === 'anniversary') return /anniversary/i.test(b.title) ? b.title : `${possessive(b.title)} Anniversary`
+    return b.title
+  }
+  const detail = (b, on) => {
+    const day = on.toLocaleDateString('en-CA', { weekday: 'long' })
+    if (b.turning > 0 && b.kind === 'birthday') return `Turns ${b.turning} · ${day}`
+    if (b.turning > 0 && b.kind === 'anniversary') return `${b.turning} ${b.turning === 1 ? 'year' : 'years'} · ${day}`
+    return day
+  }
+  const until = (d) => (d === 0 ? 'Today!' : d === 1 ? 'Tomorrow' : d < 60 ? `${d} days` : d < 365 ? `${Math.round(d / 7)} weeks` : `${d} days`)
+  return (
+    <div style={box()}>
+      <Title>Coming Up</Title>
+      {!list.length && <Muted>Add birthdays and dates on the phone (Settings › Important Dates).</Muted>}
+      <Scroll gap={10}>
+        {list.map((b) => {
+          const on = new Date(today.getTime() + b.days * 86400000)
+          const soon = b.days <= 7
+          return (
+            <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, minWidth: 0 }}>
+              <div style={{ width: 54, flexShrink: 0, borderRadius: 12, overflow: 'hidden', border: `2px solid ${b.color || C.border}`, textAlign: 'center', background: C.card }}>
+                <div style={{ background: b.color || C.muted, color: '#FFFFFF', fontSize: 12, fontWeight: 800, letterSpacing: 1, padding: '2px 0' }}>{on.toLocaleDateString('en-CA', { month: 'short' }).replace('.', '').toUpperCase()}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.25 }}>{on.getDate()}</div>
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 20, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label(b)}</div>
+                <div style={{ fontSize: 16, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{detail(b, on)}</div>
+              </div>
+              <div style={{ fontSize: 17, fontWeight: soon ? 800 : 600, color: soon ? C.rust : C.muted, whiteSpace: 'nowrap', flexShrink: 0 }}>{until(b.days)}</div>
+            </div>
+          )
+        })}
+      </Scroll>
     </div>
   )
 }

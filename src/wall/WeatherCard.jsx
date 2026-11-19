@@ -1,14 +1,24 @@
 import { C, card } from '../theme.js'
 import WeatherIcon from '../components/WeatherIcon.jsx'
+import { useState } from 'react'
 import { useWeather } from '../lib/weather.js'
+import WeatherPopover from './WeatherPopover.jsx'
 
 // Hub weather: current conditions plus a short forecast. Sits in the header row,
 // so it stays compact.
 export default function WeatherCard() {
   const { data, forecast, error } = useWeather()
+  const [open, setOpen] = useState(false)
+  // Tap for the full forecast.
+  const wrap = (el) => (
+    <>
+      <button type="button" aria-label="More weather" onClick={() => setOpen(true)} style={{ all: 'unset', cursor: 'pointer', display: 'block' }}>{el}</button>
+      <WeatherPopover open={open} onClose={() => setOpen(false)} />
+    </>
+  )
 
   if (error || !data) {
-    return (
+    return wrap(
       <div style={card({ borderRadius: 28, padding: '24px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 })}>
         <div style={{ fontSize: 60, fontWeight: 800 }}>—</div>
         <div style={{ fontSize: 22, color: C.muted }}>{error ? 'Weather off' : 'Edmonton'}</div>
@@ -18,7 +28,7 @@ export default function WeatherCard() {
 
   const next = forecast.slice(1, 4) // tomorrow + 2
 
-  return (
+  return wrap(
     <div style={card({ borderRadius: 28, padding: '18px 28px', display: 'flex', alignItems: 'center', gap: 28 })}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <WeatherIcon code={data.code} size={58} />

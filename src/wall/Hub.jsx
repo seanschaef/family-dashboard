@@ -13,14 +13,14 @@ import PhotoFrame from './PhotoFrame.jsx'
 import WeatherCard from './WeatherCard.jsx'
 import { formatClock, formatLongDate, useNow } from '../lib/time.js'
 import { hubGreeting } from '../lib/greetings.js'
-import { useImportantDates, upcomingCountdowns, countdownText } from '../lib/dates.js'
+import { useImportantDates } from '../lib/dates.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone, useRedemptions, pointsBalance, pointsThisWeek } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import PetBlock from './PetBlock.jsx'
 import InkBoard from '../components/InkBoard.jsx'
-import { Scroll, GoalsBlock, LeaderboardBlock, MealsWeekBlock, GroceriesBlock, NotesBlock, NextUpBlock, ForecastBlock, AirBlock, WasteBlock, OnThisDayBlock } from './HubWidgets.jsx'
+import { ComingUpBlock, GoalsBlock, LeaderboardBlock, MealsWeekBlock, GroceriesBlock, NotesBlock, NextUpBlock, ForecastBlock, AirBlock, WasteBlock, OnThisDayBlock } from './HubWidgets.jsx'
 import { useMeals, mealFor } from '../lib/kitchen.js'
 import { normalizeHubLayout, blockHeight, WIDTH_SPAN, ROW_UNIT, packedStyle, entryHeight } from './hubLayout.js'
 
@@ -40,8 +40,6 @@ export default function Hub() {
   const familyReminders = reminders.filter((r) => r.member_key === null && !r.done)
   const dinner = mealFor(meals, T)?.title
   const { rows: importantDates } = useImportantDates()
-  // Every birthday and important date, soonest first; the window scrolls.
-  const coming = upcomingCountdowns(members, importantDates, now)
 
   // Block content by id. Rendered in the order/size the layout specifies.
   const blocks = {
@@ -126,24 +124,7 @@ export default function Hub() {
         )}
       </div>
     ),
-    birthdays: () => (
-      <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%', minHeight: 0 })}>
-        <div style={{ fontSize: 26, fontWeight: 800, flexShrink: 0 }}>Coming Up</div>
-        {coming.length ? (
-          <Scroll gap={10}>
-          {coming.map((b) => (
-            <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 22, minWidth: 0, flexShrink: 0 }}>
-              <span style={{ width: 16, height: 16, borderRadius: 8, background: b.color || C.muted, flexShrink: 0 }} />
-              <span style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{b.title}</span>
-              <span style={{ color: C.muted, marginLeft: 'auto', whiteSpace: 'nowrap', flexShrink: 0 }}>{countdownText(b)}</span>
-            </div>
-          ))}
-          </Scroll>
-        ) : (
-          <div style={{ fontSize: 22, color: C.muted }}>None soon</div>
-        )}
-      </div>
-    ),
+    birthdays: () => <ComingUpBlock />,
   }
 
   const layout = normalizeHubLayout(wallLayout).filter((b) => b.visible && (b.group || blocks[b.id]))
