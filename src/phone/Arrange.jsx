@@ -15,6 +15,7 @@ import {
   separateEntry,
   approxHeight,
   entryHeight,
+  ROW_UNIT,
 } from '../wall/hubLayout.js'
 import { PERSON_BLOCK_LABELS, normalizePersonLayout, personApproxHeight } from '../wall/personLayout.js'
 
@@ -24,8 +25,12 @@ const TRANSITIONS = [
   { v: 'slide', label: 'Slide' },
   { v: 'none', label: 'Instant' },
 ]
-const WALL_WIDTH = 1080 // the wall's width in px; the preview is drawn to scale
-const GAP = 6
+// The wall's page area (1080x1920 screen minus its margins and the nav bar at
+// the bottom). The wall never scrolls: anything below WALL_HEIGHT is cut off.
+// The preview is drawn to scale, with that edge marked.
+const WALL_WIDTH = 976
+const WALL_HEIGHT = 1680
+const WALL_GAP = 24
 const SPANS = [1, 2, 4]
 const SPAN_WIDTH = { 1: 'quarter', 2: 'half', 4: 'full' }
 
@@ -78,9 +83,14 @@ function Preview({ items, labels, heightFor, canEdit, selected, onSelect, onMove
   }, [])
 
   const scale = width / WALL_WIDTH
+  const GAP = WALL_GAP * scale
+  const edge = Math.round(WALL_HEIGHT * scale)
   const colW = (width - GAP * 3) / 4
   const spanPx = (n) => colW * n + GAP * (n - 1)
-  const tileHeight = (b) => Math.max(26, Math.round(entryHeight(b, heightFor) * scale))
+  // Packed exactly like the wall (same row units and spans, scaled), so the
+  // preview's bottom edge is where the wall's really is.
+  const tileHeight = (b) => entryHeight(b, heightFor) * scale
+  const rowSpan = (b) => Math.ceil((entryHeight(b, heightFor) + WALL_GAP) / ROW_UNIT)
   const visible = items.filter((b) => b.visible)
 
   const endDrag = () => {
@@ -164,8 +174,9 @@ function Preview({ items, labels, heightFor, canEdit, selected, onSelect, onMove
 
   return (
     <div style={{ background: C.cream, border: `3px solid ${C.ink}`, borderRadius: 16, padding: 10 }}>
+      <div style={{ position: 'relative', minHeight: edge + 24 }}>
       {/* Same packing as the wall: tiny rows, each tile spans its height + gap. */}
-      <div ref={gridRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoRows: 2, columnGap: GAP, rowGap: 0, alignItems: 'start' }}>
+      <div ref={gridRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gridAutoRows: ROW_UNIT * scale, columnGap: GAP, rowGap: 0, alignItems: 'start' }}>
         {visible.map((b) => {
           const isSel = selected === b.id
           const isDrag = drag?.id === b.id
@@ -181,7 +192,7 @@ function Preview({ items, labels, heightFor, canEdit, selected, onSelect, onMove
               style={{
                 position: 'relative',
                 gridColumn: `span ${WIDTH_SPAN[b.width] || 4}`,
-                gridRow: `span ${Math.ceil((tileHeight(b) + GAP) / 2)}`,
+                gridRow: `span ${rowSpan(b)}`,
                 height: tileHeight(b),
                 background: b.group ? C.tealTint : C.card,
                 border: `2px ${b.group ? 'dashed' : 'solid'} ${isSel ? C.rust : b.group ? C.meals : C.border}`,
@@ -219,6 +230,11 @@ function Preview({ items, labels, heightFor, canEdit, selected, onSelect, onMove
             </div>
           )
         })}
+      </div>
+      {/* Bottom of the wall's screen: anything below is cut off. */}
+      <div style={{ position: 'absolute', left: -10, right: -10, top: edge, bottom: 0, background: 'rgba(200, 60, 40, 0.10)', borderTop: `2px dashed ${C.rust}`, pointerEvents: 'none', zIndex: 4 }}>
+        <div style={{ fontSize: 10, fontWeight: 800, color: C.rust, textAlign: 'right', padding: '2px 12px' }}>Bottom of the screen · below here is cut off</div>
+      </div>
       </div>
       <div style={{ fontSize: 11, color: C.muted, marginTop: 8, textAlign: 'center', lineHeight: 1.4 }}>
         {canEdit ? 'Tap to select · press and hold to drag · drag the corner dot to resize' : 'Preview'}
@@ -337,6 +353,22 @@ export default function Arrange() {
 
       {!canEdit && <div style={{ fontSize: 13, color: C.muted }}>{person ? `Only ${person.name} or an admin can change this page.` : 'Only an admin can change the hub.'}</div>}
       {person && <div style={{ fontSize: 13, color: C.muted }}>Big job tiles with stars suit younger kids; the chores list suits everyone else. Photos show when {person.name} has a photo collection.</div>}
+      {person && canEdit && (
+        <select
+          aria-label="Copy another page's layout"
+          value=""
+          onChange={(e) => {
+            const from = members.find((m) => m.key === e.target.value)
+            if (from) { change(normalizePersonLayout(from.page_layout, from.role)); setSelected(null) }
+          }}
+          style={{ font: 'inherit', fontSize: 14, padding: '8px 10px', borderRadius: 10, border: `2px solid ${C.border}`, background: C.card, color: C.ink, alignSelf: 'flex-start' }}
+        >
+          <option value="">Copy the layout of another page…</option>
+          {members.filter((m) => m.key !== person.key).map((m) => (
+            <option key={m.key} value={m.key}>{m.name}&apos;s page</option>
+          ))}
+        </select>
+      )}
 
       {/* The selected window's settings */}
       {b ? (

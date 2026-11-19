@@ -39,7 +39,10 @@ export default function Rotator({ items, interval = 10, transition = 'fade' }) {
     const dx = e.clientX - start.x
     const dy = e.clientY - start.y
     setStart(null)
-    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1)
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      go(dx < 0 ? 1 : -1)
+      e.stopPropagation() // this window's swipe, not the wall's page swipe
+    }
   }
   const arrow = (dir) => (
     <button
