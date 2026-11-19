@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { C, card } from '../theme.js'
-import { useFamilyTable, insertRow, updateRow } from '../lib/db.js'
+import { useFamilyTable, insertRow, updateRow, deleteRow } from '../lib/db.js'
 import { useMembers } from '../lib/members.jsx'
 import { isSupabaseConfigured } from '../lib/supabase.js'
 
 // A shared drawing board: draw with a finger on the wall (or on a phone) and
-// it shows everywhere the Ink window is. One board per family, stored as
-// strokes in ink_boards (x and y from 0 to 1, so it scales to any size).
-// The board keeps every stroke until someone taps Clear (twice).
+// it shows everywhere the Ink window is. Several pages (one ink_boards row
+// each, oldest first); + in the header adds one. Strokes are stored with x and
+// y from 0 to 1, so they scale to any size. Eraser strokes are stored too
+// ({ e: 1 }) and cut through what was drawn before them.
 
 const MAX_STROKES = 400
 const EMPTY = []
@@ -28,7 +29,9 @@ function draw(ctx, strokes, w, h) {
   for (const s of strokes) {
     const p = s.p || []
     if (!p.length) continue
-    const color = resolve(s.c, ctx.canvas)
+    // The eraser removes ink (the board's background shows through).
+    ctx.globalCompositeOperation = s.e ? 'destination-out' : 'source-over'
+    const color = s.e ? '#000000' : resolve(s.c, ctx.canvas)
     ctx.strokeStyle = color
     ctx.fillStyle = color
     ctx.lineWidth = s.w * w
@@ -50,19 +53,24 @@ function draw(ctx, strokes, w, h) {
     ctx.lineTo(last[0] * w, last[1] * h)
     ctx.stroke()
   }
+  ctx.globalCompositeOperation = 'source-over'
 }
 
 export default function InkBoard({ title = 'Ink', big = false }) {
   const { members, me } = useMembers()
-  const { rows } = useFamilyTable('ink_boards')
-  const board = rows[0] || null
-  const [local, setLocal] = useState(null) // strokes not yet confirmed by the server
-  const strokes = local ?? board?.strokes ?? EMPTY
+  const { rows: pages } = useFamilyTable('ink_boards', { order: { column: 'created_at' } })
+  const [page, setPage] = useState(0)
+  const [jumpToLast, setJumpToLast] = useState(false) // after adding a page
+  const idx = Math.min(page, Math.max(0, pages.length - 1))
+  const board = pages[idx] || null
+  const [local, setLocal] = useState(null) // { id, strokes } not yet confirmed by the server
+  const strokes = (local && local.id === (board?.id ?? null) ? local.strokes : null) ?? board?.strokes ?? EMPTY
 
   const colors = [C.ink, ...members.map((m) => m.color), '#2E8B57', '#D9A441'].filter((c, i, a) => c && a.indexOf(c) === i).slice(0, 7)
   const [color, setColor] = useState(null)
   const [thick, setThick] = useState(false)
-  const [confirmClear, setConfirmClear] = useState(false)
+  const [eraser, setEraser] = useState(false)
+  const [confirm, setConfirm] = useState(null) // 'clear' | 'delete' while waiting for the second tap
   const [tools, setTools] = useState(false) // pen tools tucked away until tapped
   const pen = color || colors[0]
 
@@ -95,7 +103,7 @@ export default function InkBoard({ title = 'Ink', big = false }) {
     return () => ro.disconnect()
   }, [])
 
-  // Redraw whenever the saved strokes change (another screen drew, or Clear).
+  // Redraw whenever the strokes change (another screen drew, a new page…).
   useEffect(() => {
     const cv = canvasRef.current
     if (!cv) return
@@ -105,11 +113,19 @@ export default function InkBoard({ title = 'Ink', big = false }) {
 
   // Once the server copy catches up with what we drew, drop the local copy.
   useEffect(() => {
-    if (local && board && JSON.stringify(board.strokes) === JSON.stringify(local)) setLocal(null)
+    if (local && board && local.id === board.id && JSON.stringify(board.strokes) === JSON.stringify(local.strokes)) setLocal(null)
   }, [board, local])
 
+  // A page was added: show it as soon as it arrives.
+  useEffect(() => {
+    if (jumpToLast && pages.length) {
+      setPage(pages.length - 1)
+      setJumpToLast(false)
+    }
+  }, [jumpToLast, pages.length])
+
   async function save(next) {
-    setLocal(next)
+    setLocal({ id: board?.id ?? null, strokes: next })
     if (!isSupabaseConfigured) return
     try {
       if (board) await updateRow('ink_boards', board.id, { strokes: next, updated_by: me?.key || null, updated_at: new Date().toISOString() })
@@ -117,6 +133,27 @@ export default function InkBoard({ title = 'Ink', big = false }) {
     } catch {
       /* stays drawn locally; the next stroke tries again */
     }
+  }
+
+  async function addPage() {
+    setTools(false)
+    setConfirm(null)
+    if (!isSupabaseConfigured) return
+    // The very first page is made by drawing on it; after that, + adds one.
+    if (!pages.length) await insertRow('ink_boards', { strokes: [], updated_by: me?.key || null })
+    await insertRow('ink_boards', { strokes: [], updated_by: me?.key || null })
+    setJumpToLast(true)
+  }
+  async function deletePage() {
+    if (confirm !== 'delete') return askTwice('delete')
+    setConfirm(null)
+    if (!board) return
+    await deleteRow('ink_boards', board.id)
+    setPage((p) => Math.max(0, p - 1))
+  }
+  function askTwice(what) {
+    setConfirm(what)
+    setTimeout(() => setConfirm((c) => (c === what ? null : c)), 4000)
   }
 
   const point = (e) => {
@@ -134,10 +171,10 @@ export default function InkBoard({ title = 'Ink', big = false }) {
       } catch {
         /* ignore */
       }
-      setConfirmClear(false)
+      setConfirm(null)
       setTools(false)
-      const width = (thick ? 0.018 : 0.007) * (big ? 0.7 : 1)
-      liveRef.current = { c: pen, w: width, p: [point(e)] }
+      const scale = big ? 0.7 : 1
+      liveRef.current = eraser ? { e: 1, w: 0.045 * scale, p: [point(e)] } : { c: pen, w: (thick ? 0.018 : 0.007) * scale, p: [point(e)] }
       const { w, h } = sizeRef.current
       draw(canvasRef.current.getContext('2d'), [...strokesRef.current, liveRef.current], w, h)
     },
@@ -169,43 +206,58 @@ export default function InkBoard({ title = 'Ink', big = false }) {
 
   const undo = () => strokes.length && save(strokes.slice(0, -1))
   const clear = () => {
-    if (!confirmClear) {
-      setConfirmClear(true)
-      setTimeout(() => setConfirmClear(false), 4000)
-      return
-    }
-    setConfirmClear(false)
+    if (confirm !== 'clear') return askTwice('clear')
+    setConfirm(null)
     save([])
   }
 
   const dot = big ? 34 : 26
   const btn = { all: 'unset', cursor: 'pointer', fontSize: big ? 18 : 15, fontWeight: 700, padding: '6px 10px', borderRadius: 10, background: C.cream, color: C.ink, whiteSpace: 'nowrap' }
+  const round = { ...btn, width: big ? 36 : 30, height: big ? 36 : 30, padding: 0, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: big ? 22 : 18, fontWeight: 800 }
+  const count = Math.max(1, pages.length)
+  const showing = Math.min(idx + 1, count)
 
   return (
     <div style={card({ padding: big ? 24 : 16, display: 'flex', flexDirection: 'column', gap: 10, height: '100%', minHeight: 0, boxSizing: 'border-box' })}>
-      {/* Tools stay tucked into one small button (showing the pen colour)
-          until tapped; they fold away again when you start drawing. */}
+      {/* Header: title, pages (‹ 2 / 3 ›), + to add a page, and one small
+          button holding the pen tools. Tools fold away when you draw. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         {title && <div style={{ fontSize: big ? 26 : 20, fontWeight: 800 }}>{title}</div>}
         <span style={{ flexGrow: 1 }} />
+        {count > 1 && (
+          <>
+            <button type="button" aria-label="Previous page" disabled={showing <= 1} onClick={() => setPage(idx - 1)} style={{ ...round, opacity: showing <= 1 ? 0.35 : 1 }}>‹</button>
+            <span style={{ fontSize: big ? 18 : 15, fontWeight: 700, color: C.muted, whiteSpace: 'nowrap' }}>{showing} / {count}</span>
+            <button type="button" aria-label="Next page" disabled={showing >= count} onClick={() => setPage(idx + 1)} style={{ ...round, opacity: showing >= count ? 0.35 : 1 }}>›</button>
+          </>
+        )}
+        <button type="button" aria-label="Add a page" onClick={addPage} style={round}>+</button>
         <button type="button" aria-expanded={tools} aria-label="Pen tools" onClick={() => setTools((t) => !t)} style={{ ...btn, display: 'flex', alignItems: 'center', gap: 8, background: tools ? C.tealTint : C.cream }}>
-          <span style={{ width: dot * 0.7, height: dot * 0.7, borderRadius: dot, background: pen, border: `2px solid ${C.card}`, boxShadow: `0 0 0 2px ${pen}` }} />
-          {tools ? 'Done' : 'Pen'}
+          {eraser ? (
+            <span style={{ width: dot * 0.7, height: dot * 0.5, borderRadius: 4, background: C.card, border: `2px solid ${C.muted}` }} />
+          ) : (
+            <span style={{ width: dot * 0.7, height: dot * 0.7, borderRadius: dot, background: pen, border: `2px solid ${C.card}`, boxShadow: `0 0 0 2px ${pen}` }} />
+          )}
+          {tools ? 'Done' : eraser ? 'Eraser' : 'Pen'}
         </button>
       </div>
       {tools && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
           {colors.map((c) => (
-            <button key={c} type="button" aria-label="Pen colour" aria-pressed={pen === c} onClick={() => setColor(c)} style={{ all: 'unset', cursor: 'pointer', width: dot, height: dot, borderRadius: dot / 2, background: c, boxShadow: pen === c ? `0 0 0 3px ${C.card}, 0 0 0 6px ${c}` : 'none', flexShrink: 0 }} />
+            <button key={c} type="button" aria-label="Pen colour" aria-pressed={!eraser && pen === c} onClick={() => { setColor(c); setEraser(false) }} style={{ all: 'unset', cursor: 'pointer', width: dot, height: dot, borderRadius: dot / 2, background: c, boxShadow: !eraser && pen === c ? `0 0 0 3px ${C.card}, 0 0 0 6px ${c}` : 'none', flexShrink: 0 }} />
           ))}
-          <button type="button" aria-pressed={thick} onClick={() => setThick((t) => !t)} style={btn}>{thick ? 'Thick' : 'Thin'}</button>
+          <button type="button" aria-pressed={thick} onClick={() => { setThick((t) => !t); setEraser(false) }} style={btn}>{thick ? 'Thick' : 'Thin'}</button>
+          <button type="button" aria-pressed={eraser} onClick={() => setEraser((x) => !x)} style={{ ...btn, background: eraser ? C.tealText : C.cream, color: eraser ? '#FFFFFF' : C.ink }}>Eraser</button>
           <span style={{ flexGrow: 1 }} />
           <button type="button" onClick={undo} disabled={!strokes.length} style={{ ...btn, opacity: strokes.length ? 1 : 0.4 }}>Undo</button>
-          <button type="button" onClick={clear} disabled={!strokes.length} style={{ ...btn, opacity: strokes.length ? 1 : 0.4, background: confirmClear ? C.rust : C.cream, color: confirmClear ? '#FFFFFF' : C.ink }}>{confirmClear ? 'Tap to Clear' : 'Clear'}</button>
+          <button type="button" onClick={clear} disabled={!strokes.length} style={{ ...btn, opacity: strokes.length ? 1 : 0.4, background: confirm === 'clear' ? C.rust : C.cream, color: confirm === 'clear' ? '#FFFFFF' : C.ink }}>{confirm === 'clear' ? 'Tap to Clear' : 'Clear'}</button>
+          {count > 1 && (
+            <button type="button" onClick={deletePage} style={{ ...btn, background: confirm === 'delete' ? C.rust : C.cream, color: confirm === 'delete' ? '#FFFFFF' : C.danger }}>{confirm === 'delete' ? 'Tap to Delete Page' : 'Delete Page'}</button>
+          )}
         </div>
       )}
       <div ref={wrapRef} style={{ position: 'relative', flex: '1 1 0', minHeight: 0, borderRadius: 16, background: C.cream, overflow: 'hidden' }}>
-        <canvas ref={canvasRef} {...handlers} style={{ position: 'absolute', inset: 0, touchAction: 'none', cursor: 'crosshair' }} />
+        <canvas ref={canvasRef} {...handlers} style={{ position: 'absolute', inset: 0, touchAction: 'none', cursor: eraser ? 'cell' : 'crosshair' }} />
         {!strokes.length && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, fontSize: big ? 22 : 16, pointerEvents: 'none' }}>Draw or write here</div>
         )}
