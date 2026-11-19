@@ -170,14 +170,15 @@ export function combineEntries(items, i, j) {
   return items.flatMap((x, k) => (k === i ? [merged] : k === j ? [] : [x]))
 }
 
-// Take one window out of a combined window (it goes right after it). A group
-// left with one member becomes a plain window again.
+// Take one window out of a combined window. It's removed from the screen
+// (moved to Hidden windows, where it can be added back); a group left with
+// one member becomes a plain window again.
 export function separateEntry(items, i, memberId) {
   const g = items[i]
   const rest = g.group.filter((id) => id !== memberId)
-  const out = { id: memberId, size: g.size, width: g.width, visible: true }
+  const out = { id: memberId, size: g.size, width: g.width, visible: false }
   const kept = rest.length >= 2 ? { ...g, group: rest } : { id: rest[0], size: g.size, width: g.width, visible: g.visible }
-  return items.flatMap((x, k) => (k === i ? [kept, out] : [x]))
+  return [...items.map((x, k) => (k === i ? kept : x)), out]
 }
 
 

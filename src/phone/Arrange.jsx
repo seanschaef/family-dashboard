@@ -483,7 +483,7 @@ export default function Arrange() {
                       <span style={{ flex: 1, fontSize: 14, fontWeight: 700 }}>{short(id)}</span>
                       {arrow(-1, '↑', k === 0)}
                       {arrow(1, '↓', k === b.group.length - 1)}
-                      <button type="button" disabled={!canEdit} onClick={() => change(separateEntry(items, i, id))} title="Take out of this window" style={{ all: 'unset', cursor: canEdit ? 'pointer' : 'default', fontSize: 13, fontWeight: 700, color: C.danger, padding: '0 4px' }}>Take Out</button>
+                      <button type="button" disabled={!canEdit} onClick={() => change(separateEntry(items, i, id))} title="Remove from this window (it goes to Hidden windows)" style={{ all: 'unset', cursor: canEdit ? 'pointer' : 'default', fontSize: 13, fontWeight: 700, color: C.danger, padding: '0 4px' }}>Remove</button>
                     </div>
                   )
                 })}
