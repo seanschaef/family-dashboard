@@ -81,6 +81,18 @@ export function doneByText(logs, chore, iso, nameFor) {
   return by ? `Done by ${nameFor(by)}` : 'Done'
 }
 
+// For a shared chore that someone ELSE did today: their name (or 'Someone'),
+// so a person's own list can show "Lewis did it" instead of looking like
+// they did it. Null if not done, done by this person, or not a shared chore.
+export function doneByOther(logs, chore, iso, memberKey, nameFor) {
+  const keys = assigneesOf(chore)
+  const shared = keys.length === 0 || (keys.length > 1 && !isEachChore(chore))
+  if (!shared) return null
+  const by = doneBy(logs, chore, iso)
+  if (by === undefined || by === memberKey) return null
+  return by ? nameFor(by) || 'Someone' : 'Someone'
+}
+
 // Who ticked a shared/unassigned chore on a date (member key, or null if it
 // was ticked from the wall's Anyone row). Undefined when it isn't done.
 export function doneBy(logs, chore, iso) {

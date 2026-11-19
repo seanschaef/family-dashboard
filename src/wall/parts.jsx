@@ -78,7 +78,10 @@ export function CheckItem({ label, sub, done = false, color = C.ink, size = 44, 
 }
 
 // Controlled tap-to-check row (parent owns `done`, from the database).
-export function LiveCheck({ label, sub, done = false, color = C.ink, size = 44, fontSize = 23, onToggle }) {
+// other: done by someone else (shared chore) — shown grey, not in this
+// person's colour, so it doesn't look like they did it.
+export function LiveCheck({ label, sub, done = false, other = false, color = C.ink, size = 44, fontSize = 23, onToggle }) {
+  if (other) color = C.muted
   return (
     <button
       type="button"

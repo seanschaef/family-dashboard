@@ -8,7 +8,7 @@ import PhotoFrame from './PhotoFrame.jsx'
 import { formatLongDate, birthdayCountdown, useNow } from '../lib/time.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, pointsThisWeek, pointsBalance, useRedemptions, doneByText, assigneesOf } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, pointsThisWeek, pointsBalance, useRedemptions, doneByText, doneByOther, assigneesOf } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import { usePhotoCollections, activeCollectionsFor } from '../lib/photos.js'
 import { normalizePersonLayout, personBlockHeight, personApproxHeight } from './personLayout.js'
@@ -48,7 +48,7 @@ function ChoresCard({ person, due, logs, T, points, actions }) {
       {due.length ? (
         due.map((c) => (
           <Hold key={c.id} onHold={() => actions.askUndo(c, isDone(logs, c, T, person.key), person.key)}>
-            <LiveCheck label={c.title} sub={doneByText(logs, c, T, nameFor) || (assigneesOf(c).length ? undefined : 'Anyone')} done={isDone(logs, c, T, person.key)} color={person.color} onToggle={() => actions.tick(c, isDone(logs, c, T, person.key), person.key)} />
+            <LiveCheck label={c.title} sub={(doneByOther(logs, c, T, person.key, nameFor) ? `${doneByOther(logs, c, T, person.key, nameFor)} did it` : doneByText(logs, c, T, nameFor)) || (assigneesOf(c).length ? undefined : 'Anyone')} done={isDone(logs, c, T, person.key)} other={!!doneByOther(logs, c, T, person.key, nameFor)} color={person.color} onToggle={() => actions.tick(c, isDone(logs, c, T, person.key), person.key)} />
           </Hold>
         ))
       ) : (
@@ -91,7 +91,19 @@ function BirthdayCountdown({ person, big = true }) {
   )
 }
 
-function JobTile({ chore, done, color, onToggle }) {
+// A big job tile. byOther: the name of whoever else did this shared job
+// today — the tile goes grey and says so, so it doesn't look like yours.
+function JobTile({ chore, done, color, byOther, onToggle }) {
+  if (done && byOther) {
+    return (
+      <button type="button" aria-label={`${chore.title}: ${byOther} did it`} onClick={onToggle}
+        style={{ all: 'unset', flex: 1, cursor: 'pointer', background: C.cream, color: C.muted, border: `3px solid ${C.border}`, borderRadius: 24, padding: 24, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 150, boxSizing: 'border-box' }}>
+        <Icon name="check" size={44} color={C.muted} strokeWidth={3} />
+        <span style={{ fontSize: 28, fontWeight: 700, textDecoration: 'line-through' }}>{chore.title}</span>
+        <span style={{ fontSize: 22, fontWeight: 700 }}>{byOther} did it</span>
+      </button>
+    )
+  }
   return (
     <button type="button" aria-label={`Mark ${chore.title} ${done ? 'not done' : 'done'}`} aria-pressed={done} onClick={onToggle}
       style={{ all: 'unset', flex: 1, cursor: 'pointer', background: done ? color : C.card, color: done ? '#FFFFFF' : C.ink, border: done ? 'none' : `3px dashed ${color}`, borderRadius: 24, padding: 24, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 150, boxSizing: 'border-box' }}>
@@ -103,7 +115,7 @@ function JobTile({ chore, done, color, onToggle }) {
 
 export default function Member() {
   const { memberKey } = useParams()
-  const { byKey } = useMembers()
+  const { byKey, nameFor } = useMembers()
   const T = todayISO()
   const { rows: chores } = useChores()
   const { rows: logs } = useChoreLogs()
@@ -140,7 +152,7 @@ export default function Member() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 18 }}>
             {due.map((c) => (
               <Hold key={c.id} onHold={() => actions.askUndo(c, isDone(logs, c, T, person.key), person.key)} style={{ display: 'flex' }}>
-                <JobTile chore={c} done={isDone(logs, c, T, person.key)} color={person.color} onToggle={() => actions.tick(c, isDone(logs, c, T, person.key), person.key)} />
+                <JobTile chore={c} done={isDone(logs, c, T, person.key)} color={person.color} byOther={doneByOther(logs, c, T, person.key, nameFor)} onToggle={() => actions.tick(c, isDone(logs, c, T, person.key), person.key)} />
               </Hold>
             ))}
             {due.length === 0 && <div style={{ fontSize: 24, color: C.muted }}>No jobs today</div>}
