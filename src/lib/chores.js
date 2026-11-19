@@ -1,4 +1,4 @@
-import { useFamilyTable, insertRow, deleteRow, deleteWhere, todayISO } from './db.js'
+import { useFamilyTable, insertRow, updateRow, deleteRow, deleteWhere, todayISO } from './db.js'
 
 // Sample chores + today's completion logs (unconfigured demo). Shaped like DB
 // rows so the same render code serves both live and sample.
@@ -88,18 +88,22 @@ export function doneBy(logs, chore, iso) {
   return log ? log.member_key : undefined
 }
 
-export async function addChore({ member_keys, shared_mode, title, repeat, days, points }) {
+function choreFields({ member_keys, shared_mode, title, repeat, days, points, tag }) {
   const keys = member_keys || []
-  return insertRow('chores', {
+  return {
     member_key: keys[0] || null,
     member_keys: keys,
     shared_mode: shared_mode === 'any' ? 'any' : 'each',
     title,
     repeat,
-    days: days || [],
-    points: points || 0,
-  })
+    days: repeat === 'weekly' ? days || [] : [],
+    points: Math.max(0, Math.min(1000, Math.round(Number(points) || 0))),
+    tag: tag === 'pet' ? 'pet' : null,
+  }
 }
+export const addChore = (fields) => insertRow('chores', choreFields(fields))
+// Edits apply from now on; past ticks keep the points they were worth.
+export const updateChore = (id, fields) => updateRow('chores', id, choreFields(fields))
 export const removeChore = (id) => deleteRow('chores', id)
 
 // Toggle a chore's completion for a date. memberKey is who is ticking it: for

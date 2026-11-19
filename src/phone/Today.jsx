@@ -9,7 +9,7 @@ import { todayISO } from '../lib/db.js'
 import { useChores, useChoreLogs, dueChores, isDone, assigneesOf, isEachChore, doneByText } from '../lib/chores.js'
 import { useChoreActions } from '../lib/choreActions.jsx'
 import Hold from '../components/Hold.jsx'
-import { useReminders, addReminder, toggleReminder, usePetLog, PET_TASKS, petDone, petBy, togglePet } from '../lib/household.js'
+import { useReminders, addReminder, toggleReminder } from '../lib/household.js'
 
 function firstName(me, user) {
   if (me?.name) return me.name
@@ -22,13 +22,12 @@ const linkBtn = { all: 'unset', cursor: 'pointer', fontSize: 15, fontWeight: 700
 export default function Today() {
   const now = useNow()
   const { user, signOut } = useAuth()
-  const { me, setMe, members, nameFor, petName } = useMembers()
+  const { me, setMe, members, nameFor } = useMembers()
   const [scope, setScope] = useState('me')
   const T = todayISO()
   const { rows: chores } = useChores()
   const { rows: logs } = useChoreLogs()
   const { rows: reminders } = useReminders()
-  const { rows: petLogs } = usePetLog()
   const [newReminder, setNewReminder] = useState('')
   const actions = useChoreActions({ logs })
 
@@ -125,23 +124,6 @@ export default function Today() {
         </form>
       </PhoneCard>
 
-      <PhoneCard style={{ gap: 4 }}>
-        <div style={{ fontSize: 18, fontWeight: 800 }}>{petName}</div>
-        {PET_TASKS.map((task) => {
-          const done = petDone(petLogs, task, T)
-          const by = petBy(petLogs, task, T)
-          return (
-            <PhoneToggle
-              key={task}
-              label={task.charAt(0).toUpperCase() + task.slice(1)}
-              sub={done && by ? nameFor(by) : undefined}
-              done={done}
-              color={C.home}
-              onToggle={() => togglePet(task, T, done, me?.key)}
-            />
-          )
-        })}
-      </PhoneCard>
 
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', fontSize: 14, paddingTop: 4 }}>
         <Link to="/app/calendars" style={{ color: C.tealText, fontWeight: 700 }}>Calendar links</Link>

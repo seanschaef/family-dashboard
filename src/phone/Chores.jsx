@@ -4,7 +4,7 @@ import { C } from '../theme.js'
 import { PhoneHeader } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { useAuth } from '../lib/auth.jsx'
-import { useChores, addChore, removeChore, assigneesOf, isEachChore } from '../lib/chores.js'
+import { useChores, addChore, updateChore, removeChore, assigneesOf, isEachChore } from '../lib/chores.js'
 
 const REPEATS = [
   { label: 'Once', value: 'once' },
@@ -36,7 +36,7 @@ function Field({ label, children }) {
 }
 
 export default function Chores() {
-  const { members, nameFor } = useMembers()
+  const { members, nameFor, petName } = useMembers()
   const { configured } = useAuth()
   const { rows: chores } = useChores()
   const [name, setName] = useState('')
@@ -45,16 +45,45 @@ export default function Chores() {
   const [repeat, setRepeat] = useState('weekly')
   const [days, setDays] = useState([1, 3, 5])
   const [points, setPoints] = useState(0)
+  const [tag, setTag] = useState(null) // 'pet' or null
+  const [editing, setEditing] = useState(null) // chore id being edited, or null for a new one
   const [status, setStatus] = useState(null)
 
   const toggleDay = (i) => setDays((d) => (d.includes(i) ? d.filter((x) => x !== i) : [...d, i].sort((a, b) => a - b)))
 
+  const resetForm = () => {
+    setEditing(null)
+    setName('')
+    setWho([])
+    setMode('each')
+    setRepeat('weekly')
+    setDays([1, 3, 5])
+    setPoints(0)
+    setTag(null)
+  }
+
+  const startEdit = (c) => {
+    setEditing(c.id)
+    setName(c.title)
+    setWho(assigneesOf(c))
+    setMode(c.shared_mode === 'any' ? 'any' : 'each')
+    setRepeat(c.repeat || 'weekly')
+    setDays(c.days?.length ? [...c.days].sort((a, b) => a - b) : [1, 3, 5])
+    setPoints(c.points || 0)
+    setTag(c.tag || null)
+    setStatus(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    document.querySelector('main')?.parentElement?.scrollTo?.({ top: 0, behavior: 'smooth' })
+  }
+
   async function save() {
     if (!name.trim()) return
     setStatus(null)
+    const fields = { member_keys: who, shared_mode: mode, title: name.trim(), repeat, days, points, tag }
     try {
-      await addChore({ member_keys: who, shared_mode: mode, title: name.trim(), repeat, days: repeat === 'weekly' ? days : [], points })
-      setName('')
+      if (editing) await updateChore(editing, fields)
+      else await addChore(fields)
+      resetForm()
       setStatus('Saved')
     } catch (e) {
       setStatus(e.message)
@@ -74,7 +103,10 @@ export default function Chores() {
     <>
       <PhoneHeader title="Chores" action={<Link to="/app/rewards" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Rewards & points ›</Link>} />
 
-      <div style={{ fontSize: 16, fontWeight: 800 }}>New chore</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 16, fontWeight: 800 }}>{editing ? 'Edit chore' : 'New chore'}</div>
+        {editing && <button type="button" onClick={resetForm} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.muted }}>Cancel edit</button>}
+      </div>
       <Field label="Chore">
         <input aria-label="Chore name" type="text" placeholder="Walk the dog" value={name} onChange={(e) => setName(e.target.value)} style={{ font: 'inherit', fontSize: 17, padding: '12px 14px', borderRadius: 12, border: `2px solid ${C.border}`, background: C.card, color: C.ink }} />
       </Field>
@@ -116,15 +148,23 @@ export default function Chores() {
         </Field>
       )}
       <Field label="Points (optional)">
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {POINTS.map((p) => (
             <Chip key={p.value} active={points === p.value} onClick={() => setPoints(p.value)}>{p.label}</Chip>
           ))}
+          <input aria-label="Points" type="number" inputMode="numeric" min="0" max="1000" value={points} onChange={(e) => setPoints(Math.max(0, Math.min(1000, Number(e.target.value) || 0)))} style={{ width: 80, font: 'inherit', fontSize: 15, padding: '8px 10px', borderRadius: 10, border: `2px solid ${C.border}`, background: C.card, color: C.ink }} />
         </div>
+      </Field>
+      <Field label="Type">
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Chip active={tag !== 'pet'} onClick={() => setTag(null)}>Regular chore</Chip>
+          <Chip active={tag === 'pet'} color={C.home} onClick={() => setTag('pet')}>{petName || 'Pet'} chore</Chip>
+        </div>
+        {tag === 'pet' && <div style={{ fontSize: 13, color: C.muted }}>Shows in {petName || 'the pet'}&apos;s window on the hub as well as on chore lists.</div>}
       </Field>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button type="button" onClick={save} disabled={!configured} style={{ all: 'unset', cursor: configured ? 'pointer' : 'default', background: C.meals, color: '#FFFFFF', borderRadius: 14, padding: '14px 24px', fontSize: 16, fontWeight: 700, opacity: configured ? 1 : 0.6 }}>Save chore</button>
+        <button type="button" onClick={save} disabled={!configured} style={{ all: 'unset', cursor: configured ? 'pointer' : 'default', background: C.meals, color: '#FFFFFF', borderRadius: 14, padding: '14px 24px', fontSize: 16, fontWeight: 700, opacity: configured ? 1 : 0.6 }}>{editing ? 'Save changes' : 'Save chore'}</button>
         {status && <span style={{ fontSize: 14, color: status === 'Saved' ? C.tealText : C.danger }}>{status}</span>}
       </div>
       {!configured && <div style={{ fontSize: 13, color: C.muted }}>Connect Supabase to save chores.</div>}
@@ -138,10 +178,11 @@ export default function Chores() {
             <div style={{ flexGrow: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 600 }}>{c.title}</div>
               <div style={{ fontSize: 13, color: C.muted }}>
-                {whoLabel(c)} · {repeatLabel(c)}{c.points ? ` · ${c.points} pts` : ''}
+                {c.tag === 'pet' ? `${petName || 'Pet'} · ` : ''}{whoLabel(c)} · {repeatLabel(c)}{c.points ? ` · ${c.points} pts` : ''}
               </div>
             </div>
-            <button type="button" onClick={() => removeChore(c.id)} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.danger }}>Delete</button>
+            <button type="button" onClick={() => startEdit(c)} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.tealText }}>Edit</button>
+            <button type="button" onClick={() => { if (window.confirm(`Delete “${c.title}”? Its history and points go too.`)) removeChore(c.id) }} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.danger }}>Delete</button>
           </div>
         ))
       )}

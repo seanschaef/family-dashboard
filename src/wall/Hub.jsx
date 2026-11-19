@@ -15,8 +15,9 @@ import { hubGreeting } from '../lib/greetings.js'
 import { useImportantDates, upcomingCountdowns, countdownText } from '../lib/dates.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, ANYONE } from '../lib/chores.js'
-import { useReminders, usePetLog, PET_TASKS, petDone, petBy, togglePet } from '../lib/household.js'
+import { useChores, useChoreLogs, dueChores, isDone } from '../lib/chores.js'
+import { useReminders } from '../lib/household.js'
+import PetBlock from './PetBlock.jsx'
 import { useMeals, mealFor } from '../lib/kitchen.js'
 import { normalizeHubLayout, blockHeight, WIDTH_SPAN, MIN_HEIGHT } from './hubLayout.js'
 
@@ -24,12 +25,11 @@ export default function Hub() {
   const now = useNow()
   const navigate = useNavigate()
   const [choresFor, setChoresFor] = useState(null) // member whose chore pop-up is open
-  const { members, nameFor, familyName, petName, wallLayout } = useMembers()
+  const { members, familyName, petName, wallLayout } = useMembers()
   const T = todayISO()
   const { rows: chores } = useChores()
   const { rows: logs } = useChoreLogs()
   const { rows: reminders } = useReminders()
-  const { rows: petLogs } = usePetLog()
   const { rows: meals } = useMeals()
 
   const familyReminders = reminders.filter((r) => r.member_key === null && !r.done)
@@ -64,9 +64,8 @@ export default function Hub() {
     chores: () => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 16, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Chores today</div>
-        {[...members, { key: ANYONE, name: 'Anyone', color: C.family }].map((m) => {
+        {members.map((m) => {
           const due = dueChores(chores, logs, m.key, T)
-          if (m.key === ANYONE && !due.length) return null // only when there are unassigned chores
           const done = due.filter((c) => isDone(logs, c, T, m.key)).length
           return (
             <button key={m.key} type="button" aria-label={`Show ${m.name}'s chores`} onClick={() => setChoresFor(m)} style={{ all: 'unset', cursor: 'pointer', display: 'block' }}>
@@ -76,29 +75,7 @@ export default function Hub() {
         })}
       </div>
     ),
-    pet: () => (
-      <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <Icon name="paw" size={32} color={C.ink} />
-          <div style={{ fontSize: 26, fontWeight: 800 }}>{petName || 'Pet'}</div>
-        </div>
-        {PET_TASKS.map((task) => {
-          const done = petDone(petLogs, task, T)
-          const by = petBy(petLogs, task, T)
-          return (
-            <LiveCheck
-              key={task}
-              label={done && by ? `${task[0].toUpperCase() + task.slice(1)} · ${nameFor(by)}` : task[0].toUpperCase() + task.slice(1)}
-              done={done}
-              color={C.home}
-              size={40}
-              fontSize={21}
-              onToggle={() => togglePet(task, T, done, null)}
-            />
-          )
-        })}
-      </div>
-    ),
+    pet: () => <PetBlock chores={chores} logs={logs} />,
     reminders: () => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 10, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Reminders</div>

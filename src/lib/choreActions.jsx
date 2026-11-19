@@ -11,9 +11,8 @@ import { checkPin } from './pin.js'
 // - A tap only ticks. A done chore is undone with a press and hold.
 // - Who may undo:
 //     on a phone: the person who did it, or a parent (admin);
-//     on the wall: the person who did it, on their own page (or the hub's
-//       Anyone row for wall ticks), within UNDO_GRACE of ticking it (to fix
-//       a mis-tap). Anything else needs the parent PIN (Settings).
+//     on the wall: within UNDO_GRACE of the tick (to fix a mis-tap), on the
+//       doer's own page or on the hub. Anything else needs the parent PIN.
 //
 // Usage:
 //   const actions = useChoreActions({ logs, pageKey, onWall })
@@ -43,7 +42,9 @@ export function useChoreActions({ logs, pageKey = null, onWall = false, scale = 
     const by = log ? log.member_key ?? null : null
     const recent = log?.created_at ? Date.now() - new Date(log.created_at).getTime() < UNDO_GRACE_MS : false
     let allowed
-    if (onWall) allowed = recent && by === (pageKey ?? null)
+    // On the hub (shared, no page owner) any quick mis-tap can be undone; on a
+    // person's page only their own.
+    if (onWall) allowed = recent && (pageKey === null || by === pageKey)
     else allowed = isAdmin || (me && by === me.key)
     const needsPin = !allowed && onWall && !!parentPinHash
     const blocked = !allowed && !needsPin
