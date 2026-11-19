@@ -95,7 +95,7 @@ function DayView({ events, anchor, colorFor, onEventClick }) {
       {list.length ? (
         list.map((ev) => (
           <button key={ev.id} type="button" onClick={() => onEventClick(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 16, alignItems: 'center', ...eventBlock(colorFor(ev), { padding: '12px 16px' }) }}>
-            <div style={{ width: 90, fontSize: 22, color: C.muted }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
+            <div style={{ width: 112, fontSize: 22, color: C.muted, flexShrink: 0 }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 24, fontWeight: 600 }}>{ev.title}</div>
               {ev.location && <div style={{ fontSize: 19, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.location}</div>}

@@ -103,11 +103,19 @@ export const JOKES = [
   ['What’s a dog’s favourite kind of pizza?', 'Pupperoni.'],
 ]
 
-// The joke for a given hour (same all hour, everywhere; a new one each hour,
-// not repeating for days).
-export function jokeOfTheHour(now = new Date()) {
+const gcd = (a, b) => (b ? gcd(b, a % b) : a)
+
+// The joke for a given hour from a pool of { key, setup, punchline } (same all
+// hour, everywhere; a new one each hour, every joke once before any repeats).
+export function jokeOfTheHour(pool, now = new Date()) {
+  if (!pool.length) return null
   const hours = Math.floor(now.getTime() / 3600000)
-  // Step through the list with a stride that shares no factor with its length.
-  const i = (hours * 37) % JOKES.length
-  return { setup: JOKES[i][0], punchline: JOKES[i][1], key: hours }
+  // Step through the pool with a stride that shares no factor with its size.
+  let stride = 389
+  while (gcd(stride, pool.length) !== 1) stride += 2
+  const j = pool[(hours * stride) % pool.length]
+  return { ...j, hour: hours }
 }
+
+// The built-in jokes as pool entries.
+export const LOCAL_JOKES = JOKES.map(([setup, punchline], i) => ({ key: `local-${i}`, setup, punchline }))

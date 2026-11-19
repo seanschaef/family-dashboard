@@ -4,7 +4,7 @@ import { C, card, eventBlock } from '../theme.js'
 import WeatherIcon from '../components/WeatherIcon.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { useNow, timeOfDay } from '../lib/time.js'
-import { todayISO } from '../lib/db.js'
+import { todayISO, useFamilyTable, insertRow } from '../lib/db.js'
 import { useEvents } from '../lib/eventsource.js'
 import { useChoreLogs, useRewards, useRedemptions, pointsBalance, pointsThisWeek } from '../lib/chores.js'
 import { useMeals, mealFor, weekDates, useGroceries, toggleGrocery } from '../lib/kitchen.js'
@@ -13,7 +13,9 @@ import { upcomingPickups, dayWord } from '../lib/waste.js'
 import { useForecast, wearHint, useAqhi, aqhiRisk } from '../lib/weather.js'
 import { fetchOnThisDay, photoAgentConfigured } from '../lib/photos.js'
 import { useDragScroll } from './dragScroll.js'
-import { jokeOfTheHour } from '../lib/jokes.js'
+import { jokeOfTheHour, LOCAL_JOKES } from '../lib/jokes.js'
+import { useLongPress } from '../lib/longPress.js'
+import ConfirmSheet from '../components/ConfirmSheet.jsx'
 import { useImportantDates, upcomingCountdowns } from '../lib/dates.js'
 import EventPopover from './EventPopover.jsx'
 import RecipePopover from './RecipePopover.jsx'
@@ -471,22 +473,54 @@ export function ComingUpBlock() {
 }
 
 // ---------- Joke of the hour ----------
-// A new (kid-safe) joke every hour. The punchline stays hidden until someone
-// taps the window; it hides again when the next joke arrives.
+// A new clean joke every hour from the family's library (about 750 imported
+// jokes plus the built-in ones). Tap for the punchline; it hides again when
+// the next joke arrives. Press and hold to never show that joke again.
 export function JokeBlock() {
   const now = useNow(60000)
-  const joke = jokeOfTheHour(now)
-  const [shown, setShown] = useState(null) // key of the joke whose punchline is showing
-  const reveal = shown === joke.key
+  const { me } = useMembers()
+  const { rows: imported } = useFamilyTable('jokes', { select: 'id, setup, punchline', order: { column: 'id' } })
+  const { rows: hides } = useFamilyTable('joke_hides', { select: 'joke_key' })
+  const hidden = useMemo(() => new Set(hides.map((h) => h.joke_key)), [hides])
+  const pool = useMemo(
+    () => [...imported.map((j) => ({ key: `db-${j.id}`, setup: j.setup, punchline: j.punchline })), ...LOCAL_JOKES].filter((j) => !hidden.has(j.key)),
+    [imported, hidden],
+  )
+  const joke = jokeOfTheHour(pool, now)
+  const [shown, setShown] = useState(null) // hour whose punchline is showing
+  const [asking, setAsking] = useState(false)
+  const hold = useLongPress(() => setAsking(true))
+  if (!joke) return null
+  const reveal = shown === joke.hour || !joke.punchline
   return (
-    <button type="button" onClick={() => setShown(reveal ? null : joke.key)} style={{ all: 'unset', cursor: 'pointer', display: 'block', height: '100%' }}>
-      <div style={box({ gap: 10 })}>
-        <Title right={reveal ? 'Tap to hide' : 'Tap for the answer'}>Joke of the Hour</Title>
-        <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.25 }}>{joke.setup}</div>
-        <div style={{ fontSize: 24, lineHeight: 1.25, color: reveal ? C.rust : C.muted, fontWeight: reveal ? 800 : 500, transition: 'color 300ms ease' }}>
-          {reveal ? joke.punchline : '…'}
+    <>
+      <button type="button" {...hold} onClick={() => joke.punchline && setShown(reveal ? null : joke.hour)} style={{ all: 'unset', cursor: 'pointer', display: 'block', height: '100%', WebkitUserSelect: 'none', userSelect: 'none' }}>
+        <div style={box({ gap: 10 })}>
+          <Title right={joke.punchline ? (reveal ? 'Tap to hide' : 'Tap for the answer') : ''}>Joke of the Hour</Title>
+          <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.25 }}>{joke.setup}</div>
+          {joke.punchline && (
+            <div style={{ fontSize: 24, lineHeight: 1.25, color: reveal ? C.rust : C.muted, fontWeight: reveal ? 800 : 500, transition: 'color 300ms ease' }}>
+              {reveal ? joke.punchline : '…'}
+            </div>
+          )}
         </div>
-      </div>
-    </button>
+      </button>
+      <ConfirmSheet
+        open={asking}
+        scale={2}
+        title="Never show this joke again?"
+        detail="It's taken out of the Joke of the Hour for good, and a new joke shows."
+        confirmLabel="Hide It"
+        onCancel={() => setAsking(false)}
+        onConfirm={async () => {
+          setAsking(false)
+          try {
+            await insertRow('joke_hides', { joke_key: joke.key, hidden_by: me?.key || null })
+          } catch {
+            /* already hidden */
+          }
+        }}
+      />
+    </>
   )
 }

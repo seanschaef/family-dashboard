@@ -29,7 +29,7 @@ export default function TodayBlock({ height }) {
         {list.length ? (
           list.map((ev) => (
             <button key={ev.id} type="button" onClick={() => setOpen(ev)} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0, ...eventBlock(colorFor(ev), { padding: '10px 14px' }) }}>
-              <div style={{ width: 64, fontSize: 18, color: C.muted, flexShrink: 0 }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
+              <div style={{ width: 84, fontSize: 18, color: C.muted, flexShrink: 0 }}>{ev.all_day ? 'All day' : timeOfDay(ev.starts_at)}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.2 }}>{ev.title}</div>
                 <div style={{ fontSize: 15, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

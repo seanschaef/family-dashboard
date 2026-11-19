@@ -79,12 +79,17 @@ export const endOfMonth = (d) => new Date(d.getFullYear(), d.getMonth() + 1, 0)
 export const isSameDay = (a, b) =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 
-// "6:30" without the am/pm tag. Uses the device's local zone so it agrees with
+// Event times ("6:30 pm"). Uses the device's local zone so it agrees with
 // the local day-grouping helpers above (startOfDay/isSameDay). For the family
 // in Edmonton the device zone is Mountain Time; the wall clock itself stays
 // pinned to Edmonton via formatClock().
 const hmFmt = new Intl.DateTimeFormat('en-CA', { hour: 'numeric', minute: '2-digit', hour12: true })
-export const timeOfDay = (d) => hmFmt.format(new Date(d)).replace(/\s?[ap]\.?m\.?/i, '').trim()
+// Event times with am/pm so 9:00 can't be misread: "9 am", "2:15 pm".
+export const timeOfDay = (d) => {
+  const parts = Object.fromEntries(hmFmt.formatToParts(new Date(d)).map((p) => [p.type, p.value]))
+  const ap = /p/i.test(parts.dayPeriod || '') ? 'pm' : 'am'
+  return parts.minute === '00' ? `${parts.hour} ${ap}` : `${parts.hour}:${parts.minute} ${ap}`
+}
 
 export const monthTitle = (d) => d.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' })
 
