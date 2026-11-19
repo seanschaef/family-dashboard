@@ -75,10 +75,26 @@ Deno.serve(async (req) => {
       const text = await res.text()
       const events = parseIcs(text)
 
-      const rows: Record<string, unknown>[] = []
+      // Outlook/Google list an edited or moved instance of a repeating event
+      // as its own VEVENT with the same UID plus RECURRENCE-ID. That instance
+      // replaces the repeat's original occurrence (which is skipped below, as
+      // are EXDATE cancellations), so each occurrence is stored once.
+      const overridden = new Map<string, Set<string>>()
       for (const ev of events) {
-        for (const occ of expand(ev, winStart, winEnd)) {
-          rows.push({
+        if (!ev.recurrenceId) continue
+        if (!overridden.has(ev.uid)) overridden.set(ev.uid, new Set())
+        overridden.get(ev.uid)!.add(ev.recurrenceId)
+      }
+
+      const byUid = new Map<string, Record<string, unknown>>()
+      for (const ev of events) {
+        const occs = ev.recurrenceId
+          ? ev.start <= winEnd && (ev.end ?? ev.start) >= winStart
+            ? [{ uid: `${ev.uid}_${ev.recurrenceId}`, start: ev.start, end: ev.end }]
+            : []
+          : expand(ev, winStart, winEnd, new Set([...(overridden.get(ev.uid) ?? []), ...(ev.exdates ?? [])]))
+        for (const occ of occs) {
+          byUid.set(occ.uid, {
             calendar_id: cal.id,
             family_id: cal.family_id,
             uid: occ.uid,
@@ -92,14 +108,21 @@ Deno.serve(async (req) => {
           })
         }
       }
+      const rows = [...byUid.values()]
 
-      // Replace this calendar's cache wholesale (simple + always consistent).
-      await admin.from('calendar_events').delete().eq('calendar_id', cal.id)
-      if (rows.length) await admin.from('calendar_events').insert(rows)
+      // Replace this calendar's cache wholesale. Every step is checked: a
+      // failed save used to leave the calendar empty but still marked synced.
+      const del = await admin.from('calendar_events').delete().eq('calendar_id', cal.id)
+      if (del.error) throw new Error(`delete: ${del.error.message}`)
+      for (let i = 0; i < rows.length; i += 500) {
+        const ins = await admin.from('calendar_events').insert(rows.slice(i, i + 500))
+        if (ins.error) throw new Error(`insert: ${ins.error.message}`)
+      }
       await admin.from('calendars').update({ last_synced_at: new Date().toISOString() }).eq('id', cal.id)
 
       summary.push({ calendar_id: cal.id, events: rows.length })
     } catch (e) {
+      console.error(`calendar ${cal.id}: ${e}`)
       summary.push({ calendar_id: cal.id, error: String(e) })
     }
   }
@@ -123,6 +146,9 @@ type Ev = {
   start: Date
   end?: Date
   rrule?: Record<string, string>
+  tz?: string
+  recurrenceId?: string // ISO start of the occurrence this one replaces
+  exdates?: string[] // ISO starts of cancelled occurrences
 }
 
 function parseIcs(text: string): Ev[] {
@@ -177,8 +203,15 @@ function parseIcs(text: string): Ev[] {
         const d = parseDate(value, params)
         cur.start = d.date
         cur.allDay = d.allDay
+        cur.tz = params.TZID ? ianaZone(params.TZID) : TZ_DEFAULT
         break
       }
+      case 'RECURRENCE-ID':
+        cur.recurrenceId = parseDate(value, params).date.toISOString()
+        break
+      case 'EXDATE':
+        cur.exdates = [...(cur.exdates ?? []), ...value.split(',').map((v) => parseDate(v, params).date.toISOString())]
+        break
       case 'DTEND': {
         const d = parseDate(value, params)
         cur.end = d.date
@@ -274,10 +307,25 @@ function zonedToUtc(y: number, mo: number, d: number, h: number, mi: number, s: 
 // ---------------- recurrence ----------------
 const WD = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA']
 
-function expand(ev: Ev, winStart: Date, winEnd: Date): { uid: string; start: Date; end?: Date }[] {
+// Weekday of an instant in the event's own time zone (an evening event in
+// Edmonton is already the next day in UTC).
+function weekdayIn(d: Date, tz: string): string {
+  const w = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short' }).format(d)
+  return w.slice(0, 2).toUpperCase()
+}
+
+// Day number (days since 1970) of an instant's local date in a zone.
+function localDay(d: Date, tz: string): number {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d).map((x) => [x.type, x.value]))
+  return Math.round(Date.UTC(+p.year, +p.month - 1, +p.day) / 86400000)
+}
+
+function expand(ev: Ev, winStart: Date, winEnd: Date, skip: Set<string> = new Set()): { uid: string; start: Date; end?: Date }[] {
   const durMs = ev.end ? ev.end.getTime() - ev.start.getTime() : 0
   const out: { uid: string; start: Date; end?: Date }[] = []
+  const tz = ev.allDay ? 'UTC' : ev.tz || TZ_DEFAULT
   const push = (start: Date) => {
+    if (skip.has(start.toISOString())) return
     out.push({ uid: `${ev.uid}_${start.toISOString()}`, start, end: durMs ? new Date(start.getTime() + durMs) : undefined })
   }
 
@@ -293,16 +341,31 @@ function expand(ev: Ev, winStart: Date, winEnd: Date): { uid: string; start: Dat
   const until = r.UNTIL ? parseDate(r.UNTIL, {}).date : null
   const byday = r.BYDAY ? r.BYDAY.split(',').map((x) => x.slice(-2)) : null
 
+  const firstMonday = localDay(ev.start, tz) - ((WD.indexOf(weekdayIn(ev.start, tz)) + 6) % 7)
   let cursor = new Date(ev.start)
   let emitted = 0
   let guard = 0
+
+  // A repeat that started years ago: jump ahead in whole periods to just
+  // before the window (only when no COUNT needs every occurrence counted),
+  // so the loop's guard isn't used up long before today.
+  if (count === Infinity && (freq === 'DAILY' || freq === 'WEEKLY')) {
+    const periodDays = freq === 'DAILY' ? interval : 7 * interval
+    const behind = Math.floor((winStart.getTime() - cursor.getTime()) / 86400000 / periodDays) - 1
+    if (behind > 0) cursor = addDays(cursor, behind * periodDays)
+  }
 
   while (guard++ < 2000 && emitted < count && cursor <= winEnd) {
     if (until && cursor > until) break
 
     let matches = true
-    if (freq === 'WEEKLY' && byday) matches = byday.includes(WD[cursor.getUTCDay()])
-    if (freq === 'DAILY' && byday) matches = byday.includes(WD[cursor.getUTCDay()])
+    if ((freq === 'WEEKLY' || freq === 'DAILY') && byday) matches = byday.includes(weekdayIn(cursor, tz))
+    // "Every 2 weeks on Tue, Thu": only calendar weeks (Monday start) 0, 2,
+    // 4… counted from the first one.
+    if (matches && freq === 'WEEKLY' && byday && interval > 1) {
+      const weeks = Math.floor((localDay(cursor, tz) - firstMonday) / 7)
+      matches = weeks % interval === 0
+    }
 
     if (matches) {
       if (cursor >= winStart && cursor <= winEnd) push(cursor)
