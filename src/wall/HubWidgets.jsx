@@ -28,7 +28,7 @@ const Title = ({ children, right }) => (
 )
 const Muted = ({ children }) => <div style={{ fontSize: 20, color: C.muted }}>{children}</div>
 
-function Scroll({ children, gap = 8 }) {
+export function Scroll({ children, gap = 8 }) {
   const drag = useDragScroll()
   return (
     <div ref={drag.ref} {...drag.handlers} className={drag.className} style={{ ...drag.style, flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', gap }}>
