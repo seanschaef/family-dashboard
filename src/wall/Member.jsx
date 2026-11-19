@@ -125,7 +125,7 @@ export default function Member() {
   const blocks = {
     header: () => <Header person={person} />,
     calendar: (size) => <CalendarBlock personKey={person.key} includeWork title="Calendar" height={personBlockHeight('calendar', size)} />,
-    chores: () => <ChoresCard person={person} due={due} logs={logs} T={T} points={person.role === 'parent' ? null : points} actions={actions} />,
+    chores: () => <ChoresCard person={person} due={due} logs={logs} T={T} points={points} actions={actions} />,
     jobs: (size) => (
       <div style={card({ padding: 28, display: 'flex', flexDirection: 'column', gap: 18, height: personBlockHeight('jobs', size) })}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

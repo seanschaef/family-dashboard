@@ -13,7 +13,8 @@ export default function Rewards() {
   const [title, setTitle] = useState('')
   const [cost, setCost] = useState('')
 
-  const kids = members.filter((m) => m.role === 'teen' || m.role === 'child')
+  // Everyone earns points, parents included.
+  const kids = members
 
   async function add(e) {
     e.preventDefault()
