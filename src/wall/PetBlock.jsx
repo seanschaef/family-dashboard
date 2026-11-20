@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Avatar from '../components/Avatar.jsx'
 import { C, card } from '../theme.js'
 import Icon from '../components/Icon.jsx'
 import Hold from '../components/Hold.jsx'
@@ -63,7 +64,7 @@ export default function PetBlock({ chores, logs }) {
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
               {(assigneesOf(asking).length ? members.filter((m) => assigneesOf(asking).includes(m.key)) : members).map((m) => (
                 <button key={m.key} type="button" onClick={() => { const c = asking; setAsking(null); actions.tick(c, false, m.key) }} style={{ all: 'unset', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                  <span style={{ width: 110, height: 110, borderRadius: 55, background: m.color, color: '#FFFFFF', fontSize: 52, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{(m.name[0] || '?').toUpperCase()}</span>
+                  <Avatar member={m} size={110} />
                   <span style={{ fontSize: 24, fontWeight: 700 }}>{m.name}</span>
                 </button>
               ))}

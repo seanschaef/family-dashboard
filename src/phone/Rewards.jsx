@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Avatar from '../components/Avatar.jsx'
 import { C } from '../theme.js'
 import { PhoneHeader } from './parts.jsx'
 import { useAuth } from '../lib/auth.jsx'
@@ -114,7 +115,7 @@ export default function Rewards() {
         {members.map((m) => (
           <div key={m.key} style={{ flex: 1, minWidth: 130, background: C.card, border: `2px solid ${C.border}`, borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 26, height: 26, borderRadius: 13, background: m.color, color: '#FFFFFF', fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{(m.name[0] || '?').toUpperCase()}</span>
+              <Avatar member={m} size={28} />
               <span style={{ fontSize: 16, fontWeight: 700 }}>{m.name}</span>
             </div>
             <div style={{ fontSize: 34, fontWeight: 800, color: m.color }}>{balanceOf(m.key)}</div>

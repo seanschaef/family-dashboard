@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Avatar from '../components/Avatar.jsx'
 import { C } from '../theme.js'
 import { PhoneHeader } from './parts.jsx'
 import { useAuth } from '../lib/auth.jsx'
@@ -33,9 +34,7 @@ function Editor({ member, configured }) {
   return (
     <div style={{ background: C.card, border: `2px solid ${C.border}`, borderRadius: 18, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ width: 30, height: 30, borderRadius: 15, background: member.color, color: '#FFFFFF', fontSize: 15, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {(member.name[0] || '?').toUpperCase()}
-        </span>
+        <Avatar member={member} size={32} />
         <div style={{ fontSize: 18, fontWeight: 800 }}>{member.name}</div>
       </div>
 

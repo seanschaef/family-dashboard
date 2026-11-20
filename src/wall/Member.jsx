@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom'
+import Avatar from '../components/Avatar.jsx'
 import { C, card } from '../theme.js'
 import Icon, { StarIcon } from '../components/Icon.jsx'
 import { Clock, LiveCheck } from './parts.jsx'
@@ -23,9 +24,7 @@ function Header({ person }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 140 }}>
       <div style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
-        <div style={{ width: 124, height: 124, borderRadius: 62, background: person.color, color: '#FFFFFF', fontSize: 58, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {(person.name[0] || '?').toUpperCase()}
-        </div>
+        <Avatar member={person} size={124} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div style={{ fontSize: 62, fontWeight: 800, lineHeight: 1.05 }}>{person.name}'s Day</div>
           <div style={{ fontSize: 26, color: C.muted }}>{formatLongDate(now)}</div>

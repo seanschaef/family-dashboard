@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import Avatar from '../components/Avatar.jsx'
+import { squareImage } from '../lib/images.js'
 import { Link } from 'react-router-dom'
 import { C, MEMBER_PALETTE } from '../theme.js'
 import { PhoneHeader } from './parts.jsx'
@@ -25,13 +27,44 @@ function Chip({ active, color = C.meals, children, onClick }) {
   )
 }
 
+// Tap the circle to choose a photo (camera or library); it's cropped square
+// and shrunk on the phone before saving. "Remove photo" goes back to the initial.
+function PhotoPicker({ m, canEdit, onPatch }) {
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  async function pick(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setBusy(true)
+    setErr('')
+    try {
+      await onPatch({ avatar: await squareImage(file) })
+    } catch (x) {
+      setErr(x.message || 'Couldn’t use that picture.')
+    }
+    setBusy(false)
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+      <label style={{ cursor: canEdit ? 'pointer' : 'default', position: 'relative', display: 'block', opacity: busy ? 0.5 : 1 }} title={canEdit ? 'Change photo' : undefined}>
+        <Avatar member={m} size={48} />
+        {canEdit && <span style={{ position: 'absolute', right: -4, bottom: -4, width: 20, height: 20, borderRadius: 10, background: C.card, border: `2px solid ${C.border}`, fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.ink }}>+</span>}
+        {canEdit && <input type="file" accept="image/*" onChange={pick} style={{ display: 'none' }} />}
+      </label>
+      {canEdit && m.avatar && <button type="button" onClick={() => onPatch({ avatar: null })} style={{ all: 'unset', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: C.muted }}>Remove</button>}
+      {err && <span style={{ fontSize: 11, color: C.danger, maxWidth: 90 }}>{err}</span>}
+    </div>
+  )
+}
+
 function MemberRow({ m, canEdit, isAdmin, onPatch, onRemove }) {
   const [name, setName] = useState(m.name)
   useEffect(() => setName(m.name), [m.name])
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ width: 30, height: 30, borderRadius: 15, background: m.color, color: '#FFF', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{(name[0] || '?').toUpperCase()}</span>
+        <PhotoPicker m={m} canEdit={canEdit} onPatch={onPatch} />
         <input aria-label="Name" value={name} disabled={!canEdit} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() && name !== m.name && onPatch({ name: name.trim() })} style={{ ...input, opacity: canEdit ? 1 : 0.6 }} />
         {isAdmin && (
           <button type="button" onClick={onRemove} style={{ all: 'unset', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.danger, flexShrink: 0 }}>Remove</button>

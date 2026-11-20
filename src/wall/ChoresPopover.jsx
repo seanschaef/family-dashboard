@@ -1,4 +1,5 @@
 import { C } from '../theme.js'
+import Avatar from '../components/Avatar.jsx'
 import { LiveCheck } from './parts.jsx'
 import { todayISO } from '../lib/db.js'
 import { dueChores, isDone, assigneesOf, doneByText, ANYONE } from '../lib/chores.js'
@@ -32,9 +33,7 @@ export default function ChoresPopover({ person, chores, logs, onClose }) {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span style={{ width: 56, height: 56, borderRadius: 28, background: person.color, color: '#FFFFFF', fontSize: 28, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {(person.name[0] || '?').toUpperCase()}
-            </span>
+            <Avatar member={person} size={56} />
             <div>
               <div style={{ fontSize: 32, fontWeight: 800 }}>{heading}</div>
               <div style={{ fontSize: 20, color: C.muted }}>{doneCount} of {due.length} done today</div>

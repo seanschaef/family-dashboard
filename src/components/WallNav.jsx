@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import Avatar from './Avatar.jsx'
 import { buildWallNav } from '../config/people.js'
 import { useMembers } from '../lib/members.jsx'
 import { C } from '../theme.js'
@@ -51,24 +52,13 @@ export default function WallNav() {
               color: C.ink,
             }}
           >
-            <span
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 32,
-                background: item.color,
-                color: '#FFFFFF',
-                fontSize: 28,
-                fontWeight: 800,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                outline: isActive ? `4px solid ${C.ink}` : 'none',
-                outlineOffset: 3,
-              }}
-            >
-              {item.icon ? <Icon name={item.icon} size={30} color="#FFFFFF" /> : item.letter}
-            </span>
+            {item.member ? (
+              <Avatar member={item.member} size={64} style={{ outline: isActive ? `4px solid ${C.ink}` : 'none', outlineOffset: 3 }} />
+            ) : (
+              <span style={{ width: 64, height: 64, borderRadius: 32, background: item.color, color: '#FFFFFF', fontSize: 28, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', outline: isActive ? `4px solid ${C.ink}` : 'none', outlineOffset: 3 }}>
+                {item.icon ? <Icon name={item.icon} size={30} color="#FFFFFF" /> : item.letter}
+              </span>
+            )}
             <span style={{ fontSize: 19, fontWeight: isActive ? 800 : 500 }}>{item.label}</span>
           </button>
         )

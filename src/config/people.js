@@ -21,6 +21,7 @@ export function buildWallNav(members) {
     to: `/wall/member/${m.key}`,
     color: m.color,
     letter: (m.name[0] || '?').toUpperCase(),
+    member: m,
   }))
   return [...WALL_HEAD, ...people, ...WALL_TAIL]
 }
