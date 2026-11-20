@@ -11,13 +11,6 @@ const timeFmt = new Intl.DateTimeFormat('en-CA', {
   timeZone: TZ,
 })
 
-const timeFmt24 = new Intl.DateTimeFormat('en-GB', {
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-  timeZone: TZ,
-})
-
 const dateFmt = new Intl.DateTimeFormat('en-CA', {
   weekday: 'long',
   month: 'long',
@@ -25,10 +18,16 @@ const dateFmt = new Intl.DateTimeFormat('en-CA', {
   timeZone: TZ,
 })
 
-// "7:42" style. The mockups drop the am/pm, so strip it.
-export function formatClock(date = new Date(), { ampm = false } = {}) {
-  if (ampm) return timeFmt.format(date).replace(/\s?[ap]\.?m\.?/i, '').trim()
-  return timeFmt24.format(date)
+// Wall clock, 12-hour: { time: "9:04", ap: "am" } (shown with a smaller am/pm).
+export function clockParts(date = new Date()) {
+  const parts = Object.fromEntries(timeFmt.formatToParts(date).map((p) => [p.type, p.value]))
+  return { time: `${parts.hour}:${parts.minute}`, ap: /p/i.test(parts.dayPeriod || '') ? 'pm' : 'am' }
+}
+
+// "9:04 am" as plain text.
+export function formatClock(date = new Date()) {
+  const { time, ap } = clockParts(date)
+  return `${time} ${ap}`
 }
 
 export function formatLongDate(date = new Date()) {

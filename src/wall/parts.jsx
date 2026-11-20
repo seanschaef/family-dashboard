@@ -1,13 +1,23 @@
 import { useState } from 'react'
 import { C } from '../theme.js'
 import Icon from '../components/Icon.jsx'
-import { formatClock } from '../lib/time.js'
-import { useNow } from '../lib/time.js'
+import { clockParts, useNow } from '../lib/time.js'
 
-// Live clock in the big "7:42" style used in page headers.
+// A 12-hour time with a smaller am/pm beside it: "9:04 am".
+export function ClockText({ now, size, weight = 800, style }) {
+  const { time, ap } = clockParts(now)
+  return (
+    <div style={{ fontSize: size, fontWeight: weight, lineHeight: 1, whiteSpace: 'nowrap', ...style }}>
+      {time}
+      <span style={{ fontSize: Math.round(size * 0.36), fontWeight: 700, marginLeft: Math.round(size * 0.08), letterSpacing: 1 }}>{ap}</span>
+    </div>
+  )
+}
+
+// Live clock used in page headers.
 export function Clock({ size = 56, weight = 700 }) {
   const now = useNow()
-  return <div style={{ fontSize: size, fontWeight: weight }}>{formatClock(now)}</div>
+  return <ClockText now={now} size={size} weight={weight} />
 }
 
 // Coloured bar + time + title (+ optional sub), used in "Today" lists.

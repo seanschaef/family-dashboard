@@ -5,14 +5,14 @@ import RecipePopover from './RecipePopover.jsx'
 import FitText from '../components/FitText.jsx'
 import { C, card } from '../theme.js'
 import Icon from '../components/Icon.jsx'
-import { LiveCheck, ProgressRow } from './parts.jsx'
+import { LiveCheck, ProgressRow, ClockText } from './parts.jsx'
 import CalendarBlock from './CalendarBlock.jsx'
 import TodayBlock from './TodayBlock.jsx'
 import Rotator from './Rotator.jsx'
 import LegendBlock from './LegendBlock.jsx'
 import PhotoFrame from './PhotoFrame.jsx'
 import WeatherCard from './WeatherCard.jsx'
-import { formatClock, formatLongDate, useNow } from '../lib/time.js'
+import { formatLongDate, useNow } from '../lib/time.js'
 import { hubGreeting } from '../lib/greetings.js'
 import { useImportantDates } from '../lib/dates.js'
 import { useWeather } from '../lib/weather.js'
@@ -56,7 +56,7 @@ export default function Hub() {
           {/* The greeting has a fixed box (beside the weather) and its text
               shrinks to fit rather than being cut off. */}
           <FitText max={t[0]} style={{ fontWeight: 600, color: C.rust, lineHeight: 1.15 }}>{hubGreeting({ now, familyName, petName, members, dates: importantDates, temp: weatherNow?.temp })}</FitText>
-          <div style={{ fontSize: t[1], fontWeight: 800, lineHeight: 1 }}>{formatClock(now)}</div>
+          <ClockText now={now} size={t[1]} />
           <div style={{ fontSize: t[2], color: C.muted, lineHeight: 1.15 }}>{formatLongDate(now)}</div>
         </div>
         <WeatherCard />
