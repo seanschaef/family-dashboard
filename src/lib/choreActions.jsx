@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { C } from '../theme.js'
+import { popIn, fadeIn } from './popIn.js'
 import { useMembers } from './members.jsx'
 import { todayISO } from './db.js'
 import { toggleChore, isEachChore } from './chores.js'
@@ -70,8 +71,8 @@ export function useChoreActions({ logs, pageKey = null, onWall = false, scale = 
   const f = (n) => n * scale
   const byName = pending ? (pending.by ? nameFor(pending.by) : 'the wall') : ''
   const ui = pending ? (
-    <div onClick={close} style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 130, padding: 24 }}>
-      <div role="alertdialog" aria-label="Undo chore" onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `2px solid ${C.border}`, borderRadius: f(20), padding: f(20), width: `min(${f(380)}px, 100%)`, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: f(14) }}>
+    <div ref={fadeIn} onClick={close} style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 130, padding: 24 }}>
+      <div ref={popIn} role="alertdialog" aria-label="Undo chore" onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `2px solid ${C.border}`, borderRadius: f(20), padding: f(20), width: `min(${f(380)}px, 100%)`, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: f(14) }}>
         <div style={{ fontSize: f(18), fontWeight: 800 }}>Undo “{pending.chore.title}”?</div>
         <div style={{ fontSize: f(14), color: C.muted }}>
           Done by {byName}.

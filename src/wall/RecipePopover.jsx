@@ -1,4 +1,5 @@
 import { QRCodeSVG } from 'qrcode.react'
+import { popIn, fadeIn } from '../lib/popIn.js'
 import { C } from '../theme.js'
 import { useDragScroll } from './dragScroll.js'
 
@@ -15,8 +16,9 @@ export default function RecipePopover({ meal, onClose }) {
   const date = new Date(meal.meal_date + 'T12:00:00').toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' })
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 110, padding: 40 }}>
+    <div ref={fadeIn} onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 110, padding: 40 }}>
       <div
+        ref={popIn}
         role="dialog"
         aria-label={meal.title}
         onClick={(e) => e.stopPropagation()}

@@ -1,4 +1,5 @@
 import { C } from '../theme.js'
+import { popIn, fadeIn } from '../lib/popIn.js'
 import { useMembers } from '../lib/members.jsx'
 
 // Tap an event: everything about it in one card. Full title and location (no
@@ -24,8 +25,9 @@ export default function EventPopover({ event: ev, onClose }) {
   return (
     // stopPropagation: when opened from the day pop-up, closing this card
     // shouldn't also close the pop-up underneath.
-    <div onClick={(e) => { e.stopPropagation(); onClose() }} style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 110, padding: 40 }}>
+    <div ref={fadeIn} onClick={(e) => { e.stopPropagation(); onClose() }} style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 110, padding: 40 }}>
       <div
+        ref={popIn}
         role="dialog"
         aria-label={ev.title}
         onClick={(e) => e.stopPropagation()}

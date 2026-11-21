@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { popIn, fadeIn } from '../lib/popIn.js'
 import { C, eventBlock } from '../theme.js'
 import EventPopover from './EventPopover.jsx'
 import { useMembers } from '../lib/members.jsx'
@@ -17,6 +18,7 @@ export default function DayPopover({ day, events, onClose }) {
 
   return (
     <div
+      ref={fadeIn}
       onClick={onClose}
       style={{
         position: 'fixed',
@@ -30,6 +32,7 @@ export default function DayPopover({ day, events, onClose }) {
       }}
     >
       <div
+        ref={popIn}
         onClick={(e) => e.stopPropagation()}
         style={{
           background: C.card,

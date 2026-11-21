@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { popIn, fadeIn } from '../lib/popIn.js'
 import Avatar from '../components/Avatar.jsx'
 import { C, card } from '../theme.js'
 import Icon from '../components/Icon.jsx'
@@ -58,8 +59,8 @@ export default function PetBlock({ chores, logs }) {
       {actions.ui}
 
       {asking && (
-        <div onClick={() => setAsking(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 130, padding: 40 }}>
-          <div role="dialog" aria-label="Who did it?" onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `2px solid ${C.border}`, borderRadius: 32, padding: 36, width: 'min(760px, 92%)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div ref={fadeIn} onClick={() => setAsking(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 130, padding: 40 }}>
+          <div ref={popIn} role="dialog" aria-label="Who did it?" onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `2px solid ${C.border}`, borderRadius: 32, padding: 36, width: 'min(760px, 92%)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 24 }}>
             <div style={{ fontSize: 34, fontWeight: 800 }}>Who did “{asking.title}”?</div>
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
               {(assigneesOf(asking).length ? members.filter((m) => assigneesOf(asking).includes(m.key)) : members).map((m) => (

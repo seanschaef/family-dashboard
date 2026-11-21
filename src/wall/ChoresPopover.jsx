@@ -1,4 +1,5 @@
 import { C } from '../theme.js'
+import { popIn, fadeIn } from '../lib/popIn.js'
 import Avatar from '../components/Avatar.jsx'
 import { LiveCheck } from './parts.jsx'
 import { todayISO } from '../lib/db.js'
@@ -22,10 +23,12 @@ export default function ChoresPopover({ person, chores, logs, onClose }) {
 
   return (
     <div
+      ref={fadeIn}
       onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 40 }}
     >
       <div
+        ref={popIn}
         role="dialog"
         aria-label={heading}
         onClick={(e) => e.stopPropagation()}
