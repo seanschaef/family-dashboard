@@ -22,7 +22,7 @@ export default function RecipePopover({ meal, onClose }) {
         role="dialog"
         aria-label={meal.title}
         onClick={(e) => e.stopPropagation()}
-        style={{ background: C.card, borderRadius: 28, border: `2px solid ${C.border}`, borderTop: `12px solid ${C.meals}`, width: 'min(920px, 94%)', maxHeight: '86%', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}
+        style={{ background: C.card, borderRadius: 28, border: `2px solid ${C.border}`, borderTop: `5px solid ${C.meals}`, width: 'min(920px, 94%)', maxHeight: '86%', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}
       >
         <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexShrink: 0 }}>
           {r.image && <img src={r.image} alt="" style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: 18, flexShrink: 0 }} />}

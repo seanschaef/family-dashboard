@@ -31,7 +31,7 @@ export default function EventPopover({ event: ev, onClose }) {
         role="dialog"
         aria-label={ev.title}
         onClick={(e) => e.stopPropagation()}
-        style={{ background: C.card, borderRadius: 28, border: `2px solid ${C.border}`, borderTop: `12px solid ${colorFor(ev)}`, width: 'min(680px, 92%)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}
+        style={{ background: C.card, borderRadius: 28, border: `2px solid ${C.border}`, borderTop: `5px solid ${colorFor(ev)}`, width: 'min(680px, 92%)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
           <div style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.15 }}>{ev.title}</div>

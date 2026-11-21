@@ -20,7 +20,7 @@ export default function WeatherPopover({ open, onClose }) {
 
   return (
     <div ref={fadeIn} onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 110, padding: 40 }}>
-      <div ref={popIn} role="dialog" aria-label="Weather" onClick={(e) => e.stopPropagation()} style={{ background: C.card, borderRadius: 28, border: `2px solid ${C.border}`, width: 'min(920px, 94%)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 22 }}>
+      <div ref={popIn} role="dialog" aria-label="Weather" onClick={(e) => e.stopPropagation()} style={{ background: C.card, borderRadius: 28, border: `2px solid ${C.border}`, borderTop: `5px solid ${C.tealText}`, width: 'min(920px, 94%)', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 22 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 20, color: C.muted, fontWeight: 600 }}>Edmonton · now</div>
