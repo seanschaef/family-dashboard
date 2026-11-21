@@ -19,6 +19,12 @@ const HOUSES = {
 }
 
 const SHOW_MS = 6500
+// A tick this recent still gets its celebration even if it reached the wall
+// late (realtime hiccup, screen asleep). Generous so a wall clock that is a few
+// minutes off from the server does not swallow it.
+const FRESH_MS = 10 * 60000
+// Safety net if realtime silently stops: check for new ticks this often.
+const POLL_MS = 20000
 
 function Fireworks({ colors }) {
   const ref = useRef(null)
@@ -103,7 +109,7 @@ function Crest({ house }) {
 
 export default function Celebration() {
   const { members, byKey } = useMembers()
-  const { rows: logs } = useChoreLogs()
+  const { rows: logs, loading } = useChoreLogs({ pollMs: POLL_MS })
   const { rows: chores } = useChores()
   const seen = useRef(null)
   const [queue, setQueue] = useState([])
@@ -112,16 +118,19 @@ export default function Celebration() {
   // New chore_logs with points (not ones that were already there when the
   // wall loaded, and not old ones arriving late) join the queue.
   useEffect(() => {
-    if (!logs.length && seen.current === null) return
+    // Baseline = whatever is there once the first fetch finishes, even if
+    // that is nothing (otherwise the first tick of an empty table was taken
+    // as the baseline and never celebrated).
+    if (loading) return
     if (seen.current === null) {
       seen.current = new Set(logs.map((l) => l.id))
       return
     }
     const fresh = logs.filter((l) => !seen.current.has(l.id))
     fresh.forEach((l) => seen.current.add(l.id))
-    const worth = fresh.filter((l) => (l.points || 0) > 0 && (!l.created_at || Date.now() - new Date(l.created_at).getTime() < 3 * 60000))
+    const worth = fresh.filter((l) => (l.points || 0) > 0 && (!l.created_at || Math.abs(Date.now() - new Date(l.created_at).getTime()) < FRESH_MS))
     if (worth.length) setQueue((q) => [...q, ...worth])
-  }, [logs])
+  }, [logs, loading])
 
   useEffect(() => {
     if (!current) return undefined

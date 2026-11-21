@@ -24,7 +24,7 @@ export const SAMPLE_LOGS = [
 ]
 
 export const useChores = () => useFamilyTable('chores', { order: { column: 'created_at' }, sample: SAMPLE_CHORES })
-export const useChoreLogs = () => useFamilyTable('chore_logs', { sample: SAMPLE_LOGS })
+export const useChoreLogs = (opts = {}) => useFamilyTable('chore_logs', { sample: SAMPLE_LOGS, ...opts })
 
 const weekdayOf = (iso) => new Date(iso + 'T00:00:00').getDay() // 0=Sun..6=Sat
 
