@@ -9,7 +9,7 @@ import PhotoFrame from './PhotoFrame.jsx'
 import { formatLongDate, birthdayCountdown, useNow } from '../lib/time.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, pointsThisWeek, pointsBalance, useRedemptions, doneByText, doneByOther, assigneesOf } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, pointsThisWeek, pointsBalance, useRedemptions, doneByText, doneByOther, assigneesOf, isTogetherChore, helpersOf } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import { usePhotoCollections, activeCollectionsFor } from '../lib/photos.js'
 import { normalizePersonLayout, personBlockHeight, personApproxHeight } from './personLayout.js'
@@ -47,7 +47,7 @@ function ChoresCard({ person, due, logs, T, points, actions }) {
       {due.length ? (
         due.map((c) => (
           <Hold key={c.id} onHold={() => actions.askUndo(c, isDone(logs, c, T, person.key), person.key)}>
-            <LiveCheck label={c.title} sub={(doneByOther(logs, c, T, person.key, nameFor) ? `${doneByOther(logs, c, T, person.key, nameFor)} did it` : doneByText(logs, c, T, nameFor)) || (assigneesOf(c).length ? undefined : 'Anyone')} done={isDone(logs, c, T, person.key)} other={!!doneByOther(logs, c, T, person.key, nameFor)} color={person.color} onToggle={() => actions.tick(c, isDone(logs, c, T, person.key), person.key)} />
+            <LiveCheck label={c.title} sub={(doneByOther(logs, c, T, person.key, nameFor) ? `${doneByOther(logs, c, T, person.key, nameFor)} did it` : isTogetherChore(c) && !isDone(logs, c, T, person.key) && helpersOf(logs, c, T).length ? `${doneByText(logs, c, T, nameFor)} · tap if you helped too` : doneByText(logs, c, T, nameFor)) || (isTogetherChore(c) ? 'Together: everyone who helps gets the points' : assigneesOf(c).length ? undefined : 'Anyone')} done={isDone(logs, c, T, person.key)} other={!!doneByOther(logs, c, T, person.key, nameFor)} color={person.color} onToggle={() => actions.tick(c, isDone(logs, c, T, person.key), person.key)} />
           </Hold>
         ))
       ) : (
@@ -92,7 +92,7 @@ function BirthdayCountdown({ person, big = true }) {
 
 // A big job tile. byOther: the name of whoever else did this shared job
 // today — the tile goes grey and says so, so it doesn't look like yours.
-function JobTile({ chore, done, color, byOther, onToggle }) {
+function JobTile({ chore, done, color, byOther, note, onToggle }) {
   if (done && byOther) {
     return (
       <button type="button" aria-label={`${chore.title}: ${byOther} did it`} onClick={onToggle}
@@ -108,6 +108,7 @@ function JobTile({ chore, done, color, byOther, onToggle }) {
       style={{ all: 'unset', flex: 1, cursor: 'pointer', background: done ? color : C.card, color: done ? '#FFFFFF' : C.ink, border: done ? 'none' : `3px dashed ${color}`, borderRadius: 24, padding: 24, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 150, boxSizing: 'border-box' }}>
       {done ? <Icon name="check" size={44} color="#FFFFFF" strokeWidth={3} /> : <span style={{ width: 44, height: 44, borderRadius: 22, border: `3px solid ${color}`, boxSizing: 'border-box' }} />}
       <span style={{ fontSize: 28, fontWeight: 700 }}>{chore.title}</span>
+      {note && <span style={{ fontSize: 20, fontWeight: 600, opacity: 0.85 }}>{note}</span>}
     </button>
   )
 }
@@ -151,7 +152,7 @@ export default function Member() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 18 }}>
             {due.map((c) => (
               <Hold key={c.id} onHold={() => actions.askUndo(c, isDone(logs, c, T, person.key), person.key)} style={{ display: 'flex' }}>
-                <JobTile chore={c} done={isDone(logs, c, T, person.key)} color={person.color} byOther={doneByOther(logs, c, T, person.key, nameFor)} onToggle={() => actions.tick(c, isDone(logs, c, T, person.key), person.key)} />
+                <JobTile chore={c} done={isDone(logs, c, T, person.key)} color={person.color} byOther={doneByOther(logs, c, T, person.key, nameFor)} note={isTogetherChore(c) ? doneByText(logs, c, T, nameFor) || 'Together: everyone who helps gets the stars' : null} onToggle={() => actions.tick(c, isDone(logs, c, T, person.key), person.key)} />
               </Hold>
             ))}
             {due.length === 0 && <div style={{ fontSize: 24, color: C.muted }}>No jobs today</div>}

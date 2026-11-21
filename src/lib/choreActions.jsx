@@ -3,7 +3,7 @@ import { C } from '../theme.js'
 import { popIn, fadeIn } from './popIn.js'
 import { useMembers } from './members.jsx'
 import { todayISO } from './db.js'
-import { toggleChore, isEachChore } from './chores.js'
+import { toggleChore, isEachChore, isTogetherChore } from './chores.js'
 import { checkPin } from './pin.js'
 
 // Ticking and un-ticking chores, with protection against "undo someone
@@ -23,7 +23,7 @@ import { checkPin } from './pin.js'
 const UNDO_GRACE_MS = 5 * 60 * 1000
 
 function findLog(logs, chore, iso, who) {
-  return logs.find((l) => l.chore_id === chore.id && l.log_date === iso && (!isEachChore(chore) || l.member_key === who))
+  return logs.find((l) => l.chore_id === chore.id && l.log_date === iso && (!(isEachChore(chore) || isTogetherChore(chore)) || l.member_key === who))
 }
 
 export function useChoreActions({ logs, pageKey = null, onWall = false, scale = 1 }) {

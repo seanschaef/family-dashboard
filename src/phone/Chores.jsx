@@ -66,7 +66,7 @@ export default function Chores() {
     setEditing(c.id)
     setName(c.title)
     setWho(assigneesOf(c))
-    setMode(c.shared_mode === 'any' ? 'any' : 'each')
+    setMode(['any', 'together'].includes(c.shared_mode) ? c.shared_mode : 'each')
     setRepeat(c.repeat || 'weekly')
     setDays(c.days?.length ? [...c.days].sort((a, b) => a - b) : [1, 3, 5])
     setPoints(c.points || 0)
@@ -92,6 +92,7 @@ export default function Chores() {
 
   const whoLabel = (c) => {
     const keys = assigneesOf(c)
+    if (c.shared_mode === 'together') return `${keys.length ? keys.map(nameFor).join(', ') : 'Everyone'} (together)`
     if (!keys.length) return 'Anyone'
     const names = keys.map(nameFor)
     if (keys.length === 1) return names[0]
@@ -118,16 +119,19 @@ export default function Chores() {
           <Chip active={who.length === 0} onClick={() => setWho([])}>Anyone</Chip>
         </div>
       </Field>
-      {who.length > 1 && (
+      {who.length !== 1 && (
         <Field label="When it's shared">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Chip active={mode === 'each'} onClick={() => setMode('each')}>Each person does it</Chip>
-            <Chip active={mode === 'any'} onClick={() => setMode('any')}>Any one of them</Chip>
+            {who.length > 1 && <Chip active={mode === 'each'} onClick={() => setMode('each')}>Each person does it</Chip>}
+            <Chip active={mode === 'any' || (who.length === 0 && mode === 'each')} onClick={() => setMode('any')}>Any one of them</Chip>
+            <Chip active={mode === 'together'} onClick={() => setMode('together')}>Together</Chip>
           </div>
           <div style={{ fontSize: 13, color: C.muted }}>
-            {mode === 'each'
-              ? 'It shows on everyone’s list; each person ticks their own and earns their own points.'
-              : 'One tick clears it for everyone; points go to whoever ticked it.'}
+            {mode === 'together'
+              ? 'One job anyone can pitch in on (like shovelling): everyone who helps ticks it and gets the points.'
+              : mode === 'each' && who.length > 1
+                ? 'It shows on everyone’s list; each person ticks their own and earns their own points.'
+                : 'One tick clears it for everyone; points go to whoever ticked it.'}
           </div>
         </Field>
       )}

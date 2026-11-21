@@ -42,16 +42,33 @@ export function assigneesOf(chore) {
   return chore.member_key ? [chore.member_key] : []
 }
 
-// 'each' = every assignee ticks their own; 'any' = one tick clears it for all.
-// A chore with one (or no) assignee behaves the same either way.
-export const isEachChore = (chore) => chore.shared_mode !== 'any' && assigneesOf(chore).length > 1
+// Sharing modes:
+//   'each'     every assignee ticks their own copy
+//   'any'      one tick clears it for all (points to whoever ticked)
+//   'together' one job, anyone can pitch in: everyone who ticks it gets the
+//              points (e.g. shovelling the driveway)
+// A chore with one (or no) assignee behaves like 'any', unless it's 'together'.
+export const isTogetherChore = (chore) => chore.shared_mode === 'together'
+export const isEachChore = (chore) => !isTogetherChore(chore) && chore.shared_mode !== 'any' && assigneesOf(chore).length > 1
+// Chores where each person's tick is their own (each, together).
+const perPerson = (chore) => isEachChore(chore) || isTogetherChore(chore)
 
 // Is the chore done on a date, from a given person's point of view?
-// For an 'each' chore that means *their* tick; otherwise any tick counts.
+// For 'each' and 'together' chores that means *their* tick; otherwise (or
+// with no person given) any tick counts.
 export function isDone(logs, chore, iso, memberKey = null) {
   return logs.some(
-    (l) => l.chore_id === chore.id && l.log_date === iso && (!isEachChore(chore) || !memberKey || l.member_key === memberKey),
+    (l) => l.chore_id === chore.id && l.log_date === iso && (!perPerson(chore) || !memberKey || l.member_key === memberKey),
   )
+}
+
+// Everyone who ticked a 'together' chore on a date (member keys).
+export function helpersOf(logs, chore, iso) {
+  return logs.filter((l) => l.chore_id === chore.id && l.log_date === iso && l.member_key).map((l) => l.member_key)
+}
+const names = (keys, nameFor) => {
+  const n = keys.map((k) => nameFor(k) || 'Someone')
+  return n.length <= 1 ? n[0] : `${n.slice(0, -1).join(', ')} & ${n[n.length - 1]}`
 }
 
 // Pass as memberKey to get the chores nobody is assigned to ("Anyone").
@@ -73,6 +90,10 @@ export function dueChores(chores, logs, memberKey, iso = todayISO()) {
 // "Done by Sean" for a chore that more than one person could tick (unassigned,
 // or shared 'any one of them'); null when not done or only one person does it.
 export function doneByText(logs, chore, iso, nameFor) {
+  if (isTogetherChore(chore)) {
+    const h = helpersOf(logs, chore, iso)
+    return h.length ? `${names(h, nameFor)} helped` : null
+  }
   const keys = assigneesOf(chore)
   const shared = keys.length === 0 || (keys.length > 1 && !isEachChore(chore))
   if (!shared) return null
@@ -85,6 +106,9 @@ export function doneByText(logs, chore, iso, nameFor) {
 // so a person's own list can show "Lewis did it" instead of looking like
 // they did it. Null if not done, done by this person, or not a shared chore.
 export function doneByOther(logs, chore, iso, memberKey, nameFor) {
+  // 'together': others pitching in doesn't tick it off for you (you can still
+  // help), so this is only for 'any' / unassigned chores.
+  if (isTogetherChore(chore)) return null
   const keys = assigneesOf(chore)
   const shared = keys.length === 0 || (keys.length > 1 && !isEachChore(chore))
   if (!shared) return null
@@ -105,7 +129,7 @@ function choreFields({ member_keys, shared_mode, title, repeat, days, points, ta
   return {
     member_key: keys[0] || null,
     member_keys: keys,
-    shared_mode: shared_mode === 'any' ? 'any' : 'each',
+    shared_mode: ['any', 'together'].includes(shared_mode) ? shared_mode : 'each',
     title,
     repeat,
     days: repeat === 'weekly' ? days || [] : [],
@@ -123,8 +147,8 @@ export const removeChore = (id) => deleteRow('chores', id)
 // tick is set (credited to whoever tapped) or cleared for everyone.
 export async function toggleChore(chore, iso, done, memberKey = null) {
   const who = memberKey || (assigneesOf(chore).length === 1 ? assigneesOf(chore)[0] : null)
-  if (isEachChore(chore)) {
-    if (!who) return // an 'each' chore needs to know whose tick this is
+  if (perPerson(chore)) {
+    if (!who) return // needs to know whose tick this is
     if (done) await deleteWhere('chore_logs', { chore_id: chore.id, log_date: iso, member_key: who })
     else await insertRow('chore_logs', { chore_id: chore.id, member_key: who, log_date: iso, points: chore.points || 0 })
     return
