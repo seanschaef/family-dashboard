@@ -91,6 +91,16 @@ function MemberRow({ m, canEdit, isAdmin, onPatch, onRemove }) {
             <span style={label}>Birthday</span>
             <input type="date" aria-label="Birthday" value={m.birthday || ''} onChange={(e) => onPatch({ birthday: e.target.value || null })} style={{ ...input, width: 'auto' }} />
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={label}>House</span>
+            <select aria-label="House" value={m.house || ''} onChange={(e) => onPatch({ house: e.target.value || null })} style={{ ...input, width: 'auto' }}>
+              <option value="">None (uses their name)</option>
+              <option value="gryffindor">Gryffindor</option>
+              <option value="hufflepuff">Hufflepuff</option>
+              <option value="ravenclaw">Ravenclaw</option>
+              <option value="slytherin">Slytherin</option>
+            </select>
+          </div>
         </>
       )}
     </div>

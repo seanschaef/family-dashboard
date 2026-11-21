@@ -12,3 +12,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .supabase
+
+# House crests: copyrighted artwork, kept only on the wall (never committed)
+public/crests/

@@ -34,7 +34,7 @@ export function MembersProvider({ children }) {
     let active = true
     async function load() {
       const [{ data, error }, fam, { data: userData }] = await Promise.all([
-        supabase.from('members').select('id, key, name, color, role, birthday, sort_order, widget_type, widget_config, page_layout, goal_reward_id, avatar').order('sort_order', { ascending: true }),
+        supabase.from('members').select('id, key, name, color, role, birthday, sort_order, widget_type, widget_config, page_layout, goal_reward_id, avatar, house').order('sort_order', { ascending: true }),
         supabase.from('families').select('id, name, pet_name, wall_layout, parent_pin_hash, waste_schedule').limit(1).maybeSingle(),
         supabase.auth.getUser(),
       ])

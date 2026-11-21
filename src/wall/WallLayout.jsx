@@ -4,6 +4,7 @@ import WallNav from '../components/WallNav.jsx'
 import { C } from '../theme.js'
 import { useWallNightTheme } from '../lib/theme.jsx'
 import NightScreen from './NightScreen.jsx'
+import Celebration from './Celebration.jsx'
 
 const FRAME_W = 1080
 const FRAME_H = 1920
@@ -101,6 +102,8 @@ export default function WallLayout() {
           <div style={{ flexShrink: 0 }}>
             <WallNav />
           </div>
+          {/* Points celebration: on top of every wall page. */}
+          <Celebration />
         </div>
       </div>
       <NightScreen />
