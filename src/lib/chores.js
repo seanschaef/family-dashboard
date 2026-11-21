@@ -1,4 +1,4 @@
-import { useFamilyTable, insertRow, updateRow, deleteRow, deleteWhere, todayISO } from './db.js'
+import { useFamilyTable, insertRow, updateRow, deleteRow, deleteWhere, todayISO, daysAgoISO } from './db.js'
 
 // Sample chores + today's completion logs (unconfigured demo). Shaped like DB
 // rows so the same render code serves both live and sample.
@@ -23,8 +23,29 @@ export const SAMPLE_LOGS = [
   { id: 'l9', chore_id: 'c9', member_key: 'm4', log_date: T, points: 5 },
 ]
 
-export const useChores = () => useFamilyTable('chores', { order: { column: 'created_at' }, sample: SAMPLE_CHORES })
-export const useChoreLogs = (opts = {}) => useFamilyTable('chore_logs', { sample: SAMPLE_LOGS, ...opts })
+// done_count (how many logs a chore has ever had) lets a 'once' chore stay
+// done even though only recent logs are loaded below.
+export const useChores = () =>
+  useFamilyTable('chores', { select: '*,done:chore_logs(count)', order: { column: 'created_at' }, sample: SAMPLE_CHORES, watch: ['chores', 'chore_logs'] })
+
+// Only recent logs: every screen works off today or this week. Lifetime
+// points come from usePointTotals, so the app never needs the full history
+// (which would hit the 1,000-row cap and quietly go wrong).
+export const LOG_DAYS = 14
+const recentLogs = (q) => q.gte('log_date', daysAgoISO(LOG_DAYS)).order('created_at', { ascending: false })
+export const useChoreLogs = (opts = {}) => useFamilyTable('chore_logs', { sample: SAMPLE_LOGS, query: recentLogs, ...opts })
+
+// Lifetime earned / spent / balance per member, summed in the database
+// (view public.member_points).
+const SAMPLE_TOTALS = Object.values(
+  SAMPLE_LOGS.reduce((acc, l) => {
+    const t = (acc[l.member_key] ||= { member_key: l.member_key, earned: 0, spent: 0, balance: 0 })
+    t.earned += l.points || 0
+    t.balance += l.points || 0
+    return acc
+  }, {}),
+)
+export const usePointTotals = () => useFamilyTable('member_points', { sample: SAMPLE_TOTALS, watch: ['chore_logs', 'reward_redemptions'] })
 
 const weekdayOf = (iso) => new Date(iso + 'T00:00:00').getDay() // 0=Sun..6=Sat
 
@@ -33,7 +54,7 @@ export function isDueOn(chore, iso, logs) {
   if (chore.repeat === 'daily') return true
   if (chore.repeat === 'weekly') return (chore.days || []).includes(weekdayOf(iso))
   // once: due until it has ever been completed
-  return !logs.some((l) => l.chore_id === chore.id)
+  return !(chore.done?.[0]?.count > 0) && !logs.some((l) => l.chore_id === chore.id)
 }
 
 // Everyone a chore is assigned to. Older rows only have member_key.
@@ -173,16 +194,15 @@ export const removeReward = (id) => deleteRow('rewards', id)
 // ---------- spending points ----------
 // A person's balance = every point they've earned minus what they've spent on
 // rewards. Spending is approved by a parent (see phone/Rewards.jsx).
-export const useRedemptions = () => useFamilyTable('reward_redemptions', { order: { column: 'created_at', ascending: false }, sample: [] })
+// Recent history only (for the list on the phone); balances use usePointTotals.
+export const useRedemptions = () =>
+  useFamilyTable('reward_redemptions', { order: { column: 'created_at', ascending: false }, sample: [], query: (q) => q.limit(100) })
 export const redeemReward = ({ member_key, reward, approved_by }) =>
   insertRow('reward_redemptions', { member_key, reward_id: reward.id, title: reward.title, cost: reward.cost || 0, approved_by: approved_by || null })
 export const undoRedemption = (id) => deleteRow('reward_redemptions', id)
 
-export const pointsEarned = (logs, memberKey) =>
-  logs.filter((l) => l.member_key === memberKey).reduce((sum, l) => sum + (l.points || 0), 0)
-export const pointsSpent = (redemptions, memberKey) =>
-  redemptions.filter((r) => r.member_key === memberKey).reduce((sum, r) => sum + (r.cost || 0), 0)
-export const pointsBalance = (logs, redemptions, memberKey) => pointsEarned(logs, memberKey) - pointsSpent(redemptions, memberKey)
+// Points left to spend, from usePointTotals rows.
+export const pointsBalance = (totals, memberKey) => totals.find((t) => t.member_key === memberKey)?.balance || 0
 
 // Points a member has earned this week (Mon..Sun containing today).
 export function pointsThisWeek(logs, memberKey) {

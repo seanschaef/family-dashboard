@@ -9,7 +9,7 @@ import PhotoFrame from './PhotoFrame.jsx'
 import { formatLongDate, birthdayCountdown, useNow } from '../lib/time.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, pointsThisWeek, pointsBalance, useRedemptions, doneByText, doneByOther, assigneesOf, isTogetherChore, helpersOf } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, pointsThisWeek, pointsBalance, usePointTotals, doneByText, doneByOther, assigneesOf, isTogetherChore, helpersOf } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import { usePhotoCollections, activeCollectionsFor } from '../lib/photos.js'
 import { normalizePersonLayout, personBlockHeight, personApproxHeight } from './personLayout.js'
@@ -123,13 +123,13 @@ export default function Member() {
   const { rows: photoCollections } = usePhotoCollections()
   const person = byKey(memberKey)
   const jobsDrag = useDragScroll()
-  const { rows: redemptions } = useRedemptions()
+  const { rows: totals } = usePointTotals()
   const actions = useChoreActions({ logs, pageKey: memberKey, onWall: true, scale: 2 })
   if (!person) return null
 
   const due = dueChores(chores, logs, person.key, T).sort((a, b) => a.title.localeCompare(b.title))
   const myReminders = reminders.filter((r) => r.member_key === person.key)
-  const points = { week: pointsThisWeek(logs, person.key), balance: pointsBalance(logs, redemptions, person.key) }
+  const points = { week: pointsThisWeek(logs, person.key), balance: pointsBalance(totals, person.key) }
   const hasPhotos = activeCollectionsFor(photoCollections, { memberKey: person.key }).length > 0
   const reminderTitle = person.role === 'teen' ? 'Homework and Reminders' : person.role === 'child' ? 'Reminders' : 'My Reminders'
 

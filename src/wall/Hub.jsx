@@ -18,7 +18,7 @@ import { useImportantDates } from '../lib/dates.js'
 import { useWeather } from '../lib/weather.js'
 import { useMembers } from '../lib/members.jsx'
 import { todayISO } from '../lib/db.js'
-import { useChores, useChoreLogs, dueChores, isDone, useRedemptions, pointsBalance, pointsThisWeek } from '../lib/chores.js'
+import { useChores, useChoreLogs, dueChores, isDone, usePointTotals, pointsBalance, pointsThisWeek } from '../lib/chores.js'
 import { useReminders } from '../lib/household.js'
 import PetBlock from './PetBlock.jsx'
 import InkBoard from '../components/InkBoard.jsx'
@@ -37,7 +37,7 @@ export default function Hub() {
   const { rows: logs } = useChoreLogs()
   const { rows: reminders } = useReminders()
   const { rows: meals } = useMeals()
-  const { rows: redemptions } = useRedemptions()
+  const { rows: totals } = usePointTotals()
 
   const familyReminders = reminders.filter((r) => r.member_key === null && !r.done)
   const dinner = mealFor(meals, T)?.title
@@ -108,7 +108,7 @@ export default function Hub() {
       <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>Points</div>
         {[...members]
-          .map((m) => ({ m, total: pointsBalance(logs, redemptions, m.key), week: pointsThisWeek(logs, m.key) }))
+          .map((m) => ({ m, total: pointsBalance(totals, m.key), week: pointsThisWeek(logs, m.key) }))
           .sort((a, b) => b.total - a.total)
           .map(({ m, total, week }) => (
             <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 24, minWidth: 0 }}>

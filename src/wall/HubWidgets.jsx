@@ -6,7 +6,7 @@ import { useMembers } from '../lib/members.jsx'
 import { useNow, timeOfDay } from '../lib/time.js'
 import { todayISO, useFamilyTable, insertRow } from '../lib/db.js'
 import { useEvents } from '../lib/eventsource.js'
-import { useChoreLogs, useRewards, useRedemptions, pointsBalance, pointsThisWeek } from '../lib/chores.js'
+import { useChoreLogs, useRewards, usePointTotals, pointsBalance, pointsThisWeek } from '../lib/chores.js'
 import { useMeals, mealFor, weekDates, useGroceries, toggleGrocery } from '../lib/kitchen.js'
 import { useNotes, liveNotes, noteAge } from '../lib/notes.js'
 import { upcomingPickups, dayWord } from '../lib/waste.js'
@@ -60,11 +60,10 @@ function Bar({ value, max, color }) {
 // else the next reward they can't afford yet.
 export function GoalsBlock() {
   const { members } = useMembers()
-  const { rows: logs } = useChoreLogs()
   const { rows: rewards } = useRewards()
-  const { rows: redemptions } = useRedemptions()
+  const { rows: totals } = usePointTotals()
   const rows = members.map((m) => {
-    const balance = pointsBalance(logs, redemptions, m.key)
+    const balance = pointsBalance(totals, m.key)
     const chosen = rewards.find((r) => r.id === m.goal_reward_id)
     const goal = chosen || [...rewards].sort((a, b) => (a.cost || 0) - (b.cost || 0)).find((r) => (r.cost || 0) > balance)
     return { m, balance, goal, chosen: !!chosen }

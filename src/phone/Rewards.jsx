@@ -7,7 +7,7 @@ import { useMembers } from '../lib/members.jsx'
 import { checkPin } from '../lib/pin.js'
 import {
   useChoreLogs, pointsThisWeek, pointsBalance, useRewards, addReward, removeReward,
-  useRedemptions, redeemReward, undoRedemption,
+  useRedemptions, usePointTotals, redeemReward, undoRedemption,
 } from '../lib/chores.js'
 
 // Points and rewards. Everyone (parents included) has a running balance:
@@ -92,12 +92,13 @@ export default function Rewards() {
   const { rows: logs } = useChoreLogs()
   const { rows: rewards } = useRewards()
   const { rows: redemptions } = useRedemptions()
+  const { rows: totals } = usePointTotals()
   const [title, setTitle] = useState('')
   const [cost, setCost] = useState('')
   const [redeeming, setRedeeming] = useState(null)
   const [msg, setMsg] = useState('')
 
-  const balanceOf = (key) => pointsBalance(logs, redemptions, key)
+  const balanceOf = (key) => pointsBalance(totals, key)
 
   async function add(e) {
     e.preventDefault()
