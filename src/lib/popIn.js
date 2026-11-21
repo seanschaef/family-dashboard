@@ -28,12 +28,12 @@ export function popIn(el) {
       { transform: 'translate(0, 0) scale(1.03)', opacity: 1, offset: 0.75 },
       { transform: 'none', opacity: 1 },
     ],
-    { duration: 380, easing: 'cubic-bezier(.2,.8,.3,1)' },
+    { duration: 650, easing: 'cubic-bezier(.22,.8,.3,1)' },
   )
 }
 
 export function fadeIn(el) {
   if (!el || el.dataset.faded || !el.animate) return
   el.dataset.faded = '1'
-  el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' })
+  el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350, easing: 'ease-out' })
 }
