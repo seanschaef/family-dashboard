@@ -40,7 +40,18 @@ const COMIC_WORDS = ['KAPOW!', 'BAM!', 'WHAM!', 'ZAP!', 'BOOM!', 'POW!', 'SHAZAM
 const SHOW_MS = 6500
 
 // Read at page load: the wall's router may tidy the address before members load.
-const DEMO = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('celebrate') : null
+// Kept in sessionStorage too, so it survives the wall reloading itself onto a
+// freshly deployed version (the service worker does that once after an update).
+function readDemo() {
+  try {
+    const q = new URLSearchParams(window.location.search).get('celebrate')
+    if (q) sessionStorage.setItem('celebrate', q)
+    return sessionStorage.getItem('celebrate')
+  } catch {
+    return null
+  }
+}
+const DEMO = typeof window !== 'undefined' ? readDemo() : null
 let crestList = null // loaded once from /crests/index.json
 let lastStyle = null
 const pick = (a) => a[Math.floor(Math.random() * a.length)]
@@ -606,6 +617,7 @@ export default function Celebration() {
     const want = DEMO
     if (!want) return undefined
     demoDone.current = true
+    try { sessionStorage.removeItem('celebrate') } catch { /* private mode */ }
     const people = members.filter((m) => m.house)
     const m = pick(people.length ? people : members)
     const t = setTimeout(() => setQueue((q) => [...q, { id: `demo-${Date.now()}`, member_key: m.key, points: 10, chore_title: 'Preview', style: STYLES.includes(want) ? want : null }]), 4000)
