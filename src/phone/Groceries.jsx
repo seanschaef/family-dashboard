@@ -6,7 +6,8 @@ import { useMembers } from '../lib/members.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import {
   useGroceries, addGrocery, toggleGrocery, clearCheckedGroceries, updateGrocerySection,
-  GROCERY_SECTIONS, useStaples, addStaple, removeStaple, parseQty, setGroceryQty, removeGrocery,
+  GROCERY_SECTIONS, useStaples, addStaple, removeStaple, parseItem, setGroceryQty, removeGrocery,
+  setGroceryAmount, groceryText,
 } from '../lib/kitchen.js'
 import { useLongPress } from '../lib/longPress.js'
 import ConfirmSheet from '../components/ConfirmSheet.jsx'
@@ -19,7 +20,7 @@ function OrderBar({ items }) {
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
   const open = items.filter((it) => !it.done)
-  const text = open.map((it) => `${it.label}${(it.qty || 1) > 1 ? ` x${it.qty}` : ''}`).join(String.fromCharCode(10))
+  const text = open.map((it) => groceryText(it, 'x')).join(String.fromCharCode(10))
 
   async function instacart() {
     if (!isSupabaseConfigured || !open.length) return
@@ -69,7 +70,15 @@ const stepBtn = { all: 'unset', cursor: 'pointer', width: 30, height: 30, border
 function GroceryRow({ it, nameFor, onAskRemove }) {
   const lp = useLongPress(() => onAskRemove(it))
   const qty = it.qty || 1
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const save = (e) => {
+    e?.preventDefault()
+    setEditing(false)
+    if ((draft.trim() || null) !== (it.amount || null)) setGroceryAmount(it.id, draft)
+  }
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', minHeight: 44 }}>
       <button type="button" {...lp} aria-label={`${it.label}${qty > 1 ? `, ${qty}` : ''}, ${it.done ? 'done' : 'not done'}. Press and hold to remove.`} aria-pressed={it.done} onClick={() => toggleGrocery(it.id, !it.done)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'center', flexGrow: 1, minWidth: 0, WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}>
         <span style={{ width: 28, height: 28, flexShrink: 0, borderRadius: 14, boxSizing: 'border-box', background: it.done ? C.meals : 'transparent', border: it.done ? 'none' : `2px solid ${C.meals}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -78,6 +87,7 @@ function GroceryRow({ it, nameFor, onAskRemove }) {
         <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <span style={{ fontSize: 17, color: it.done ? C.muted : C.ink, textDecoration: it.done ? 'line-through' : 'none' }}>
             {it.label}
+            {it.amount && <span style={{ color: C.muted, marginLeft: 6 }}>{it.amount}</span>}
             {qty > 1 && <b style={{ color: C.tealText, marginLeft: 6 }}>×{qty}</b>}
           </span>
           {(it.source === 'meal' || it.added_by_member_key) && (
@@ -85,6 +95,11 @@ function GroceryRow({ it, nameFor, onAskRemove }) {
           )}
         </span>
       </button>
+      {!it.done && (
+        <button type="button" aria-label={it.amount ? `Change amount for ${it.label}` : `Add an amount for ${it.label}`} onClick={() => { setDraft(it.amount || ''); setEditing((v) => !v) }} style={{ all: 'unset', cursor: 'pointer', flexShrink: 0, fontSize: 12, fontWeight: 700, color: C.tealText, border: `2px solid ${C.border}`, borderRadius: 8, padding: '5px 7px' }}>
+          {it.amount ? 'Amt' : '+ Amt'}
+        </button>
+      )}
       {!it.done && (
         <span style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
           <button type="button" aria-label={`Fewer ${it.label}`} disabled={qty <= 1} onClick={() => setGroceryQty(it.id, qty - 1)} style={{ ...stepBtn, opacity: qty <= 1 ? 0.35 : 1 }}>−</button>
@@ -96,6 +111,34 @@ function GroceryRow({ it, nameFor, onAskRemove }) {
         {GROCERY_SECTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
       </select>
     </div>
+    {editing && (
+      <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '4px 0 8px 40px' }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input autoFocus aria-label={`Amount for ${it.label}`} placeholder="2 L, 500 g, 1 dozen…" value={draft} maxLength={30} onChange={(e) => setDraft(e.target.value)} style={{ flexGrow: 1, minWidth: 0, font: 'inherit', fontSize: 15, padding: '8px 10px', borderRadius: 10, border: `2px solid ${C.border}`, background: C.card, color: C.ink }} />
+          <button type="submit" style={{ all: 'unset', cursor: 'pointer', background: C.meals, color: '#FFF', borderRadius: 10, padding: '8px 14px', fontSize: 14, fontWeight: 700 }}>Save</button>
+          {it.amount && <button type="button" onClick={() => { setEditing(false); setGroceryAmount(it.id, null) }} style={{ all: 'unset', cursor: 'pointer', color: C.muted, fontSize: 14, fontWeight: 700, padding: '8px 4px' }}>Clear</button>}
+        </div>
+        <UnitChips value={draft} onChange={setDraft} />
+      </form>
+    )}
+    </div>
+  )
+}
+
+// Quick unit buttons: tap one to put the unit after the number you typed
+// (or after a 1 if you haven't typed one).
+const UNITS = ['g', 'kg', 'mL', 'L', 'lb', 'dozen', 'pack', 'bag', 'can', 'bottle']
+function UnitChips({ value, onChange }) {
+  const pick = (u) => {
+    const num = (String(value).match(/^\s*(\d+(?:[.,]\d+)?|\d+\/\d+)/) || [])[1] || '1'
+    onChange(`${num} ${u}`)
+  }
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {UNITS.map((u) => (
+        <button key={u} type="button" onClick={() => pick(u)} style={{ all: 'unset', cursor: 'pointer', background: C.cream, border: `2px solid ${C.border}`, borderRadius: 999, padding: '4px 10px', fontSize: 13, fontWeight: 700, color: C.ink }}>{u}</button>
+      ))}
+    </div>
   )
 }
 
@@ -105,6 +148,7 @@ export default function Groceries() {
   const { rows: items } = useGroceries()
   const { rows: staples } = useStaples()
   const [text, setText] = useState('')
+  const [amount, setAmount] = useState('')
   const [editStaples, setEditStaples] = useState(false)
   const [newStaple, setNewStaple] = useState('')
   const [removing, setRemoving] = useState(null)
@@ -120,10 +164,11 @@ export default function Groceries() {
 
   async function add(e) {
     e.preventDefault()
-    const { label, qty } = parseQty(text)
-    if (!label) return
+    const parsed = parseItem(text)
+    if (!parsed.label) return
     setText('')
-    await addGrocery({ label, qty, added_by_member_key: me?.key, source: 'manual' })
+    setAmount('')
+    await addGrocery({ label: parsed.label, qty: parsed.qty, amount: amount.trim() || parsed.amount, added_by_member_key: me?.key, source: 'manual' })
   }
   async function saveStaple(e) {
     e.preventDefault()
@@ -138,11 +183,15 @@ export default function Groceries() {
     <>
       <PhoneHeader title="Groceries" subtitle={`${openCount} items · synced`} />
 
-      <form onSubmit={add} style={{ display: 'flex', gap: 8 }}>
-        <input aria-label="Add an item" type="text" placeholder="Add milk, 2 apples, eggs x3…" value={text} onChange={(e) => setText(e.target.value)} style={input} />
-        <button type="submit" aria-label="Add item" style={{ all: 'unset', cursor: 'pointer', width: 48, height: 48, borderRadius: 12, background: C.meals, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Icon name="check" size={22} color="#FFFFFF" strokeWidth={3} />
-        </button>
+      <form onSubmit={add} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input aria-label="Add an item" type="text" placeholder="Add milk, 2 apples, 2L milk…" value={text} onChange={(e) => setText(e.target.value)} style={input} />
+          <button type="submit" aria-label="Add item" style={{ all: 'unset', cursor: 'pointer', width: 48, height: 48, borderRadius: 12, background: C.meals, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Icon name="check" size={22} color="#FFFFFF" strokeWidth={3} />
+          </button>
+        </div>
+        <input aria-label="Amount (optional)" type="text" placeholder="Amount (optional): 2 L, 500 g, 1 dozen" value={amount} maxLength={30} onChange={(e) => setAmount(e.target.value)} style={{ ...input, fontSize: 15, padding: '9px 12px' }} />
+        {(amount || text) && <UnitChips value={amount} onChange={setAmount} />}
       </form>
 
       {/* Recurring staples: tap to add to the list */}

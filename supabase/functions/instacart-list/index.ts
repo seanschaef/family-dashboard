@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
   if (!key) return json({ error: 'Instacart isn’t set up yet (no API key).', setup: true }, 200)
   const base = Deno.env.get('INSTACART_ENV') === 'development' ? 'https://connect.dev.instacart.tools' : 'https://connect.instacart.com'
 
-  const { data: items, error } = await db.from('grocery_items').select('label, qty, done').eq('done', false).order('created_at')
+  const { data: items, error } = await db.from('grocery_items').select('label, qty, amount, done').eq('done', false).order('created_at')
   if (error) return json({ error: error.message }, 500)
   if (!items?.length) return json({ error: 'The grocery list is empty.' }, 200)
 
@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     expires_in: 30,
     line_items: items.slice(0, 200).map((g) => ({
       name: String(g.label).slice(0, 100),
-      display_text: g.qty > 1 ? `${g.label} × ${g.qty}` : g.label,
+      display_text: `${g.label}${g.amount ? ` (${g.amount})` : ''}${g.qty > 1 ? ` × ${g.qty}` : ''}`,
       line_item_measurements: [{ quantity: Math.max(1, g.qty || 1), unit: 'each' }],
     })),
     ...(linkback ? { landing_page_configuration: { partner_linkback_url: linkback } } : {}),

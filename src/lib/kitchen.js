@@ -166,26 +166,64 @@ export function parseQty(text) {
   return { label: t, qty: 1 }
 }
 
+// Amounts: a volume, weight or size typed with the item, e.g. "2L milk",
+// "500 g butter", "1 dozen eggs", "flour 2 kg". Units are tidied ("2l" -> "2 L").
+const UNIT = 'kg|g|mg|ml|l|litres?|liters?|lbs?|oz|dozen|doz|packs?|pk|bags?|cans?|bottles?|boxes|box|bunch(?:es)?|jars?|loaf|loaves|cartons?|tubs?|blocks?|heads?'
+const NUM = '\\d+(?:[.,]\\d+)?|\\d+\\/\\d+|½|¼'
+const LEAD_AMOUNT = new RegExp(`^(${NUM})\\s*(${UNIT})\\.?\\s+(?:of\\s+)?(.+)$`, 'i')
+const TRAIL_AMOUNT = new RegExp(`^(.+?)\\s+(${NUM})\\s*(${UNIT})\\.?$`, 'i')
+const UNIT_NAMES = { ml: 'mL', l: 'L', litre: 'L', litres: 'L', liter: 'L', liters: 'L', lbs: 'lb', doz: 'dozen', pk: 'pack' }
+export function tidyAmount(num, unit) {
+  const u = String(unit).toLowerCase()
+  return `${num} ${UNIT_NAMES[u] || u}`
+}
+
+// "2L milk x2" -> { label: 'milk', amount: '2 L', qty: 2 }. Anything without a
+// unit stays a count ("3 apples" -> 3 apples).
+export function parseItem(text) {
+  let t = String(text || '').trim()
+  let qty = 1
+  const tail = t.match(/^(.+?)\s*[x×]\s*(\d{1,2})$/i)
+  if (tail) {
+    t = tail[1].trim()
+    qty = Math.min(99, Math.max(1, +tail[2]))
+  }
+  let m = t.match(LEAD_AMOUNT)
+  if (m) return { label: m[3].trim(), amount: tidyAmount(m[1], m[2]), qty }
+  m = t.match(TRAIL_AMOUNT)
+  if (m) return { label: m[1].trim(), amount: tidyAmount(m[2], m[3]), qty }
+  const counted = parseQty(t)
+  return { label: counted.label, amount: null, qty: tail ? qty : counted.qty }
+}
+
+// How an item reads in a list: "Milk (2 L) ×2".
+export function groceryText(it, times = '×') {
+  const qty = it.qty || 1
+  return `${it.label}${it.amount ? ` (${it.amount})` : ''}${qty > 1 ? ` ${times}${qty}` : ''}`
+}
+
 // Add an item. If the same item is already on the list (not checked off), its
-// quantity goes up instead of adding a second line.
-export async function addGrocery({ label, section, added_by_member_key, source, qty = 1 }) {
+// quantity goes up instead of adding a second line (and a new amount replaces
+// the old one).
+export async function addGrocery({ label, section, added_by_member_key, source, qty = 1, amount = null }) {
   const name = String(label || '').trim()
   if (!name) return null
   if (isSupabaseConfigured) {
     const { data: existing } = await supabase
       .from('grocery_items')
-      .select('id, qty')
+      .select('id, qty, amount')
       .ilike('label', name.replace(/[%_]/g, '\\$&'))
       .eq('done', false)
       .limit(1)
       .maybeSingle()
     if (existing) {
-      await updateRow('grocery_items', existing.id, { qty: Math.min(99, (existing.qty || 1) + qty) })
+      await updateRow('grocery_items', existing.id, { qty: Math.min(99, (existing.qty || 1) + qty), ...(amount ? { amount: String(amount).slice(0, 30) } : {}) })
       return existing
     }
   }
-  return insertRow('grocery_items', { label: name, qty: Math.min(99, Math.max(1, qty)), section: section || guessSection(name), added_by_member_key: added_by_member_key || null, source: source || 'manual' })
+  return insertRow('grocery_items', { label: name, qty: Math.min(99, Math.max(1, qty)), amount: amount ? String(amount).trim().slice(0, 30) || null : null, section: section || guessSection(name), added_by_member_key: added_by_member_key || null, source: source || 'manual' })
 }
+export const setGroceryAmount = (id, amount) => updateRow('grocery_items', id, { amount: String(amount || '').trim().slice(0, 30) || null })
 export const setGroceryQty = (id, qty) => updateRow('grocery_items', id, { qty: Math.min(99, Math.max(1, qty)) })
 export const removeGrocery = (id) => deleteRow('grocery_items', id)
 export const toggleGrocery = (id, done) => updateRow('grocery_items', id, { done })

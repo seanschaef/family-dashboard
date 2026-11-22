@@ -135,7 +135,7 @@ function WallGroceryItem({ it, onAskRemove }) {
   const qty = it.qty || 1
   return (
     <div {...lp}>
-      <LiveCheck label={qty > 1 ? `${it.label} ×${qty}` : it.label} sub={it.source === 'meal' ? '· Meal plan' : undefined} done={it.done} color={C.meals} size={40} fontSize={22} onToggle={() => toggleGrocery(it.id, !it.done)} />
+      <LiveCheck label={`${it.label}${it.amount ? ` · ${it.amount}` : ''}${qty > 1 ? ` ×${qty}` : ''}`} sub={it.source === 'meal' ? '· Meal plan' : undefined} done={it.done} color={C.meals} size={40} fontSize={22} onToggle={() => toggleGrocery(it.id, !it.done)} />
     </div>
   )
 }

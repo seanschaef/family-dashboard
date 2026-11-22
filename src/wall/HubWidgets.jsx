@@ -174,6 +174,7 @@ export function GroceriesBlock() {
       <span style={{ width: 22, height: 22, borderRadius: 6, border: `3px solid ${g.done ? C.tealText : C.border}`, background: g.done ? C.tealText : 'transparent', flexShrink: 0 }} />
       <span style={{ textDecoration: g.done ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
         {g.label}
+        {g.amount && <span style={{ color: C.muted }}> · {g.amount}</span>}
         {g.qty > 1 && <span style={{ color: C.muted }}> × {g.qty}</span>}
       </span>
     </button>
