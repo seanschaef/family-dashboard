@@ -595,6 +595,21 @@ export default function Celebration() {
       .catch(() => { crestList = FALLBACK_CRESTS })
   }, [])
 
+  // Preview: /wall/hub?celebrate=macho (or ?celebrate=any) plays one for a
+  // random person with a house a few seconds after the wall loads. Nothing is
+  // saved and no points are given. The kiosk can open this once (pi/kiosk.sh).
+  const demoDone = useRef(false)
+  useEffect(() => {
+    if (demoDone.current || !members.length) return undefined
+    const want = new URLSearchParams(window.location.search).get('celebrate')
+    if (!want) return undefined
+    demoDone.current = true
+    const people = members.filter((m) => m.house)
+    const m = pick(people.length ? people : members)
+    const t = setTimeout(() => setQueue((q) => [...q, { id: `demo-${Date.now()}`, member_key: m.key, points: 10, chore_title: 'Preview', style: STYLES.includes(want) ? want : null }]), 4000)
+    return () => clearTimeout(t)
+  }, [members])
+
   // New chore_logs with points (not ones already there when the wall loaded,
   // and not old ones arriving late) join the queue.
   useEffect(() => {
@@ -615,7 +630,7 @@ export default function Celebration() {
     const person = byKey(current.member_key)
     const list = (crestList || FALLBACK_CRESTS)[person?.house] || []
     // (window.__celebrationStyle forces one, for testing.)
-    const style = STYLES.includes(window.__celebrationStyle) ? window.__celebrationStyle : pick(STYLES.filter((s) => s !== lastStyle))
+    const style = current.style || (STYLES.includes(window.__celebrationStyle) ? window.__celebrationStyle : null) || pick(STYLES.filter((s) => s !== lastStyle))
     lastStyle = style
     const words = { pixel: PIXEL_WORDS, eighties: EIGHTIES_WORDS, race: RACE_WORDS, hero: HERO_WORDS, ...THEME_WORDS }[style] || COMIC_WORDS
     setLook({ id: current.id, style, crest: list.length ? pick(list) : null, word: pick(words) })

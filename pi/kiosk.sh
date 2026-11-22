@@ -50,6 +50,13 @@ sed -i 's/"exited_cleanly":false/"exited_cleanly":true/; s/"exit_type":"[^"]\+"/
 # marker so pi/display-keeper.py holds off re-sleeping it for a minute while
 # Chromium comes up. (A running Chromium is fine when the monitor sleeps.)
 touch "$PROFILE/kiosk-start"
+
+# One-time start page: if ~/.config/family-wall/kiosk-once holds a path (e.g.
+# "wall/hub?celebrate=macho" to preview a celebration), open that this time only.
+if [ -s "$PROFILE/kiosk-once" ]; then
+  URL="http://localhost:${PORT}/$(head -n1 "$PROFILE/kiosk-once")"
+  rm -f "$PROFILE/kiosk-once"
+fi
 if command -v wlopm >/dev/null 2>&1; then
   wlopm 2>/dev/null | awk '{print $1}' | while read -r o; do wlopm --on "$o" >/dev/null 2>&1 || true; done
   sleep 2
