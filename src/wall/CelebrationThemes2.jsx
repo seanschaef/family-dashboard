@@ -255,7 +255,8 @@ function Car({ color }) {
 
 export function Turbo({ t, big, line, crest, who, word }) {
   const font = { fontFamily: "'Russo One', 'Outfit', sans-serif", fontStyle: 'italic' }
-  const flameText = { backgroundImage: 'linear-gradient(180deg, #fff3b0 0%, #ffd23f 35%, #ff7b00 65%, #d00000 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', filter: 'drop-shadow(4px 4px 0 #111)' }
+  // (Padding: slanted letters lean past their box, and the flame fill stops at the box edge.)
+  const flameText = { padding: '0 0.18em', backgroundImage: 'linear-gradient(180deg, #fff3b0 0%, #ffd23f 35%, #ff7b00 65%, #d00000 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', filter: 'drop-shadow(4px 4px 0 #111)' }
   return (
     <div style={FULL}>
       {/* the loop */}
