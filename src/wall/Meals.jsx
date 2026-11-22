@@ -8,6 +8,7 @@ import { useLongPress } from '../lib/longPress.js'
 import ConfirmSheet from '../components/ConfirmSheet.jsx'
 import { useState } from 'react'
 import { useMembers } from '../lib/members.jsx'
+import { useDragScroll } from './dragScroll.js'
 
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const STAPLES = ['Milk', 'Eggs', 'Bread', 'Bananas', 'Dog food']
@@ -28,6 +29,7 @@ export default function Meals() {
   const [removing, setRemoving] = useState(null)
   const [offset, setOffset] = useState(0) // weeks from this one (plan ahead on the phone)
   const [recipe, setRecipe] = useState(null)
+  const listDrag = useDragScroll()
   const week = weekAt(offset)
   const T = todayISO()
 
@@ -79,13 +81,14 @@ export default function Meals() {
         })}
       </div>
 
-      <div style={card({ flexGrow: 1, padding: 28, display: 'flex', flexDirection: 'column', gap: 14 })}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+      {/* Fills the rest of the screen; a long list scrolls inside it (drag up/down). */}
+      <div style={card({ flex: '1 1 0', minHeight: 0, padding: 28, display: 'flex', flexDirection: 'column', gap: 14 })}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexShrink: 0 }}>
           <div style={{ fontSize: 26, fontWeight: 800 }}>Grocery List</div>
           <div style={{ fontSize: 20, color: C.muted }}>Synced to everyone's phone</div>
         </div>
 
-        <div style={{ display: 'flex', gap: 18, alignItems: 'center', background: C.tealTint, borderRadius: 18, padding: '16px 20px' }}>
+        <div style={{ display: 'flex', gap: 18, alignItems: 'center', background: C.tealTint, borderRadius: 18, padding: '16px 20px', flexShrink: 0 }}>
           <div style={{ width: 84, height: 84, flexShrink: 0, borderRadius: 10, background: '#FFFFFF', border: `2px solid ${C.border}`, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <QRCodeSVG value={GROCERY_URL} size={68} bgColor="#FFFFFF" fgColor={C.meals} />
           </div>
@@ -95,7 +98,7 @@ export default function Meals() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, flexShrink: 0 }}>
           {STAPLES.map((s) => (
             <button key={s} type="button" onClick={() => addStaple(s)} style={{ all: 'unset', cursor: 'pointer', background: C.card, border: `2px solid ${C.border}`, borderRadius: 999, padding: '12px 20px', fontSize: 21, fontWeight: 600 }}>+ {s}</button>
           ))}
@@ -104,7 +107,8 @@ export default function Meals() {
         {groceries.length === 0 ? (
           <div style={{ fontSize: 22, color: C.muted }}>List is empty.</div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '14px 24px' }}>
+          <div ref={listDrag.ref} {...listDrag.handlers} className={listDrag.className} style={{ ...listDrag.style, flex: '1 1 0', minHeight: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '14px 24px', alignContent: 'start', paddingBottom: 8 }}>
             {sections.map((name) => (
               <div key={name} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ fontSize: 19, fontWeight: 800, color: C.muted, letterSpacing: 1, textTransform: 'uppercase' }}>{name}</div>
@@ -113,6 +117,7 @@ export default function Meals() {
                 ))}
               </div>
             ))}
+          </div>
           </div>
         )}
       </div>

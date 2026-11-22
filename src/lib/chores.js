@@ -32,8 +32,9 @@ export function isDueOn(chore, iso, logs) {
   if (!chore.active) return false
   if (chore.repeat === 'daily') return true
   if (chore.repeat === 'weekly') return (chore.days || []).includes(weekdayOf(iso))
-  // once: due until it has ever been completed
-  return !logs.some((l) => l.chore_id === chore.id)
+  // once: due until it has been completed; on the day it's done it stays on
+  // the list (ticked) and drops off from the next day.
+  return !logs.some((l) => l.chore_id === chore.id && l.log_date < iso)
 }
 
 // Everyone a chore is assigned to. Older rows only have member_key.

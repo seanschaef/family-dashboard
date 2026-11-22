@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { C, MEMBER_PALETTE, FAMILY_COLOR } from '../theme.js'
+import { C, FAMILY_COLOR } from '../theme.js'
 import { PhoneHeader } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { useAuth } from '../lib/auth.jsx'
@@ -35,31 +35,42 @@ function OwnerPicker({ value, onChange, members }) {
   )
 }
 
-// Colour: "match the person" (null), a preset, or any custom colour.
-function ColorPicker({ value, onChange, autoColor }) {
-  const presets = [...MEMBER_PALETTE, FAMILY_COLOR]
-  const swatch = (col, selected) => ({ all: 'unset', cursor: 'pointer', width: 28, height: 28, borderRadius: 14, background: col, boxShadow: selected ? `0 0 0 3px ${C.cream}, 0 0 0 5px ${col}` : 'none', flexShrink: 0 })
+// Colour: "Person's colour" (null, follows the owner), any colour from the
+// picker, or one tap on a colour already in use (other calendars, people).
+function ColorPicker({ value, onChange, autoColor, used = [] }) {
+  const current = value || autoColor || '#2F6A9E'
+  const norm = (c) => String(c || '').toLowerCase()
+  const recent = [...new Set(used.filter(Boolean).map(norm))].filter((c) => c !== norm(value)).slice(0, 14)
+  const swatch = (col, selected, size = 28) => ({ all: 'unset', cursor: 'pointer', width: size, height: size, borderRadius: size / 2, background: col, boxShadow: selected ? `0 0 0 3px ${C.cream}, 0 0 0 5px ${col}` : `inset 0 0 0 1px rgba(0,0,0,0.12)`, flexShrink: 0, display: 'inline-block' })
+  const pill = (active) => ({ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: active ? C.ink : C.muted, border: `2px solid ${active ? C.ink : C.border}`, borderRadius: 999, padding: '6px 14px 6px 6px', position: 'relative', overflow: 'hidden' })
   return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-      <button type="button" onClick={() => onChange(null)} aria-pressed={!value} style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 600, color: !value ? C.ink : C.muted }}>
-        <span style={{ ...swatch(autoColor, !value), display: 'inline-block' }} />
-        Person&apos;s colour
-      </button>
-      {presets.map((col) => (
-        <button key={col} type="button" aria-label={`Colour ${col}`} aria-pressed={value === col} onClick={() => onChange(col)} style={swatch(col, value === col)} />
-      ))}
-      <label title="Custom colour" style={{ cursor: 'pointer', width: 28, height: 28, borderRadius: 14, border: `2px dashed ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', boxSizing: 'border-box' }}>
-        <span aria-hidden="true" style={{ fontSize: 16, color: C.muted, lineHeight: 1 }}>+</span>
-        <input type="color" aria-label="Custom colour" value={value || autoColor || '#2F6A9E'} onChange={(e) => onChange(e.target.value)} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
-      </label>
-      {value && !presets.includes(value) && <span style={swatch(value, true)} />}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <button type="button" onClick={() => onChange(null)} aria-pressed={!value} style={{ all: 'unset', ...pill(!value) }}>
+          <span style={swatch(autoColor || '#B0A89E', false, 24)} />
+          Person&apos;s colour
+        </button>
+        <label style={pill(!!value)}>
+          <span style={swatch(current, false, 24)} />
+          {value ? 'Custom colour' : 'Pick a colour'}
+          <input type="color" aria-label="Pick a colour" value={current} onChange={(e) => onChange(e.target.value)} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+        </label>
+      </div>
+      {recent.length > 0 && (
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: C.muted }}>Already used:</span>
+          {recent.map((col) => (
+            <button key={col} type="button" aria-label={`Use colour ${col}`} onClick={() => onChange(col)} style={swatch(col, false)} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
 const ownersOf = (cal) => (cal.person_keys?.length ? cal.person_keys : cal.person_key ? [cal.person_key] : [])
 
-function CalendarRow({ cal, members, colorFor, nameFor, onChanged }) {
+function CalendarRow({ cal, members, colorFor, nameFor, onChanged, used }) {
   const [open, setOpen] = useState(false)
   const owners = ownersOf(cal)
   const shown = cal.color || colorFor(owners[0])
@@ -85,7 +96,7 @@ function CalendarRow({ cal, members, colorFor, nameFor, onChanged }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: C.muted }}>Belongs to</div>
           <OwnerPicker value={owners} members={members} onChange={(keys) => keys.length && save({ person_keys: keys, person_key: keys[0] })} />
           <div style={{ fontSize: 13, fontWeight: 700, color: C.muted }}>Colour</div>
-          <ColorPicker value={cal.color} autoColor={colorFor(owners[0])} onChange={(color) => save({ color })} />
+          <ColorPicker value={cal.color} autoColor={colorFor(owners[0])} used={used} onChange={(color) => save({ color })} />
           {cal.kind !== 'work' && (
             <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15 }}>
               <input type="checkbox" checked={cal.show_on_hub} onChange={(e) => save({ show_on_hub: e.target.checked })} />
@@ -123,6 +134,8 @@ export default function Calendars() {
   const [color, setColor] = useState(null)
   const [kind, setKind] = useState('personal')
   const [showOnHub, setShowOnHub] = useState(true)
+  // Colours already in use: other calendars first, then each person's colour.
+  const usedColors = [...list.map((c) => c.color), ...members.map((m) => m.color)]
 
   async function refresh() {
     try {
@@ -205,7 +218,7 @@ export default function Calendars() {
         <OwnerPicker value={owners} onChange={setOwners} members={members} />
 
         <div style={label}>Colour</div>
-        <ColorPicker value={color} onChange={setColor} autoColor={colorFor(owners[0])} />
+        <ColorPicker value={color} onChange={setColor} autoColor={colorFor(owners[0])} used={usedColors} />
 
         <div style={label}>Type</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -249,7 +262,7 @@ export default function Calendars() {
       ) : list.length === 0 ? (
         <div style={{ fontSize: 15, color: C.muted }}>No calendars linked yet.</div>
       ) : (
-        list.map((cal) => <CalendarRow key={cal.id} cal={cal} members={members} colorFor={colorFor} nameFor={nameFor} onChanged={refresh} />)
+        list.map((cal) => <CalendarRow key={cal.id} cal={cal} members={members} colorFor={colorFor} nameFor={nameFor} onChanged={refresh} used={usedColors} />)
       )}
     </>
   )
