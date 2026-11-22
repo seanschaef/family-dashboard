@@ -186,7 +186,7 @@ export default function Chores() {
               </div>
             </div>
             <button type="button" onClick={() => startEdit(c)} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.tealText }}>Edit</button>
-            <button type="button" onClick={() => { if (window.confirm(`Delete “${c.title}”? Its history and points go too.`)) removeChore(c.id) }} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.danger }}>Delete</button>
+            <button type="button" onClick={() => { if (window.confirm(`Delete “${c.title}”? Points already earned for it are kept.`)) removeChore(c.id) }} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.danger }}>Delete</button>
           </div>
         ))
       )}

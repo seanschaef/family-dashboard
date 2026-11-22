@@ -148,7 +148,7 @@ export default function Celebration() {
           {pts} {pts === 1 ? 'Point' : 'Points'} for {theme.name}!
         </div>
         <div style={{ fontSize: 34, fontWeight: 700, color: theme.text, opacity: 0.85, marginTop: 6 }}>
-          {[person?.name, chore?.title].filter(Boolean).join(' · ')}
+          {[person?.name, chore?.title || current.chore_title].filter(Boolean).join(' · ')}
         </div>
       </div>
       <Fireworks key={`fx-${current.id}`} colors={theme.fx} />
