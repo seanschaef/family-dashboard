@@ -38,6 +38,10 @@ const RACE_WORDS = ['VICTORY LAP!', 'CHECKERED FLAG!', 'POLE POSITION!', 'FIRST 
 const HERO_WORDS = ['MISSION COMPLETE', 'NAILED IT', 'HERO OF THE DAY', 'BOOM. DONE.']
 const COMIC_WORDS = ['KAPOW!', 'BAM!', 'WHAM!', 'ZAP!', 'BOOM!', 'POW!', 'SHAZAM!']
 const SHOW_MS = 6500
+// A chore worth no points still gets the full show, with a cheer instead of
+// a score. {h} is the house (or the person's name if they have no house).
+const CHEERS = ['No points, but good job anyway!', 'Keep trying, {h}!', 'Work hard, {h}!', 'No points, all heart!', 'Every bit counts, {h}!', 'Way to go, {h}!']
+const CHEER_BIG = ['YAY!', 'WOO!', 'NICE!']
 
 // Read at page load: the wall's router may tidy the address before members load.
 // Kept in sessionStorage too, so it survives the wall reloading itself onto a
@@ -425,34 +429,34 @@ const KEYFRAMES = `
 @keyframes hp-late-3{0%,65%{transform:translateY(40px);opacity:0}100%{transform:translateY(0);opacity:1}}
 `
 
-function Banner({ t, pts, crest, who }) {
+function Banner({ t, big, line, crest, who }) {
   return (
     <div style={{ position: 'relative', zIndex: 2, width: 900, boxSizing: 'border-box', background: t.bg, border: `14px solid ${t.edge}`, borderRadius: 48, padding: '36px 40px 44px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center', animation: 'hp-pop 800ms cubic-bezier(.2,1.5,.4,1) both' }}>
       <div style={{ background: '#FFFFFF', borderRadius: 36, padding: 18, animation: 'hp-wobble 1.6s ease-in-out infinite' }}>
         <Crest src={crest} house={t} />
       </div>
-      <div style={{ fontSize: 210, fontWeight: 900, lineHeight: 0.95, color: t.text, marginTop: 10 }}>+{pts}</div>
-      <div style={{ fontSize: 66, fontWeight: 900, lineHeight: 1.05, color: t.text }}>{pts} {pts === 1 ? 'Point' : 'Points'} for {t.name}!</div>
+      <div style={{ fontSize: 210, fontWeight: 900, lineHeight: 0.95, color: t.text, marginTop: 10 }}>{big}</div>
+      <div style={{ fontSize: 66, fontWeight: 900, lineHeight: 1.05, color: t.text }}>{line}</div>
       <div style={{ fontSize: 34, fontWeight: 700, color: t.text, opacity: 0.85, marginTop: 6 }}>{who}</div>
     </div>
   )
 }
 
-function Lasers({ t, pts, crest, who }) {
+function Lasers({ t, big, line, crest, who }) {
   const neon = (c, blur = 30) => `0 0 ${blur / 3}px #fff, 0 0 ${blur}px ${c}, 0 0 ${blur * 2}px ${c}`
   return (
     <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center', animation: 'hp-pop 700ms ease-out both' }}>
       <div style={{ '--glow': t.fx[2], animation: 'hp-glow 1.2s ease-in-out infinite', background: 'rgba(255,255,255,0.95)', borderRadius: 32, padding: 16, border: `6px solid ${t.fx[2]}` }}>
         <Crest src={crest} house={t} size={380} />
       </div>
-      <div style={{ fontSize: 240, fontWeight: 900, lineHeight: 0.9, color: '#FFFFFF', textShadow: neon(t.fx[0], 40), animation: 'hp-flicker 1.4s linear infinite' }}>+{pts}</div>
-      <div style={{ fontSize: 70, fontWeight: 900, lineHeight: 1.05, color: '#FFFFFF', textShadow: neon(t.fx[2], 26), maxWidth: 960 }}>{pts} {pts === 1 ? 'Point' : 'Points'} for {t.name}!</div>
+      <div style={{ fontSize: 240, fontWeight: 900, lineHeight: 0.9, color: '#FFFFFF', textShadow: neon(t.fx[0], 40), animation: 'hp-flicker 1.4s linear infinite' }}>{big}</div>
+      <div style={{ fontSize: 70, fontWeight: 900, lineHeight: 1.05, color: '#FFFFFF', textShadow: neon(t.fx[2], 26), maxWidth: 960 }}>{line}</div>
       <div style={{ fontSize: 34, fontWeight: 700, color: '#FFFFFF', opacity: 0.85 }}>{who}</div>
     </div>
   )
 }
 
-function Comic({ t, pts, crest, who, word }) {
+function Comic({ t, short, crest, who, word }) {
   const comic = { fontFamily: "'Bangers', 'Outfit', sans-serif", letterSpacing: 2 }
   // A 16-point starburst.
   const burst = Array.from({ length: 32 }, (_, i) => {
@@ -472,14 +476,14 @@ function Comic({ t, pts, crest, who, word }) {
       {/* speech bubble */}
       <div style={{ position: 'relative', marginTop: 50, background: '#FFFFFF', border: '10px solid #111', borderRadius: 60, padding: '24px 46px', boxShadow: '14px 14px 0 #111', textAlign: 'center', animation: 'hp-late-1 1000ms ease-out both' }}>
         <div style={{ position: 'absolute', top: -46, left: 120, width: 0, height: 0, borderLeft: '30px solid transparent', borderRight: '30px solid transparent', borderBottom: '46px solid #111' }} />
-        <div style={{ ...comic, fontSize: 96, lineHeight: 1, color: t.bg === '#F0C419' ? '#111' : t.bg }}>+{pts} for {t.name}!</div>
+        <div style={{ ...comic, fontSize: 96, lineHeight: 1, color: t.bg === '#F0C419' ? '#111' : t.bg, maxWidth: 860 }}>{short}</div>
         <div style={{ fontSize: 30, fontWeight: 800, color: '#111', marginTop: 6 }}>{who}</div>
       </div>
     </div>
   )
 }
 
-function Magic({ t, pts, crest, who }) {
+function Magic({ t, big, line, crest, who }) {
   const serif = { fontFamily: "'Cinzel', Georgia, serif" }
   return (
     <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center' }}>
@@ -488,14 +492,14 @@ function Magic({ t, pts, crest, who }) {
           <Crest src={crest} house={t} size={400} />
         </div>
       </div>
-      <div style={{ ...serif, fontSize: 200, fontWeight: 900, lineHeight: 0.9, color: t.fx[2], textShadow: `0 0 30px ${t.fx[2]}`, animation: 'hp-late-1 1300ms ease-out both' }}>+{pts}</div>
-      <div style={{ ...serif, fontSize: 64, fontWeight: 900, lineHeight: 1.1, color: '#FFFFFF', textShadow: `0 0 20px ${t.fx[0]}`, maxWidth: 960, animation: 'hp-late-2 1600ms ease-out both' }}>{pts} {pts === 1 ? 'Point' : 'Points'} for {t.name}!</div>
+      <div style={{ ...serif, fontSize: 200, fontWeight: 900, lineHeight: 0.9, color: t.fx[2], textShadow: `0 0 30px ${t.fx[2]}`, animation: 'hp-late-1 1300ms ease-out both' }}>{big}</div>
+      <div style={{ ...serif, fontSize: 64, fontWeight: 900, lineHeight: 1.1, color: '#FFFFFF', textShadow: `0 0 20px ${t.fx[0]}`, maxWidth: 960, animation: 'hp-late-2 1600ms ease-out both' }}>{line}</div>
       <div style={{ fontSize: 34, fontWeight: 700, color: '#FFFFFF', opacity: 0.85, animation: 'hp-late-3 1800ms ease-out both' }}>{who}</div>
     </div>
   )
 }
 
-function Pixel({ t, pts, crest, who, word }) {
+function Pixel({ t, big, line, crest, who, word }) {
   const px = { fontFamily: "'Press Start 2P', monospace" }
   const blocky = (c) => `6px 0 0 ${c}, -6px 0 0 ${c}, 0 6px 0 ${c}, 0 -6px 0 ${c}, 6px 6px 0 #000`
   return (
@@ -504,14 +508,14 @@ function Pixel({ t, pts, crest, who, word }) {
       <div style={{ background: '#FFFFFF', padding: 18, border: '12px solid #000', boxShadow: `12px 12px 0 ${t.fx[0]}`, imageRendering: 'pixelated' }}>
         <Crest src={crest} house={t} size={340} style={{ imageRendering: 'pixelated' }} />
       </div>
-      <div style={{ ...px, fontSize: 150, lineHeight: 1, color: t.fx[2], textShadow: blocky('#000') }}>+{pts}</div>
-      <div style={{ ...px, fontSize: 40, lineHeight: 1.5, color: '#FFFFFF', textShadow: '5px 5px 0 #000', maxWidth: 940 }}>{pts} POINTS FOR {t.name.toUpperCase()}!</div>
+      <div style={{ ...px, fontSize: 150, lineHeight: 1, color: t.fx[2], textShadow: blocky('#000') }}>{big}</div>
+      <div style={{ ...px, fontSize: 40, lineHeight: 1.5, color: '#FFFFFF', textShadow: '5px 5px 0 #000', maxWidth: 940 }}>{line.toUpperCase()}</div>
       <div style={{ ...px, fontSize: 22, color: '#BBBBBB' }}>{who.toUpperCase()}</div>
     </div>
   )
 }
 
-function Eighties({ t, pts, crest, who, word }) {
+function Eighties({ t, big, line, crest, who, word }) {
   const chrome = { backgroundImage: 'linear-gradient(180deg, #ffffff 0%, #9fd8ff 38%, #1b1b5e 50%, #ff8ad8 62%, #ffffff 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', WebkitTextStroke: '3px #2a0845' }
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
@@ -523,15 +527,15 @@ function Eighties({ t, pts, crest, who, word }) {
         <div style={{ background: 'rgba(255,255,255,0.92)', borderRadius: 24, padding: 14, boxShadow: '0 0 40px #00e5ff, 0 0 80px #ff3cac', animation: 'hp-pop 800ms ease-out both' }}>
           <Crest src={crest} house={t} size={330} />
         </div>
-        <div style={{ fontFamily: "'Anton', 'Outfit', sans-serif", fontSize: 230, lineHeight: 1, ...chrome }}>+{pts}</div>
-        <div style={{ fontFamily: "'Anton', 'Outfit', sans-serif", fontSize: 72, lineHeight: 1.05, color: '#00e5ff', textShadow: '0 0 18px #00e5ff, 4px 4px 0 #2a0845', maxWidth: 960 }}>{pts} POINTS FOR {t.name.toUpperCase()}!</div>
+        <div style={{ fontFamily: "'Anton', 'Outfit', sans-serif", fontSize: 230, lineHeight: 1, ...chrome }}>{big}</div>
+        <div style={{ fontFamily: "'Anton', 'Outfit', sans-serif", fontSize: 72, lineHeight: 1.05, color: '#00e5ff', textShadow: '0 0 18px #00e5ff, 4px 4px 0 #2a0845', maxWidth: 960 }}>{line.toUpperCase()}</div>
         <div style={{ fontSize: 32, fontWeight: 800, color: '#ffffff' }}>{who}</div>
       </div>
     </div>
   )
 }
 
-function Race({ t, pts, crest, who, word }) {
+function Race({ t, big, line, crest, who, word }) {
   const font = { fontFamily: "'Russo One', 'Outfit', sans-serif" }
   const checks = { backgroundImage: 'conic-gradient(#111 25%, #fff 0 50%, #111 0 75%, #fff 0)', backgroundSize: '60px 60px' }
   return (
@@ -548,17 +552,17 @@ function Race({ t, pts, crest, who, word }) {
         </div>
         {/* podium */}
         <div style={{ ...font, width: 520, background: 'linear-gradient(180deg, #ffd700, #c9a400)', border: '8px solid #111', borderRadius: '18px 18px 0 0', paddingTop: 10 }}>
-          <div style={{ fontSize: 190, lineHeight: 1, color: '#111' }}>+{pts}</div>
+          <div style={{ fontSize: 190, lineHeight: 1, color: '#111' }}>{big}</div>
           <div style={{ fontSize: 34, color: '#111', paddingBottom: 12 }}>1ST PLACE</div>
         </div>
-        <div style={{ ...font, fontSize: 60, fontStyle: 'italic', color: '#FFFFFF', textShadow: '5px 5px 0 #111', maxWidth: 960 }}>{pts} Points for {t.name}!</div>
+        <div style={{ ...font, fontSize: 60, fontStyle: 'italic', color: '#FFFFFF', textShadow: '5px 5px 0 #111', maxWidth: 960 }}>{line}</div>
         <div style={{ fontSize: 32, fontWeight: 800, color: '#FFFFFF' }}>{who}</div>
       </div>
     </div>
   )
 }
 
-function Hero({ t, pts, crest, who, word }) {
+function Hero({ t, big, line, crest, who, word }) {
   const font = { fontFamily: "'Anton', 'Outfit', sans-serif", letterSpacing: 4 }
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
@@ -571,8 +575,8 @@ function Hero({ t, pts, crest, who, word }) {
           <Crest src={crest} house={t} size={360} />
         </div>
         <div style={{ ...font, fontSize: 110, color: '#FFFFFF', textShadow: '0 8px 0 #000, 0 0 30px #ff4d00', animation: 'hp-late-1 1000ms ease-out both' }}>{word}</div>
-        <div style={{ ...font, fontSize: 230, lineHeight: 0.95, color: t.fx[2], textShadow: '0 10px 0 #000' }}>+{pts}</div>
-        <div style={{ ...font, fontSize: 70, color: '#FFFFFF', textShadow: '0 6px 0 #000', maxWidth: 960 }}>{pts} POINTS FOR {t.name.toUpperCase()}</div>
+        <div style={{ ...font, fontSize: 230, lineHeight: 0.95, color: t.fx[2], textShadow: '0 10px 0 #000' }}>{big}</div>
+        <div style={{ ...font, fontSize: 70, color: '#FFFFFF', textShadow: '0 6px 0 #000', maxWidth: 960 }}>{line.toUpperCase()}</div>
         <div style={{ fontSize: 32, fontWeight: 800, color: '#FFFFFF', textShadow: '0 3px 0 #000' }}>Starring {who}</div>
       </div>
     </div>
@@ -637,7 +641,8 @@ export default function Celebration() {
     }
     const fresh = logs.filter((l) => !seen.current.has(l.id))
     fresh.forEach((l) => seen.current.add(l.id))
-    const worth = fresh.filter((l) => (l.points || 0) > 0 && (!l.created_at || Date.now() - new Date(l.created_at).getTime() < 3 * 60000))
+    // Every new tick celebrates, points or not (old ticks arriving late don't).
+    const worth = fresh.filter((l) => !l.created_at || Date.now() - new Date(l.created_at).getTime() < 3 * 60000)
     if (worth.length) setQueue((q) => [...q, ...worth])
   }, [logs])
 
@@ -650,7 +655,7 @@ export default function Celebration() {
     const style = current.style || (STYLES.includes(window.__celebrationStyle) ? window.__celebrationStyle : null) || pick(STYLES.filter((s) => s !== lastStyle))
     lastStyle = style
     const words = { pixel: PIXEL_WORDS, eighties: EIGHTIES_WORDS, race: RACE_WORDS, hero: HERO_WORDS, ...THEME_WORDS }[style] || COMIC_WORDS
-    setLook({ id: current.id, style, crest: list.length ? pick(list) : null, word: pick(words) })
+    setLook({ id: current.id, style, crest: list.length ? pick(list) : null, word: pick(words), cheer: pick(CHEERS), cheerBig: pick(CHEER_BIG) })
     const t = setTimeout(() => setQueue((q) => q.slice(1)), SHOW_MS)
     return () => clearTimeout(t)
   }, [current]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -660,7 +665,10 @@ export default function Celebration() {
   const house = person?.house ? HOUSES[person.house] : null
   const chore = chores.find((c) => c.id === current.chore_id)
   const t = house || { name: person?.name || 'the family', bg: person?.color || '#7F0909', edge: '#FFFFFF', text: '#FFFFFF', fx: [person?.color || '#F1B400', '#FFFFFF', '#F1B400', '#FFD34D', '#FFFFFF'] }
-  const props = { t, pts: current.points, crest: house ? look.crest : null, who: [person?.name, chore?.title || current.chore_title].filter(Boolean).join(' · '), word: look.word }
+  const pts = current.points || 0
+  const line = pts > 0 ? `${pts} ${pts === 1 ? 'Point' : 'Points'} for ${t.name}!` : look.cheer.replace('{h}', t.name)
+  const scores = { big: pts > 0 ? `+${pts}` : look.cheerBig, line, short: pts > 0 ? `+${pts} for ${t.name}!` : line }
+  const props = { t, ...scores, crest: house ? look.crest : null, who: [person?.name, chore?.title || current.chore_title].filter(Boolean).join(' · '), word: look.word }
   const View = { banner: Banner, lasers: Lasers, comic: Comic, magic: Magic, pixel: Pixel, eighties: Eighties, race: Race, hero: Hero, ...THEME_VIEWS }[look.style]
   const fx = look.style === 'comic' || look.style === 'eighties' ? null : look.style
   const comicBg = look.style === 'comic' ? { backgroundImage: `radial-gradient(${t.fx[1]} 22%, transparent 24%)`, backgroundSize: '34px 34px', backgroundColor: t.fx[3] } : {}

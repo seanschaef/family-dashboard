@@ -66,13 +66,12 @@ export function Crest({ src, house, size = 420, style }) {
   )
 }
 
-const label = (pts, name) => `${pts} ${pts === 1 ? 'Point' : 'Points'} for ${name}!`
 const FULL = { position: 'absolute', inset: 0, overflow: 'hidden' }
 const COLUMN = { position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }
 const goldText = { backgroundImage: 'linear-gradient(180deg, #FFF6B0 0%, #FFD700 45%, #B8860B 55%, #FFE066 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }
 
 // ---------- pro wrestling ----------
-export function Macho({ t, pts, crest, who, word }) {
+export function Macho({ t, big, line, crest, who, word }) {
   const font = { fontFamily: "'Bowlby One SC', 'Anton', sans-serif" }
   const rope = (top, c) => <div style={{ position: 'absolute', left: 0, right: 0, top, height: 28, borderRadius: 14, background: c, boxShadow: 'inset 0 -9px 0 rgba(0,0,0,0.3), 0 6px 12px rgba(0,0,0,0.4)' }} />
   const post = (side) => (
@@ -100,8 +99,8 @@ export function Macho({ t, pts, crest, who, word }) {
             <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.75) 50%, transparent 60%)', backgroundSize: '250% 100%', animation: 'th-shine 1.8s linear infinite' }} />
           </div>
         </div>
-        <div style={{ ...font, fontSize: 200, lineHeight: 1, ...goldText, WebkitTextStroke: '4px #5a2d00' }}>+{pts}</div>
-        <div style={{ ...font, fontSize: 58, lineHeight: 1.1, color: '#FFFFFF', textShadow: '5px 5px 0 #6a00b0', maxWidth: 980 }}>{label(pts, t.name)}</div>
+        <div style={{ ...font, fontSize: 200, lineHeight: 1, ...goldText, WebkitTextStroke: '4px #5a2d00' }}>{big}</div>
+        <div style={{ ...font, fontSize: 58, lineHeight: 1.1, color: '#FFFFFF', textShadow: '5px 5px 0 #6a00b0', maxWidth: 980 }}>{line}</div>
         <div style={{ fontSize: 32, fontWeight: 800, color: '#FFFFFF' }}>{who}</div>
       </div>
     </div>
@@ -109,7 +108,7 @@ export function Macho({ t, pts, crest, who, word }) {
 }
 
 // ---------- construction ----------
-export function Construction({ t, pts, crest, who, word }) {
+export function Construction({ t, big, line, crest, who, word }) {
   const stencil = { fontFamily: "'Saira Stencil One', 'Anton', sans-serif" }
   const hazard = { backgroundImage: 'repeating-linear-gradient(45deg, #FFC400 0 50px, #111 50px 100px)', backgroundSize: '141px 141px', animation: 'th-hazard 1s linear infinite' }
   const lattice = { backgroundImage: 'repeating-linear-gradient(45deg, transparent 0 18px, #E8A300 18px 26px), repeating-linear-gradient(-45deg, transparent 0 18px, #E8A300 18px 26px)', border: '8px solid #E8A300', boxSizing: 'border-box' }
@@ -137,9 +136,9 @@ export function Construction({ t, pts, crest, who, word }) {
         <div style={{ ...stencil, fontSize: 100, lineHeight: 1.05, maxWidth: 960, color: '#111', background: '#FFC400', border: '10px solid #111', borderRadius: 18, padding: '8px 40px', transform: 'rotate(-2deg)', animation: 'hp-pop 700ms 300ms ease-out both' }}>{word}</div>
         {/* a steel beam drops in with the points */}
         <div style={{ width: 920, height: 230, boxSizing: 'border-box', borderTop: '22px solid #7c2d12', borderBottom: '22px solid #7c2d12', backgroundImage: 'radial-gradient(circle, #5a1e08 9px, transparent 10px), linear-gradient(180deg, #c2410c, #ea580c 25%, #9a3412 50%, #ea580c 75%, #c2410c)', backgroundSize: '92px 50%, 100% 100%', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'th-drop 1s 500ms ease-in both' }}>
-          <div style={{ ...stencil, fontSize: 180, lineHeight: 1, color: '#FFFFFF', textShadow: '7px 7px 0 #431407' }}>+{pts}</div>
+          <div style={{ ...stencil, fontSize: 180, lineHeight: 1, color: '#FFFFFF', textShadow: '7px 7px 0 #431407' }}>{big}</div>
         </div>
-        <div style={{ ...stencil, fontSize: 60, lineHeight: 1.1, color: '#111', textShadow: '0 3px 0 rgba(255,255,255,0.7)', maxWidth: 980 }}>{label(pts, t.name)}</div>
+        <div style={{ ...stencil, fontSize: 60, lineHeight: 1.1, color: '#111', textShadow: '0 3px 0 rgba(255,255,255,0.7)', maxWidth: 980 }}>{line}</div>
         <div style={{ fontSize: 32, fontWeight: 800, color: '#111' }}>{who}</div>
       </div>
     </div>
@@ -159,7 +158,7 @@ function Palm({ flip }) {
   )
 }
 
-export function Hawaii({ t, pts, crest, who, word }) {
+export function Hawaii({ t, big, line, crest, who, word }) {
   const script = { fontFamily: "'Pacifico', cursive" }
   const flowers = ['#FF5D8F', '#FFFFFF', '#FF8C42', '#E83F6F', '#FFD23F']
   const wave = (top, speed, op) => <div style={{ position: 'absolute', left: 0, right: 0, top, height: 40, opacity: op, backgroundImage: 'radial-gradient(circle at 50% 0, transparent 22px, #ffffff 23px, #ffffff 28px, transparent 29px)', backgroundSize: '80px 40px', animation: `th-waves ${speed}s linear infinite` }} />
@@ -185,8 +184,8 @@ export function Hawaii({ t, pts, crest, who, word }) {
             <Crest src={crest} house={t} size={280} />
           </div>
         </div>
-        <div style={{ ...script, fontSize: 170, lineHeight: 1.25, color: '#FFF3B0', textShadow: '6px 6px 0 #a8327a' }}>+{pts}</div>
-        <div style={{ fontSize: 58, fontWeight: 900, lineHeight: 1.1, color: '#FFFFFF', textShadow: '4px 4px 0 #a8327a', maxWidth: 960 }}>{label(pts, t.name)}</div>
+        <div style={{ ...script, fontSize: 170, lineHeight: 1.25, color: '#FFF3B0', textShadow: '6px 6px 0 #a8327a' }}>{big}</div>
+        <div style={{ fontSize: 58, fontWeight: 900, lineHeight: 1.1, color: '#FFFFFF', textShadow: '4px 4px 0 #a8327a', maxWidth: 960 }}>{line}</div>
         <div style={{ fontSize: 32, fontWeight: 800, color: '#FFFFFF', marginTop: 6 }}>{who}</div>
       </div>
     </div>
@@ -215,15 +214,15 @@ function SoccerBall({ size = 120 }) {
   )
 }
 
-export function Soccer({ t, pts, crest, who, word }) {
+export function Soccer({ t, big, line, crest, who, word }) {
   const font = { fontFamily: "'Graduate', 'Anton', serif" }
-  const line = 'rgba(255,255,255,0.85)'
+  const chalk = 'rgba(255,255,255,0.85)'
   return (
     <div style={FULL}>
-      <div style={{ position: 'absolute', left: 130, right: 130, top: 0, height: 540, border: `8px solid ${line}`, borderTop: 'none' }} />
-      <div style={{ position: 'absolute', left: 320, right: 320, top: 0, height: 220, border: `8px solid ${line}`, borderTop: 'none' }} />
-      <div style={{ position: 'absolute', left: '50%', top: 1640, width: 520, height: 520, marginLeft: -260, borderRadius: '50%', border: `8px solid ${line}` }} />
-      <div style={{ position: 'absolute', left: 0, right: 0, top: 1896, height: 8, background: line }} />
+      <div style={{ position: 'absolute', left: 130, right: 130, top: 0, height: 540, border: `8px solid ${chalk}`, borderTop: 'none' }} />
+      <div style={{ position: 'absolute', left: 320, right: 320, top: 0, height: 220, border: `8px solid ${chalk}`, borderTop: 'none' }} />
+      <div style={{ position: 'absolute', left: '50%', top: 1640, width: 520, height: 520, marginLeft: -260, borderRadius: '50%', border: `8px solid ${chalk}` }} />
+      <div style={{ position: 'absolute', left: 0, right: 0, top: 1896, height: 8, background: chalk }} />
       {/* the goal: it shakes when the ball hits the net */}
       <div style={{ position: 'absolute', left: 190, right: 190, top: 10, height: 270, border: '16px solid #FFFFFF', borderBottom: 'none', boxShadow: '0 6px 0 rgba(0,0,0,0.25)', backgroundImage: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.55) 0 3px, transparent 3px 30px), repeating-linear-gradient(90deg, rgba(255,255,255,0.55) 0 3px, transparent 3px 30px)', transformOrigin: 'top', animation: 'th-net 450ms 820ms ease-out both' }} />
       <div style={{ position: 'absolute', left: 'calc(50% - 60px)', top: 0, zIndex: 3, animation: 'th-shot 850ms cubic-bezier(.2,.7,.3,1) both' }}>
@@ -237,9 +236,9 @@ export function Soccer({ t, pts, crest, who, word }) {
         {/* scoreboard */}
         <div style={{ ...font, display: 'flex', alignItems: 'center', gap: 34, background: '#111', border: '8px solid #444', borderRadius: 18, padding: '12px 36px', animation: 'hp-late-2 1500ms ease-out both' }}>
           <div style={{ fontSize: 48, color: '#FFFFFF' }}>{t.name.toUpperCase()}</div>
-          <div style={{ fontSize: 150, lineHeight: 1, color: '#FFD60A', textShadow: '0 0 22px #FFB000' }}>+{pts}</div>
+          <div style={{ fontSize: 150, lineHeight: 1, color: '#FFD60A', textShadow: '0 0 22px #FFB000' }}>{big}</div>
         </div>
-        <div style={{ ...font, fontSize: 54, lineHeight: 1.1, color: '#FFFFFF', textShadow: '4px 4px 0 #111', maxWidth: 980 }}>{label(pts, t.name)}</div>
+        <div style={{ ...font, fontSize: 54, lineHeight: 1.1, color: '#FFFFFF', textShadow: '4px 4px 0 #111', maxWidth: 980 }}>{line}</div>
         <div style={{ fontSize: 32, fontWeight: 800, color: '#FFFFFF', textShadow: '0 2px 0 #111' }}>{who}</div>
       </div>
     </div>
@@ -249,7 +248,7 @@ export function Soccer({ t, pts, crest, who, word }) {
 // ---------- golf ----------
 export const GOLF_HOLE = { x: 775 / 1080, y: 1705 / 1920 } // where the ball drops (for the sparkles)
 
-export function Golf({ t, pts, crest, who, word }) {
+export function Golf({ t, big, line, crest, who, word }) {
   const serif = { fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'italic', fontWeight: 900 }
   const green = '#1f5f2a'
   return (
@@ -269,10 +268,10 @@ export function Golf({ t, pts, crest, who, word }) {
           <div style={{ background: green, color: '#FFFFFF', fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 900, fontSize: 38, letterSpacing: 8, padding: '6px 0' }}>LEADERBOARD</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 30px' }}>
             <div style={{ fontSize: 46, fontWeight: 800, color: '#1f2f1f' }}>{t.name.toUpperCase()}</div>
-            <div style={{ ...serif, fontStyle: 'normal', fontSize: 110, lineHeight: 1.1, color: '#C8102E' }}>+{pts}</div>
+            <div style={{ ...serif, fontStyle: 'normal', fontSize: 110, lineHeight: 1.1, color: '#C8102E' }}>{big}</div>
           </div>
         </div>
-        <div style={{ fontSize: 54, fontWeight: 900, lineHeight: 1.1, color: '#FFFFFF', textShadow: `3px 3px 0 ${green}`, maxWidth: 960 }}>{label(pts, t.name)}</div>
+        <div style={{ fontSize: 54, fontWeight: 900, lineHeight: 1.1, color: '#FFFFFF', textShadow: `3px 3px 0 ${green}`, maxWidth: 960 }}>{line}</div>
         <div style={{ fontSize: 32, fontWeight: 800, color: '#FFFFFF', textShadow: `0 2px 0 ${green}` }}>{who}</div>
       </div>
     </div>
@@ -280,7 +279,7 @@ export function Golf({ t, pts, crest, who, word }) {
 }
 
 // ---------- K-pop ----------
-export function Kpop({ t, pts, crest, who, word }) {
+export function Kpop({ t, big, line, crest, who, word }) {
   const font = { fontFamily: "'Bungee', 'Anton', sans-serif" }
   const glow = ['#FF4FA3', '#5CE1E6', t.fx[0], '#FFE66D']
   return (
@@ -300,8 +299,8 @@ export function Kpop({ t, pts, crest, who, word }) {
         <div style={{ background: '#FFFFFF', borderRadius: 40, padding: 16, boxShadow: '0 0 50px #ff4fa3, 0 0 110px #7b2ff7', animation: 'hp-pop 700ms 150ms both, th-beat 0.48s ease-in-out 900ms infinite alternate' }}>
           <Crest src={crest} house={t} size={320} />
         </div>
-        <div style={{ ...font, fontSize: 190, lineHeight: 1.05, color: '#FFFFFF', textShadow: '0 0 20px #ff4fa3, 0 0 50px #ff4fa3' }}>+{pts}</div>
-        <div style={{ ...font, fontSize: 50, lineHeight: 1.15, color: '#FFE66D', textShadow: '0 0 16px #ff4fa3', maxWidth: 980 }}>{label(pts, t.name)}</div>
+        <div style={{ ...font, fontSize: 190, lineHeight: 1.05, color: '#FFFFFF', textShadow: '0 0 20px #ff4fa3, 0 0 50px #ff4fa3' }}>{big}</div>
+        <div style={{ ...font, fontSize: 50, lineHeight: 1.15, color: '#FFE66D', textShadow: '0 0 16px #ff4fa3', maxWidth: 980 }}>{line}</div>
         <div style={{ fontSize: 32, fontWeight: 800, color: '#FFFFFF' }}>{who}</div>
       </div>
     </div>
@@ -311,7 +310,7 @@ export function Kpop({ t, pts, crest, who, word }) {
 // ---------- Irish ----------
 export const IRISH_POT = { x: 0.82, y: 0.87 } // the pot of gold (coins burst from it)
 
-export function Irish({ t, pts, crest, who, word }) {
+export function Irish({ t, big, line, crest, who, word }) {
   const celtic = { fontFamily: "'Uncial Antiqua', Georgia, serif" }
   const gold = { color: '#FFD700', WebkitTextStroke: '4px #0b3d1a', paintOrder: 'stroke fill', textShadow: '5px 5px 0 #0b3d1a' }
   return (
@@ -330,8 +329,8 @@ export function Irish({ t, pts, crest, who, word }) {
             <Crest src={crest} house={t} size={300} />
           </div>
         </div>
-        <div style={{ ...celtic, ...gold, fontSize: 190, lineHeight: 1.1 }}>+{pts}</div>
-        <div style={{ ...celtic, fontSize: 54, lineHeight: 1.15, color: '#FFFFFF', textShadow: '4px 4px 0 #0b3d1a', maxWidth: 960 }}>{label(pts, t.name)}</div>
+        <div style={{ ...celtic, ...gold, fontSize: 190, lineHeight: 1.1 }}>{big}</div>
+        <div style={{ ...celtic, fontSize: 54, lineHeight: 1.15, color: '#FFFFFF', textShadow: '4px 4px 0 #0b3d1a', maxWidth: 960 }}>{line}</div>
         <div style={{ fontSize: 32, fontWeight: 800, color: '#FFFFFF', textShadow: '0 2px 0 #0b3d1a' }}>{who}</div>
       </div>
     </div>
@@ -339,7 +338,7 @@ export function Irish({ t, pts, crest, who, word }) {
 }
 
 // ---------- rock and roll ----------
-export function Rock({ t, pts, crest, who, word }) {
+export function Rock({ t, big, line, crest, who, word }) {
   const metal = { fontFamily: "'Metal Mania', 'Anton', serif" }
   const cone = (key) => <div key={key} style={{ width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, #555 0 14%, #111 15% 55%, #2a2a2a 56% 62%, #0a0a0a 63%)', animation: 'th-thump 0.45s ease-in-out infinite alternate' }} />
   const stack = (side) => (
@@ -363,8 +362,8 @@ export function Rock({ t, pts, crest, who, word }) {
         <div style={{ background: '#FFFFFF', borderRadius: 20, border: '8px solid #111', padding: 12, boxShadow: '0 0 50px #ff4d00', animation: 'hp-pop 600ms 150ms both, th-beat 0.45s ease-in-out 800ms infinite alternate' }}>
           <Crest src={crest} house={t} size={310} />
         </div>
-        <div style={{ ...metal, fontSize: 210, lineHeight: 1.05, backgroundImage: 'linear-gradient(180deg, #ffffff 0%, #d9d9d9 40%, #555 50%, #e6e6e6 60%, #ffffff 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', WebkitTextStroke: '3px #000' }}>+{pts}</div>
-        <div style={{ ...metal, fontSize: 62, lineHeight: 1.1, color: '#FFFFFF', textShadow: '0 0 20px #ff4d00, 4px 4px 0 #000', maxWidth: 580 }}>{label(pts, t.name)}</div>
+        <div style={{ ...metal, fontSize: 210, lineHeight: 1.05, backgroundImage: 'linear-gradient(180deg, #ffffff 0%, #d9d9d9 40%, #555 50%, #e6e6e6 60%, #ffffff 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', WebkitTextStroke: '3px #000' }}>{big}</div>
+        <div style={{ ...metal, fontSize: 62, lineHeight: 1.1, color: '#FFFFFF', textShadow: '0 0 20px #ff4d00, 4px 4px 0 #000', maxWidth: 580 }}>{line}</div>
         <div style={{ fontSize: 32, fontWeight: 800, color: '#FFFFFF', maxWidth: 600 }}>{who}</div>
       </div>
     </div>
