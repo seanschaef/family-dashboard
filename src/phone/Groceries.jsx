@@ -66,61 +66,60 @@ function OrderBar({ items }) {
 
 const stepBtn = { all: 'unset', cursor: 'pointer', width: 30, height: 30, borderRadius: 15, border: `2px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: C.ink, boxSizing: 'border-box' }
 
-// One list item: tap to tick, press and hold to remove, − / + for quantity.
+// One list item: tap to tick, press and hold to remove, − / + for how many.
+// "Edit" opens the amount (2 L, 500 g…) and the aisle section underneath, so
+// the row itself stays roomy: name on the left, count and Edit on the right.
 function GroceryRow({ it, nameFor, onAskRemove }) {
   const lp = useLongPress(() => onAskRemove(it))
   const qty = it.qty || 1
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
+  const open = () => { setDraft(it.amount || ''); setEditing((v) => !v) }
   const save = (e) => {
     e?.preventDefault()
     setEditing(false)
     if ((draft.trim() || null) !== (it.amount || null)) setGroceryAmount(it.id, draft)
   }
+  const sub = [it.amount, it.source === 'meal' ? 'Meal plan' : it.added_by_member_key ? nameFor(it.added_by_member_key) : null].filter(Boolean).join(' · ')
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-    <div style={{ display: 'flex', gap: 8, alignItems: 'center', minHeight: 44 }}>
-      <button type="button" {...lp} aria-label={`${it.label}${qty > 1 ? `, ${qty}` : ''}, ${it.done ? 'done' : 'not done'}. Press and hold to remove.`} aria-pressed={it.done} onClick={() => toggleGrocery(it.id, !it.done)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'center', flexGrow: 1, minWidth: 0, WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}>
-        <span style={{ width: 28, height: 28, flexShrink: 0, borderRadius: 14, boxSizing: 'border-box', background: it.done ? C.meals : 'transparent', border: it.done ? 'none' : `2px solid ${C.meals}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {it.done && <Icon name="check" size={16} color="#FFFFFF" strokeWidth={3} />}
-        </span>
-        <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <span style={{ fontSize: 17, color: it.done ? C.muted : C.ink, textDecoration: it.done ? 'line-through' : 'none' }}>
-            {it.label}
-            {it.amount && <span style={{ color: C.muted, marginLeft: 6 }}>{it.amount}</span>}
-            {qty > 1 && <b style={{ color: C.tealText, marginLeft: 6 }}>×{qty}</b>}
+    <div style={{ display: 'flex', flexDirection: 'column', borderTop: `1px solid ${C.border}`, padding: '8px 0' }}>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', minHeight: 44 }}>
+        <button type="button" {...lp} aria-label={`${groceryText(it)}, ${it.done ? 'done' : 'not done'}. Press and hold to remove.`} aria-pressed={it.done} onClick={() => toggleGrocery(it.id, !it.done)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'center', flex: '1 1 0', minWidth: 0, WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}>
+          <span style={{ width: 28, height: 28, flexShrink: 0, borderRadius: 14, boxSizing: 'border-box', background: it.done ? C.meals : 'transparent', border: it.done ? 'none' : `2px solid ${C.meals}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {it.done && <Icon name="check" size={16} color="#FFFFFF" strokeWidth={3} />}
           </span>
-          {(it.source === 'meal' || it.added_by_member_key) && (
-            <span style={{ fontSize: 13, color: C.muted }}>{it.source === 'meal' ? 'Meal plan' : nameFor(it.added_by_member_key)}</span>
-          )}
-        </span>
-      </button>
-      {!it.done && (
-        <button type="button" aria-label={it.amount ? `Change amount for ${it.label}` : `Add an amount for ${it.label}`} onClick={() => { setDraft(it.amount || ''); setEditing((v) => !v) }} style={{ all: 'unset', cursor: 'pointer', flexShrink: 0, fontSize: 12, fontWeight: 700, color: C.tealText, border: `2px solid ${C.border}`, borderRadius: 8, padding: '5px 7px' }}>
-          {it.amount ? 'Amt' : '+ Amt'}
+          <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: '1 1 0', gap: 2 }}>
+            <span style={{ fontSize: 17, lineHeight: 1.25, color: it.done ? C.muted : C.ink, textDecoration: it.done ? 'line-through' : 'none', overflowWrap: 'anywhere' }}>{it.label}</span>
+            {sub && <span style={{ fontSize: 13, lineHeight: 1.3, color: C.muted, overflowWrap: 'anywhere' }}>{sub}</span>}
+          </span>
         </button>
+        {!it.done && (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <button type="button" aria-label={`Fewer ${it.label}`} disabled={qty <= 1} onClick={() => setGroceryQty(it.id, qty - 1)} style={{ ...stepBtn, opacity: qty <= 1 ? 0.35 : 1 }}>−</button>
+            <span style={{ minWidth: 18, textAlign: 'center', fontSize: 15, fontWeight: 700 }}>{qty}</span>
+            <button type="button" aria-label={`More ${it.label}`} onClick={() => setGroceryQty(it.id, qty + 1)} style={stepBtn}>+</button>
+          </span>
+        )}
+        <button type="button" aria-expanded={editing} aria-label={`Edit ${it.label}`} onClick={open} style={{ all: 'unset', cursor: 'pointer', flexShrink: 0, fontSize: 13, fontWeight: 700, color: editing ? '#FFFFFF' : C.tealText, background: editing ? C.meals : 'transparent', border: `2px solid ${editing ? C.meals : C.border}`, borderRadius: 10, padding: '6px 10px' }}>
+          Edit
+        </button>
+      </div>
+      {editing && (
+        <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 0 4px 40px' }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: C.muted, letterSpacing: 0.5, textTransform: 'uppercase' }}>Amount</div>
+          <input autoFocus aria-label={`Amount for ${it.label}`} placeholder="2 L, 500 g, 1 dozen…" value={draft} maxLength={30} onChange={(e) => setDraft(e.target.value)} style={{ font: 'inherit', fontSize: 15, padding: '9px 12px', borderRadius: 10, border: `2px solid ${C.border}`, background: C.card, color: C.ink, minWidth: 0 }} />
+          <UnitChips value={draft} onChange={setDraft} />
+          <div style={{ fontSize: 12, fontWeight: 800, color: C.muted, letterSpacing: 0.5, textTransform: 'uppercase', marginTop: 2 }}>Section</div>
+          <select aria-label="Section" value={it.section || 'Other'} onChange={(e) => updateGrocerySection(it.id, e.target.value)} style={{ font: 'inherit', fontSize: 15, color: C.ink, background: C.cream, border: `2px solid ${C.border}`, borderRadius: 10, padding: '8px 10px' }}>
+            {GROCERY_SECTIONS.map((sec) => <option key={sec} value={sec}>{sec}</option>)}
+          </select>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 2 }}>
+            <button type="submit" style={{ all: 'unset', cursor: 'pointer', background: C.meals, color: '#FFF', borderRadius: 10, padding: '9px 18px', fontSize: 14, fontWeight: 700 }}>Done</button>
+            {it.amount && <button type="button" onClick={() => { setDraft(''); setEditing(false); setGroceryAmount(it.id, null) }} style={{ all: 'unset', cursor: 'pointer', color: C.muted, fontSize: 14, fontWeight: 700 }}>Clear amount</button>}
+            <button type="button" onClick={() => { setEditing(false); onAskRemove(it) }} style={{ all: 'unset', cursor: 'pointer', color: C.danger, fontSize: 14, fontWeight: 700, marginLeft: 'auto' }}>Remove</button>
+          </div>
+        </form>
       )}
-      {!it.done && (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-          <button type="button" aria-label={`Fewer ${it.label}`} disabled={qty <= 1} onClick={() => setGroceryQty(it.id, qty - 1)} style={{ ...stepBtn, opacity: qty <= 1 ? 0.35 : 1 }}>−</button>
-          <span style={{ minWidth: 18, textAlign: 'center', fontSize: 15, fontWeight: 700 }}>{qty}</span>
-          <button type="button" aria-label={`More ${it.label}`} onClick={() => setGroceryQty(it.id, qty + 1)} style={stepBtn}>+</button>
-        </span>
-      )}
-      <select aria-label="Section" value={it.section || 'Other'} onChange={(e) => updateGrocerySection(it.id, e.target.value)} style={{ font: 'inherit', fontSize: 12, color: C.muted, background: C.cream, border: `2px solid ${C.border}`, borderRadius: 8, padding: '4px 6px', flexShrink: 0, maxWidth: 92 }}>
-        {GROCERY_SECTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-      </select>
-    </div>
-    {editing && (
-      <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '4px 0 8px 40px' }}>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input autoFocus aria-label={`Amount for ${it.label}`} placeholder="2 L, 500 g, 1 dozen…" value={draft} maxLength={30} onChange={(e) => setDraft(e.target.value)} style={{ flexGrow: 1, minWidth: 0, font: 'inherit', fontSize: 15, padding: '8px 10px', borderRadius: 10, border: `2px solid ${C.border}`, background: C.card, color: C.ink }} />
-          <button type="submit" style={{ all: 'unset', cursor: 'pointer', background: C.meals, color: '#FFF', borderRadius: 10, padding: '8px 14px', fontSize: 14, fontWeight: 700 }}>Save</button>
-          {it.amount && <button type="button" onClick={() => { setEditing(false); setGroceryAmount(it.id, null) }} style={{ all: 'unset', cursor: 'pointer', color: C.muted, fontSize: 14, fontWeight: 700, padding: '8px 4px' }}>Clear</button>}
-        </div>
-        <UnitChips value={draft} onChange={setDraft} />
-      </form>
-    )}
     </div>
   )
 }
@@ -222,15 +221,15 @@ export default function Groceries() {
       {items.length === 0 && <div style={{ fontSize: 15, color: C.muted }}>List is empty. Add something above.</div>}
 
       {sections.map((name) => (
-        <div key={name} style={{ background: C.card, borderRadius: 20, padding: 16, border: `2px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: C.muted, letterSpacing: 1, textTransform: 'uppercase' }}>{name}</div>
+        <div key={name} style={{ background: C.card, borderRadius: 20, padding: '14px 16px 8px', border: `2px solid ${C.border}`, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: C.muted, letterSpacing: 1, textTransform: 'uppercase', paddingBottom: 6 }}>{name}</div>
           {bySection[name].map((it) => (
             <GroceryRow key={it.id} it={it} nameFor={nameFor} onAskRemove={setRemoving} />
           ))}
         </div>
       ))}
 
-      {items.length > 0 && <div style={{ fontSize: 12, color: C.muted, textAlign: 'center' }}>Press and hold an item to remove it.</div>}
+      {items.length > 0 && <div style={{ fontSize: 12, color: C.muted, textAlign: 'center' }}>Tap Edit for amount and section. Press and hold an item to remove it.</div>}
 
       <ConfirmSheet
         open={!!removing}

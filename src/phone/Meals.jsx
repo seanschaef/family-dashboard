@@ -4,7 +4,7 @@ import { PhoneHeader } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
 import {
   useMeals, mealFor, setMeal, removeMeal, weekAt, addIngredientsToGroceries, pastMeals, importRecipe, groceryNames,
-  useMealPlans, saveMealPlan, applyMealPlan, deleteMealPlan,
+  useMealPlans, saveMealPlan, applyMealPlan, deleteMealPlan, moveMeal,
 } from '../lib/kitchen.js'
 
 // Dinner planning: any week, as far ahead as you like. Fill a day from a
@@ -26,23 +26,27 @@ function weekTitle(week, offset) {
   return `Week of ${date}`
 }
 
-function DayEditor({ iso, dow, meal, previous, onDone }) {
+function DayEditor({ iso, dow, meal, meals, previous, onDone, onMoved }) {
   const [title, setTitle] = useState(meal?.title || '')
   const [ing, setIng] = useState(meal?.ingredients || '')
   const [url, setUrl] = useState(meal?.recipe_url || '')
   const [recipe, setRecipe] = useState(meal?.recipe || null)
-  const [search, setSearch] = useState('')
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
+  const [moveTo, setMoveTo] = useState('')
+  const moveTarget = moveTo && moveTo !== iso ? mealFor(meals, moveTo) : null
 
-  const matches = previous.filter((p) => !search || p.title.toLowerCase().includes(search.toLowerCase())).slice(0, search ? 20 : 8)
+  // One bar: type a new dinner, or tap one of the previous dinners that match
+  // what you've typed (the most recent ones show before you type).
+  const q = title.trim().toLowerCase()
+  const picked = previous.find((p) => p.title.toLowerCase() === q)
+  const matches = picked ? [picked] : previous.filter((p) => !q || p.title.toLowerCase().includes(q)).slice(0, q ? 12 : 8)
 
   function pick(p) {
     setTitle(p.title)
     setIng(p.ingredients || '')
     setUrl(p.recipe_url || '')
     setRecipe(p.recipe || null)
-    setSearch('')
     setMsg('')
   }
   async function fetchRecipe() {
@@ -67,6 +71,13 @@ function DayEditor({ iso, dow, meal, previous, onDone }) {
     await setMeal(meal?.id, iso, { title: title.trim(), ingredients: ing.trim(), recipe_url: url.trim() || null, recipe })
     onDone()
   }
+  // Move this dinner (with any edits) to another day; swaps if that day has one.
+  async function move() {
+    if (!meal?.id || !moveTo || moveTo === iso) return
+    if (title.trim()) await setMeal(meal.id, iso, { title: title.trim(), ingredients: ing.trim(), recipe_url: url.trim() || null, recipe })
+    await moveMeal(meal, moveTo, meals)
+    onMoved(moveTo)
+  }
   async function clear() {
     if (meal?.id) await removeMeal(meal.id)
     onDone()
@@ -76,10 +87,11 @@ function DayEditor({ iso, dow, meal, previous, onDone }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ fontSize: 15, fontWeight: 800 }}>{DOW[dow]} · {new Date(iso + 'T12:00:00').toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}</div>
 
+      <div style={label}>Dinner</div>
+      <input aria-label="Dinner" placeholder={previous.length ? 'Type a dinner or search previous ones' : 'Dinner'} value={title} onChange={(e) => setTitle(e.target.value)} style={input} />
       {previous.length > 0 && (
         <>
-          <div style={label}>Pick a previous dinner</div>
-          <input aria-label="Search previous dinners" placeholder="Search previous dinners" value={search} onChange={(e) => setSearch(e.target.value)} style={input} />
+          {!picked && <div style={{ fontSize: 12, color: C.muted }}>{q ? 'Previous dinners that match. Tap one to reuse it, or keep typing for a new one.' : 'Recent dinners. Tap one to reuse it.'}</div>}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {matches.map((p) => (
               <button key={p.title} type="button" onClick={() => pick(p)} style={{ all: 'unset', cursor: 'pointer', background: title === p.title ? C.meals : C.cream, color: title === p.title ? '#FFFFFF' : C.ink, border: `2px solid ${title === p.title ? C.meals : C.border}`, borderRadius: 999, padding: '6px 12px', fontSize: 14, fontWeight: 600 }}>
@@ -87,13 +99,10 @@ function DayEditor({ iso, dow, meal, previous, onDone }) {
                 {p.recipe && ' 📖'}
               </button>
             ))}
-            {!matches.length && <span style={{ fontSize: 13, color: C.muted }}>No match. Type it below.</span>}
+            {!matches.length && <span style={{ fontSize: 13, color: C.muted }}>New dinner. Nothing like it before.</span>}
           </div>
         </>
       )}
-
-      <div style={label}>Dinner</div>
-      <input aria-label="Meal" placeholder="Dinner" value={title} onChange={(e) => setTitle(e.target.value)} style={input} />
 
       <div style={label}>Recipe link (optional)</div>
       <div style={{ display: 'flex', gap: 8 }}>
@@ -114,6 +123,17 @@ function DayEditor({ iso, dow, meal, previous, onDone }) {
       <input aria-label="Ingredients" placeholder="e.g. chicken thighs, cream, rice" value={ing} onChange={(e) => setIng(e.target.value)} style={input} />
       {recipe?.ingredients?.length > 0 && (
         <button type="button" onClick={() => setIng(groceryNames(recipe.ingredients).join(', '))} style={{ ...linkBtn, alignSelf: 'flex-start' }}>Use the recipe&apos;s ingredients</button>
+      )}
+
+      {meal?.id && (
+        <>
+          <div style={label}>Move to another day</div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input aria-label="Move to day" type="date" value={moveTo || iso} onChange={(e) => setMoveTo(e.target.value)} style={{ ...input, flex: 1, minWidth: 0 }} />
+            <button type="button" onClick={move} disabled={!moveTo || moveTo === iso} style={{ ...btn(C.tealText), opacity: moveTo && moveTo !== iso ? 1 : 0.5, whiteSpace: 'nowrap' }}>Move</button>
+          </div>
+          {moveTarget && <div style={{ fontSize: 13, color: C.muted }}>That day has {moveTarget.title}. They&apos;ll swap days.</div>}
+        </>
       )}
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -193,7 +213,7 @@ export default function Meals() {
         return (
           <div key={iso} style={{ background: m ? C.tealTint : C.card, border: `2px solid ${isEditing ? C.meals : C.border}`, borderRadius: 16, padding: isEditing ? 14 : '12px 14px' }}>
             {isEditing ? (
-              <DayEditor iso={iso} dow={i} meal={m} previous={previous} onDone={() => setEditing(null)} />
+              <DayEditor iso={iso} dow={i} meal={m} meals={meals} previous={previous} onDone={() => setEditing(null)} onMoved={() => setEditing(null)} />
             ) : (
               <button type="button" onClick={() => setEditing(iso)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'center', width: '100%' }}>
                 <span style={{ width: 44 }}>

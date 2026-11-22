@@ -39,6 +39,19 @@ export async function setMeal(existingId, meal_date, fields) {
 }
 export const removeMeal = (id) => deleteRow('meals', id)
 
+// Move a dinner to another day. If that day already has one, they swap.
+// (One dinner per day is enforced by the database, so the swap parks the first
+// one on a placeholder date for a moment.)
+export async function moveMeal(meal, toIso, meals) {
+  if (!meal?.id || !toIso || meal.meal_date === toIso) return
+  const other = mealFor(meals, toIso)
+  if (other) {
+    await updateRow('meals', meal.id, { meal_date: '1900-01-01' })
+    await updateRow('meals', other.id, { meal_date: meal.meal_date })
+  }
+  await updateRow('meals', meal.id, { meal_date: toIso })
+}
+
 // Monday-start weeks: the 7 dates of the week `offset` weeks from this one.
 export function weekAt(offset = 0) {
   const d = new Date()
