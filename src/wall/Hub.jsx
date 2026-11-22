@@ -22,7 +22,7 @@ import { useChores, useChoreLogs, dueChores, isDone, useRedemptions, pointsBalan
 import { useReminders } from '../lib/household.js'
 import PetBlock from './PetBlock.jsx'
 import InkBoard from '../components/InkBoard.jsx'
-import { JokeBlock, ComingUpBlock, GoalsBlock, LeaderboardBlock, MealsWeekBlock, GroceriesBlock, NotesBlock, NextUpBlock, ForecastBlock, AirBlock, WasteBlock, OnThisDayBlock } from './HubWidgets.jsx'
+import { Scroll, JokeBlock, ComingUpBlock, GoalsBlock, LeaderboardBlock, MealsWeekBlock, GroceriesBlock, NotesBlock, NextUpBlock, ForecastBlock, AirBlock, WasteBlock, OnThisDayBlock } from './HubWidgets.jsx'
 import { useMeals, mealFor } from '../lib/kitchen.js'
 import { normalizeHubLayout, blockHeight, WIDTH_SPAN, ROW_UNIT, packedStyle, entryHeight } from './hubLayout.js'
 
@@ -79,8 +79,8 @@ export default function Hub() {
     ),
     chores: () => (
       <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
-        <div style={{ fontSize: 26, fontWeight: 800 }}>Chores Today</div>
-        {members.map((m) => {
+        <div style={{ fontSize: 26, fontWeight: 800, flexShrink: 0 }}>Chores Today</div>
+        <Scroll gap={12}>{members.map((m) => {
           const due = dueChores(chores, logs, m.key, T)
           const done = due.filter((c) => isDone(logs, c, T, m.key)).length
           return (
@@ -88,7 +88,7 @@ export default function Hub() {
               <ProgressRow name={m.name} done={done} total={due.length} color={m.color} />
             </button>
           )
-        })}
+        })}</Scroll>
       </div>
     ),
     pet: () => <PetBlock chores={chores} logs={logs} />,

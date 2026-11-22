@@ -38,12 +38,15 @@ function Header({ person }) {
 function ChoresCard({ person, due, logs, T, points, actions }) {
   const { nameFor } = useMembers()
   const done = due.filter((c) => isDone(logs, c, T, person.key)).length
+  // A long list scrolls with a finger drag inside the window.
+  const drag = useDragScroll()
   return (
-    <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, flexGrow: 1 })}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+    <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, flexGrow: 1, height: '100%', minHeight: 0 })}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexShrink: 0 }}>
         <div style={{ fontSize: 26, fontWeight: 800 }}>My Chores</div>
         <div style={{ fontSize: 20, color: C.muted }}>{done} of {due.length}</div>
       </div>
+      <div ref={drag.ref} {...drag.handlers} className={drag.className} style={{ ...drag.style, flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
       {due.length ? (
         due.map((c) => (
           <Hold key={c.id} onHold={() => actions.askUndo(c, isDone(logs, c, T, person.key), person.key)}>
@@ -53,8 +56,9 @@ function ChoresCard({ person, due, logs, T, points, actions }) {
       ) : (
         <div style={{ fontSize: 22, color: C.muted }}>Nothing due today</div>
       )}
+      </div>
       {points != null && (
-        <div style={{ marginTop: 'auto', background: C.track, borderRadius: 16, padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 22 }}>
+        <div style={{ flexShrink: 0, background: C.track, borderRadius: 16, padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: 22 }}>
           <div style={{ fontWeight: 600 }}>Points <span style={{ fontWeight: 400, color: C.muted, fontSize: 18 }}>· {points.week} this week</span></div>
           <div style={{ fontWeight: 800, color: person.color }}>{points.balance}</div>
         </div>

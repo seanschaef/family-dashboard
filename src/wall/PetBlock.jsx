@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Scroll } from './HubWidgets.jsx'
 import { popIn, fadeIn } from '../lib/popIn.js'
 import Avatar from '../components/Avatar.jsx'
 import { C, card } from '../theme.js'
@@ -31,13 +32,13 @@ export default function PetBlock({ chores, logs }) {
   }
 
   return (
-    <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%' })}>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+    <div style={card({ padding: 24, display: 'flex', flexDirection: 'column', gap: 12, height: '100%', minHeight: 0 })}>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0 }}>
         <Icon name="paw" size={32} color={C.ink} />
         <div style={{ fontSize: 26, fontWeight: 800 }}>{petName || 'Pet'}</div>
       </div>
       {list.length ? (
-        list.map((c) => {
+        <Scroll gap={12}>{list.map((c) => {
           const done = isDone(logs, c, T)
           return (
             <Hold key={c.id} onHold={() => actions.askUndo(c, done)}>
@@ -52,7 +53,7 @@ export default function PetBlock({ chores, logs }) {
               />
             </Hold>
           )
-        })
+        })}</Scroll>
       ) : (
         <div style={{ fontSize: 20, color: C.muted }}>No {petName || 'pet'} chores today. Add some on the phone: Chores › tag as Pet.</div>
       )}

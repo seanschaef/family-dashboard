@@ -7,12 +7,15 @@ import { dueChores, isDone, assigneesOf, doneByText, ANYONE } from '../lib/chore
 import { useMembers } from '../lib/members.jsx'
 import { useChoreActions } from '../lib/choreActions.jsx'
 import Hold from '../components/Hold.jsx'
+import { useDragScroll } from './dragScroll.js'
 
 // Tap a person in the hub's Chores card: a pop-up with today's chores for that
 // person, tickable right there. Same look as the calendar's tap-a-day pop-up.
 export default function ChoresPopover({ person, chores, logs, onClose }) {
   const { nameFor } = useMembers()
   const actions = useChoreActions({ logs, pageKey: person?.key === ANYONE ? null : person?.key, onWall: true, scale: 2 })
+  // The wall's touch screen acts as a mouse, so a long list needs drag-to-scroll.
+  const drag = useDragScroll()
   if (!person) return null
   const T = todayISO()
   const due = dueChores(chores, logs, person.key, T).sort((a, b) => a.title.localeCompare(b.title))
@@ -28,11 +31,12 @@ export default function ChoresPopover({ person, chores, logs, onClose }) {
       style={{ position: 'fixed', inset: 0, background: 'rgba(43, 36, 32, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 40 }}
     >
       <div
-        ref={popIn}
+        ref={(el) => { popIn(el); drag.ref.current = el }}
+        {...drag.handlers}
         role="dialog"
         aria-label={heading}
         onClick={(e) => e.stopPropagation()}
-        style={{ background: C.card, borderRadius: 28, border: `2px solid ${C.border}`, width: 'min(680px, 92%)', maxHeight: '80%', overflowY: 'auto', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}
+        style={{ ...drag.style, background: C.card, borderRadius: 28, border: `2px solid ${C.border}`, width: 'min(680px, 92%)', maxHeight: '80%', overflowY: 'auto', boxSizing: 'border-box', padding: 32, display: 'flex', flexDirection: 'column', gap: 18 }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
