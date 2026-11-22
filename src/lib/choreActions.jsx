@@ -39,6 +39,15 @@ export function useChoreActions({ logs, pageKey = null, onWall = false, scale = 
 
   const askUndo = (chore, done, who) => {
     if (!done) return
+    // A shared list (e.g. the pet card) doesn't say whose tick it is. For a
+    // chore where each person's tick is their own, undo the latest tick today
+    // (hold again to undo the next one).
+    if (!who && (isEachChore(chore) || isTogetherChore(chore))) {
+      const latest = logs
+        .filter((l) => l.chore_id === chore.id && l.log_date === T)
+        .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))[0]
+      who = latest?.member_key || undefined
+    }
     const log = findLog(logs, chore, T, who)
     const by = log ? log.member_key ?? null : null
     const recent = log?.created_at ? Date.now() - new Date(log.created_at).getTime() < UNDO_GRACE_MS : false
