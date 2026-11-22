@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useMembers } from '../lib/members.jsx'
 import { useChoreLogs, useChores } from '../lib/chores.js'
 import { Crest, THEME_STYLES, THEME_WORDS, THEME_BACKDROP, THEME_KEYFRAMES, THEME_VIEWS, GOLF_HOLE, IRISH_POT } from './CelebrationThemes.jsx'
+import { THEME2_STYLES, THEME2_WORDS, THEME2_BACKDROP, THEME2_KEYFRAMES, THEME2_VIEWS, THEME2_SHAPES, THEME2_FX } from './CelebrationThemes2.jsx'
 
 // The points celebration: whenever someone earns points (a chore ticked on the
 // wall or on any phone), the wall shows "10 Points for Gryffindor!" big and
@@ -17,7 +18,8 @@ import { Crest, THEME_STYLES, THEME_WORDS, THEME_BACKDROP, THEME_KEYFRAMES, THEM
 //   race    - chequered flags, speed lines, a podium "VICTORY LAP!"
 //   hero    - action movie: explosion, debris, "MISSION COMPLETE"
 // plus eight more in CelebrationThemes.jsx (wrestling, construction, Hawaii,
-// soccer, golf, K-pop, Irish, rock and roll).
+// soccer, golf, K-pop, Irish, rock and roll) and eight in CelebrationThemes2.jsx
+// (ninja, glam, dogs, atomic, robots, turbo track, mountain, zombies).
 // About 6½ seconds; a tap closes it sooner. Several in a row play in turn.
 //
 // Crest pictures live only on the wall (public/crests/, listed in
@@ -31,7 +33,7 @@ const HOUSES = {
   slytherin: { name: 'Slytherin', bg: '#1A472A', edge: '#C0C0C0', text: '#E6E6E6', fx: ['#2A7A48', '#3FAF6B', '#C0C0C0', '#E0A526', '#FFFFFF'] },
 }
 const FALLBACK_CRESTS = { gryffindor: ['/crests/gryffindor.webp'], hufflepuff: ['/crests/hufflepuff.webp'], ravenclaw: ['/crests/ravenclaw.webp'], slytherin: ['/crests/slytherin.png'] }
-const STYLES = ['banner', 'lasers', 'comic', 'magic', 'pixel', 'eighties', 'race', 'hero', ...THEME_STYLES]
+const STYLES = ['banner', 'lasers', 'comic', 'magic', 'pixel', 'eighties', 'race', 'hero', ...THEME_STYLES, ...THEME2_STYLES]
 const PIXEL_WORDS = ['LEVEL UP!', 'HIGH SCORE!', 'POWER UP!', '1UP!', 'BONUS!']
 const EIGHTIES_WORDS = ['RADICAL!', 'TOTALLY TUBULAR!', 'GNARLY!', 'BODACIOUS!', 'AWESOME!']
 const RACE_WORDS = ['VICTORY LAP!', 'CHECKERED FLAG!', 'POLE POSITION!', 'FIRST PLACE!']
@@ -217,6 +219,7 @@ function Effects({ mode, colors }) {
         for (let i = 0; i < 45; i++) parts.push({ kind: 'coin', x: w * IRISH_POT.x, y: h * IRISH_POT.y, vx: R(-11, 3), vy: R(-24, -12), r: R(13, 20), c: '#FFD23F', rot: R(0, 6), spin: 0.18, g: 0.5, life: 300, delay: d })
       }
     }
+    THEME2_FX[mode]?.({ w, h, parts, R, rain, rise, colors, col })
     if (mode === 'rock') rise(80, 'note', ['#FFFFFF', '#FFD23F', '#FF7B00', ...colors], { vy: 2, vyr: 2.5, r: 16, rr: 14, sw: 1, delay: 320 })
 
     if (mode === 'banner') {
@@ -368,11 +371,11 @@ function Effects({ mode, colors }) {
           ctx.beginPath()
           ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
           ctx.fill()
-        } else if (SHAPES[p.kind]) {
+        } else if (SHAPES[p.kind] || THEME2_SHAPES[p.kind]) {
           ctx.save()
           ctx.translate(p.x, p.y)
           ctx.rotate((p.rot += p.spin || 0))
-          SHAPES[p.kind](ctx, p)
+          ;(SHAPES[p.kind] || THEME2_SHAPES[p.kind])(ctx, p)
           ctx.restore()
         } else if (p.kind === 'c') {
           ctx.save()
@@ -593,6 +596,7 @@ const BACKDROP = {
   race: '#2b2b2b',
   hero: '#120806',
   ...THEME_BACKDROP,
+  ...THEME2_BACKDROP,
 }
 
 export default function Celebration() {
@@ -654,7 +658,7 @@ export default function Celebration() {
     // (window.__celebrationStyle forces one, for testing.)
     const style = current.style || (STYLES.includes(window.__celebrationStyle) ? window.__celebrationStyle : null) || pick(STYLES.filter((s) => s !== lastStyle))
     lastStyle = style
-    const words = { pixel: PIXEL_WORDS, eighties: EIGHTIES_WORDS, race: RACE_WORDS, hero: HERO_WORDS, ...THEME_WORDS }[style] || COMIC_WORDS
+    const words = { pixel: PIXEL_WORDS, eighties: EIGHTIES_WORDS, race: RACE_WORDS, hero: HERO_WORDS, ...THEME_WORDS, ...THEME2_WORDS }[style] || COMIC_WORDS
     setLook({ id: current.id, style, crest: list.length ? pick(list) : null, word: pick(words), cheer: pick(CHEERS), cheerBig: pick(CHEER_BIG) })
     const t = setTimeout(() => setQueue((q) => q.slice(1)), SHOW_MS)
     return () => clearTimeout(t)
@@ -669,13 +673,13 @@ export default function Celebration() {
   const line = pts > 0 ? `${pts} ${pts === 1 ? 'Point' : 'Points'} for ${t.name}!` : look.cheer.replace('{h}', t.name)
   const scores = { big: pts > 0 ? `+${pts}` : look.cheerBig, line, short: pts > 0 ? `+${pts} for ${t.name}!` : line }
   const props = { t, ...scores, crest: house ? look.crest : null, who: [person?.name, chore?.title || current.chore_title].filter(Boolean).join(' · '), word: look.word }
-  const View = { banner: Banner, lasers: Lasers, comic: Comic, magic: Magic, pixel: Pixel, eighties: Eighties, race: Race, hero: Hero, ...THEME_VIEWS }[look.style]
+  const View = { banner: Banner, lasers: Lasers, comic: Comic, magic: Magic, pixel: Pixel, eighties: Eighties, race: Race, hero: Hero, ...THEME_VIEWS, ...THEME2_VIEWS }[look.style]
   const fx = look.style === 'comic' || look.style === 'eighties' ? null : look.style
   const comicBg = look.style === 'comic' ? { backgroundImage: `radial-gradient(${t.fx[1]} 22%, transparent 24%)`, backgroundSize: '34px 34px', backgroundColor: t.fx[3] } : {}
 
   return (
     <div onClick={() => setQueue((q) => q.slice(1))} style={{ position: 'fixed', inset: 0, zIndex: 200, background: BACKDROP[look.style], ...comicBg, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-      <style>{KEYFRAMES + THEME_KEYFRAMES}</style>
+      <style>{KEYFRAMES + THEME_KEYFRAMES + THEME2_KEYFRAMES}</style>
       <View key={current.id} {...props} />
       {fx && <Effects key={`fx-${current.id}`} mode={fx} colors={t.fx} />}
     </div>
