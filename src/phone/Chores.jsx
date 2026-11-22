@@ -4,6 +4,7 @@ import { C } from '../theme.js'
 import { PhoneHeader } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { useAuth } from '../lib/auth.jsx'
+import { popIn, fadeIn } from '../lib/popIn.js'
 import { useChores, addChore, updateChore, removeChore, assigneesOf, isEachChore } from '../lib/chores.js'
 
 const REPEATS = [
@@ -72,8 +73,6 @@ export default function Chores() {
     setPoints(c.points || 0)
     setTag(c.tag || null)
     setStatus(null)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-    document.querySelector('main')?.parentElement?.scrollTo?.({ top: 0, behavior: 'smooth' })
   }
 
   async function save() {
@@ -100,14 +99,10 @@ export default function Chores() {
   }
   const repeatLabel = (c) => (c.repeat === 'weekly' ? [...(c.days || [])].sort((a, b) => a - b).map((d) => DAYS[d]).join(' ') : c.repeat)
 
-  return (
+  // The chore form: inline for a new chore, in a pop-up sheet when editing one
+  // (so Edit never leaves you scrolled down the list, away from the form).
+  const form = (
     <>
-      <PhoneHeader title="Chores" action={<Link to="/app/rewards" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Rewards & Points ›</Link>} />
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>{editing ? 'Edit Chore' : 'New Chore'}</div>
-        {editing && <button type="button" onClick={resetForm} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.muted }}>Cancel edit</button>}
-      </div>
       <Field label="Chore">
         <input aria-label="Chore name" type="text" placeholder="Walk the dog" value={name} onChange={(e) => setName(e.target.value)} style={{ font: 'inherit', fontSize: 17, padding: '12px 14px', borderRadius: 12, border: `2px solid ${C.border}`, background: C.card, color: C.ink }} />
       </Field>
@@ -171,6 +166,15 @@ export default function Chores() {
         <button type="button" onClick={save} disabled={!configured} style={{ all: 'unset', cursor: configured ? 'pointer' : 'default', background: C.meals, color: '#FFFFFF', borderRadius: 14, padding: '14px 24px', fontSize: 16, fontWeight: 700, opacity: configured ? 1 : 0.6 }}>{editing ? 'Save changes' : 'Save chore'}</button>
         {status && <span style={{ fontSize: 14, color: status === 'Saved' ? C.tealText : C.danger }}>{status}</span>}
       </div>
+    </>
+  )
+
+  return (
+    <>
+      <PhoneHeader title="Chores" action={<Link to="/app/rewards" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Rewards & Points ›</Link>} />
+
+      <div style={{ fontSize: 16, fontWeight: 800 }}>New Chore</div>
+      {editing ? <div style={{ fontSize: 14, color: C.muted }}>Editing a chore…</div> : form}
       {!configured && <div style={{ fontSize: 13, color: C.muted }}>Connect Supabase to save chores.</div>}
 
       <div style={{ fontSize: 18, fontWeight: 800, paddingTop: 8 }}>All Chores</div>
@@ -189,6 +193,18 @@ export default function Chores() {
             <button type="button" onClick={() => { if (window.confirm(`Delete “${c.title}”? Points already earned for it are kept.`)) removeChore(c.id) }} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.danger }}>Delete</button>
           </div>
         ))
+      )}
+
+      {editing && (
+        <div ref={fadeIn} onClick={resetForm} style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(43, 36, 32, 0.45)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div ref={popIn} role="dialog" aria-label="Edit chore" onClick={(e) => e.stopPropagation()} style={{ background: C.cream, width: '100%', maxWidth: 560, maxHeight: '90dvh', overflowY: 'auto', overscrollBehavior: 'contain', borderRadius: '24px 24px 0 0', padding: '18px 18px calc(24px + env(safe-area-inset-bottom))', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>Edit Chore</div>
+              <button type="button" onClick={resetForm} style={{ all: 'unset', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: C.muted, padding: '4px 2px' }}>Cancel</button>
+            </div>
+            {form}
+          </div>
+        </div>
       )}
     </>
   )
