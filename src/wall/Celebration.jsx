@@ -611,18 +611,21 @@ export default function Celebration() {
   // Preview: /wall/hub?celebrate=macho (or ?celebrate=any) plays one for a
   // random person with a house a few seconds after the wall loads. Nothing is
   // saved and no points are given. The kiosk can open this once (pi/kiosk.sh).
-  const demoDone = useRef(false)
+  // (The wall shows placeholder people for a moment before the real family
+  // loads, so the person is picked when the timer fires, from the latest list.)
+  const membersRef = useRef(members)
+  membersRef.current = members
   useEffect(() => {
-    if (demoDone.current || !members.length) return undefined
-    const want = DEMO
-    if (!want) return undefined
-    demoDone.current = true
+    if (!DEMO) return undefined
     try { sessionStorage.removeItem('celebrate') } catch { /* private mode */ }
-    const people = members.filter((m) => m.house)
-    const m = pick(people.length ? people : members)
-    const t = setTimeout(() => setQueue((q) => [...q, { id: `demo-${Date.now()}`, member_key: m.key, points: 10, chore_title: 'Preview', style: STYLES.includes(want) ? want : null }]), 4000)
+    const t = setTimeout(() => {
+      const all = membersRef.current
+      const people = all.filter((m) => m.house)
+      const m = pick(people.length ? people : all)
+      if (m) setQueue((q) => [...q, { id: `demo-${Date.now()}`, member_key: m.key, points: 10, chore_title: 'Preview', style: STYLES.includes(DEMO) ? DEMO : null }])
+    }, 6000)
     return () => clearTimeout(t)
-  }, [members])
+  }, [])
 
   // New chore_logs with points (not ones already there when the wall loaded,
   // and not old ones arriving late) join the queue.
