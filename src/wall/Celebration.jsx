@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMembers } from '../lib/members.jsx'
 import { useChoreLogs, useChores } from '../lib/chores.js'
+import { Crest, THEME_STYLES, THEME_WORDS, THEME_BACKDROP, THEME_KEYFRAMES, THEME_VIEWS, GOLF_HOLE, IRISH_POT } from './CelebrationThemes.jsx'
 
 // The points celebration: whenever someone earns points (a chore ticked on the
 // wall or on any phone), the wall shows "10 Points for Gryffindor!" big and
@@ -15,6 +16,8 @@ import { useChoreLogs, useChores } from '../lib/chores.js'
 //   eighties- synthwave: neon grid, striped sunset, chrome "RADICAL!"
 //   race    - chequered flags, speed lines, a podium "VICTORY LAP!"
 //   hero    - action movie: explosion, debris, "MISSION COMPLETE"
+// plus eight more in CelebrationThemes.jsx (wrestling, construction, Hawaii,
+// soccer, golf, K-pop, Irish, rock and roll).
 // About 6½ seconds; a tap closes it sooner. Several in a row play in turn.
 //
 // Crest pictures live only on the wall (public/crests/, listed in
@@ -28,7 +31,7 @@ const HOUSES = {
   slytherin: { name: 'Slytherin', bg: '#1A472A', edge: '#C0C0C0', text: '#E6E6E6', fx: ['#2A7A48', '#3FAF6B', '#C0C0C0', '#E0A526', '#FFFFFF'] },
 }
 const FALLBACK_CRESTS = { gryffindor: ['/crests/gryffindor.webp'], hufflepuff: ['/crests/hufflepuff.webp'], ravenclaw: ['/crests/ravenclaw.webp'], slytherin: ['/crests/slytherin.png'] }
-const STYLES = ['banner', 'lasers', 'comic', 'magic', 'pixel', 'eighties', 'race', 'hero']
+const STYLES = ['banner', 'lasers', 'comic', 'magic', 'pixel', 'eighties', 'race', 'hero', ...THEME_STYLES]
 const PIXEL_WORDS = ['LEVEL UP!', 'HIGH SCORE!', 'POWER UP!', '1UP!', 'BONUS!']
 const EIGHTIES_WORDS = ['RADICAL!', 'TOTALLY TUBULAR!', 'GNARLY!', 'BODACIOUS!', 'AWESOME!']
 const RACE_WORDS = ['VICTORY LAP!', 'CHECKERED FLAG!', 'POLE POSITION!', 'FIRST PLACE!']
@@ -39,6 +42,108 @@ const SHOW_MS = 6500
 let crestList = null // loaded once from /crests/index.json
 let lastStyle = null
 const pick = (a) => a[Math.floor(Math.random() * a.length)]
+
+// Canvas shapes for the themed effects, drawn around (0, 0) at size p.r.
+function heart(ctx, cx, cy, r) {
+  ctx.moveTo(cx, cy + r)
+  ctx.bezierCurveTo(cx - r * 1.3, cy + r * 0.15, cx - r * 0.95, cy - r * 0.95, cx, cy - r * 0.35)
+  ctx.bezierCurveTo(cx + r * 0.95, cy - r * 0.95, cx + r * 1.3, cy + r * 0.15, cx, cy + r)
+}
+const SHAPES = {
+  star5(ctx, p) {
+    ctx.beginPath()
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5
+      const rr = i % 2 ? p.r * 0.45 : p.r
+      ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr)
+    }
+    ctx.closePath()
+    ctx.fill()
+  },
+  hex(ctx, p) {
+    ctx.beginPath()
+    for (let i = 0; i < 6; i++) ctx.lineTo(Math.cos((i * Math.PI) / 3) * p.r, Math.sin((i * Math.PI) / 3) * p.r)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = '#4a4f55'
+    ctx.beginPath()
+    ctx.arc(0, 0, p.r * 0.42, 0, Math.PI * 2)
+    ctx.fill()
+  },
+  flower(ctx, p) {
+    for (let k = 0; k < 5; k++) {
+      const a = (k * Math.PI * 2) / 5
+      ctx.beginPath()
+      ctx.ellipse(Math.cos(a) * p.r * 0.5, Math.sin(a) * p.r * 0.5, p.r * 0.55, p.r * 0.38, a, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.fillStyle = '#FFD23F'
+    ctx.beginPath()
+    ctx.arc(0, 0, p.r * 0.28, 0, Math.PI * 2)
+    ctx.fill()
+  },
+  heart(ctx, p) {
+    ctx.beginPath()
+    heart(ctx, 0, 0, p.r)
+    ctx.fill()
+  },
+  shamrock(ctx, p) {
+    ctx.strokeStyle = p.c
+    ctx.lineWidth = p.r * 0.16
+    ctx.beginPath()
+    ctx.moveTo(0, 0)
+    ctx.quadraticCurveTo(p.r * 0.1, p.r * 0.7, p.r * 0.4, p.r * 1.1)
+    ctx.stroke()
+    for (let k = 0; k < 3; k++) {
+      ctx.save()
+      ctx.rotate((k * Math.PI * 2) / 3)
+      ctx.beginPath()
+      heart(ctx, 0, -p.r * 0.55, p.r * 0.5)
+      ctx.fill()
+      ctx.restore()
+    }
+  },
+  note(ctx, p) {
+    ctx.beginPath()
+    ctx.ellipse(0, p.r * 0.6, p.r * 0.45, p.r * 0.32, -0.4, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.fillRect(p.r * 0.3, -p.r * 0.9, p.r * 0.14, p.r * 1.5)
+    ctx.beginPath()
+    ctx.moveTo(p.r * 0.44, -p.r * 0.9)
+    ctx.quadraticCurveTo(p.r * 0.9, -p.r * 0.5, p.r * 0.7, -p.r * 0.05)
+    ctx.quadraticCurveTo(p.r * 0.75, -p.r * 0.45, p.r * 0.44, -p.r * 0.55)
+    ctx.fill()
+  },
+  coin(ctx, p) {
+    // A spinning coin: squash it sideways as it turns.
+    ctx.rotate(-p.rot)
+    ctx.scale(Math.abs(Math.cos(p.rot)) * 0.9 + 0.1, 1)
+    ctx.beginPath()
+    ctx.arc(0, 0, p.r, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.strokeStyle = '#B8860B'
+    ctx.lineWidth = p.r * 0.18
+    ctx.beginPath()
+    ctx.arc(0, 0, p.r * 0.66, 0, Math.PI * 2)
+    ctx.stroke()
+  },
+  flash(ctx, p) {
+    p.r *= 1.05
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, p.r)
+    g.addColorStop(0, 'rgba(255,255,255,1)')
+    g.addColorStop(1, 'rgba(255,255,255,0)')
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(0, 0, p.r, 0, Math.PI * 2)
+    ctx.fill()
+  },
+  puff(ctx, p) {
+    p.r *= 1.02
+    ctx.beginPath()
+    ctx.arc(0, 0, p.r, 0, Math.PI * 2)
+    ctx.fill()
+  },
+}
 
 // ---------- effects (canvas, drawn IN FRONT of the card, taps pass through) ----------
 function Effects({ mode, colors }) {
@@ -52,6 +157,50 @@ function Effects({ mode, colors }) {
     const col = (i) => colors[i % colors.length]
     const parts = []
     let frame = 0
+    const R = (a, b) => a + Math.random() * (b - a)
+    // Falling (rain) or rising (rise) shapes across the screen, starting at random times.
+    const rain = (n, kind, cols, o = {}) => {
+      for (let i = 0; i < n; i++) parts.push({ kind, x: R(0, w), y: -R(20, h * (o.spread || 1)), vx: R(-1, 1) * (o.vx || 1.5), vy: R(o.vy || 2, (o.vy || 2) + (o.vyr || 3)), r: R(o.r || 12, (o.r || 12) + (o.rr || 10)), c: cols[i % cols.length], rot: R(0, 6), spin: R(-1, 1) * (o.spin || 0.06), sw: o.sw || 0, ph: R(0, 6), g: o.g || 0, life: o.life || 700, delay: o.delay ? Math.floor(R(0, o.delay)) : 0 })
+    }
+    const rise = (n, kind, cols, o = {}) => {
+      for (let i = 0; i < n; i++) parts.push({ kind, x: R(0, w), y: h + R(20, 120), vx: R(-1, 1) * (o.vx || 1), vy: -R(o.vy || 2, (o.vy || 2) + (o.vyr || 3)), r: R(o.r || 12, (o.r || 12) + (o.rr || 10)), c: cols[i % cols.length], rot: R(-0.3, 0.3), spin: 0, sw: o.sw || 0, ph: R(0, 6), g: 0, life: o.life || 700, delay: o.delay ? Math.floor(R(0, o.delay)) : 0 })
+    }
+    const BEAMS = { kpop: ['#FF4FA3', '#B44CFF', '#5CE1E6', '#FF8AD8'], rock: ['#FFFFFF', '#FFC14D', '#FF4D00', '#FFFFFF'] }[mode]
+
+    if (mode === 'macho') {
+      rain(120, 'star5', ['#FFD700', '#FF4FA3', '#B44CFF', '#FFFFFF', ...colors], { vy: 2, vyr: 3, r: 10, rr: 14, sw: 1.2, spread: 1.6, spin: 0.08 })
+      for (let i = 0; i < 40; i++) parts.push({ kind: 'flash', x: R(0, w), y: R(0, h * 0.9), r: R(25, 45), c: '#FFFFFF', life: 18, max: 18, delay: Math.floor(R(0, 360)) })
+    }
+    if (mode === 'construction') {
+      rain(60, 'hex', ['#9AA0A6', '#C0C4C8', '#7A7F85'], { vy: 5, vyr: 5, r: 10, rr: 8, g: 0.25, spread: 1.2, spin: 0.15 })
+      for (let i = 0; i < 30; i++) parts.push({ kind: 'puff', x: w / 2 + R(-460, 460), y: h * 0.6, vx: R(-4, 4), vy: R(-2, -0.4), r: R(22, 44), c: '#C9B79C', life: 80, max: 80, delay: 88 })
+      for (let i = 0; i < 90; i++) parts.push({ kind: 'c', x: w / 2 + R(-300, 300), y: h * 0.6, vx: R(-14, 14), vy: R(-22, -6), r: R(5, 11), c: ['#FFC400', '#111111', '#FF7A00', ...colors][i % 6], rot: R(0, 6), g: 0.5, life: 300, delay: 90 })
+    }
+    if (mode === 'hawaii') rain(110, 'flower', ['#FF5D8F', '#FFFFFF', '#FFD23F', '#FF8C42', '#E83F6F'], { vy: 1.4, vyr: 2, r: 14, rr: 12, sw: 1.6, spread: 1.6, spin: 0.03 })
+    if (mode === 'soccer') {
+      for (let i = 0; i < 200; i++) {
+        const a = R(0.1, Math.PI - 0.1)
+        const sp = R(6, 20)
+        parts.push({ kind: 'c', x: w / 2 + R(-200, 200), y: h * 0.1, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6, r: R(5, 11), c: col(i), rot: R(0, 6), g: 0.3, life: 400, delay: 50 })
+      }
+      rain(90, 'c', colors, { vy: 3, vyr: 4, r: 6, rr: 6, sw: 0.8, delay: 200 })
+    }
+    if (mode === 'golf') {
+      for (let i = 0; i < 46; i++) {
+        const a = R(Math.PI, Math.PI * 2)
+        const sp = R(3, 10)
+        parts.push({ kind: 'star5', x: w * GOLF_HOLE.x, y: h * GOLF_HOLE.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: R(8, 16), c: ['#FFD700', '#FFFFFF', '#FFF3B0'][i % 3], rot: R(0, 6), spin: 0.1, g: 0.12, life: 90, max: 90, delay: 96 })
+      }
+      rain(80, 'c', ['#FFFFFF', '#FFD700', ...colors], { vy: 2, vyr: 3, r: 6, rr: 6, sw: 1, delay: 220 })
+    }
+    if (mode === 'kpop') rise(100, 'heart', ['#FF4FA3', '#FF8AD8', '#B44CFF', '#5CE1E6', ...colors], { vy: 1.6, vyr: 2.6, r: 12, rr: 16, sw: 1.2, delay: 320 })
+    if (mode === 'irish') {
+      rain(110, 'shamrock', ['#1E9E4A', '#34C759', '#0B6B2E', '#7BD389'], { vy: 1.6, vyr: 2, r: 16, rr: 14, sw: 1.3, spread: 1.5, spin: 0.04 })
+      for (const d of [20, 110, 200]) {
+        for (let i = 0; i < 45; i++) parts.push({ kind: 'coin', x: w * IRISH_POT.x, y: h * IRISH_POT.y, vx: R(-11, 3), vy: R(-24, -12), r: R(13, 20), c: '#FFD23F', rot: R(0, 6), spin: 0.18, g: 0.5, life: 300, delay: d })
+      }
+    }
+    if (mode === 'rock') rise(80, 'note', ['#FFFFFF', '#FFD23F', '#FF7B00', ...colors], { vy: 2, vyr: 2.5, r: 16, rr: 14, sw: 1, delay: 320 })
 
     if (mode === 'banner') {
       for (let i = 0; i < 260; i++) parts.push({ kind: 'c', x: w / 2 + (Math.random() - 0.5) * 200, y: h * 0.55, vx: (Math.random() - 0.5) * 26, vy: -Math.random() * 26 - 8, r: Math.random() * 9 + 5, c: col(i), rot: Math.random() * 6, g: 0.45, life: 400 })
@@ -138,7 +287,34 @@ function Effects({ mode, colors }) {
         }
       }
 
-      let alive = mode === 'lasers' ? frame < 380 : 0
+      if (BEAMS && frame < 380) {
+        // Stage spotlights sweeping from the top.
+        ctx.globalCompositeOperation = 'lighter'
+        BEAMS.forEach((c, k) => {
+          const ox = w * (0.14 + k * 0.24)
+          const ang = Math.PI / 2 + Math.sin(frame / 38 + k * 1.3) * 0.38
+          const len = h * 1.15
+          const g = ctx.createLinearGradient(ox, 0, ox + Math.cos(ang) * len, Math.sin(ang) * len)
+          g.addColorStop(0, c)
+          g.addColorStop(1, 'rgba(0,0,0,0)')
+          ctx.fillStyle = g
+          ctx.globalAlpha = 0.32
+          ctx.beginPath()
+          ctx.moveTo(ox, -10)
+          ctx.lineTo(ox + Math.cos(ang - 0.13) * len, Math.sin(ang - 0.13) * len)
+          ctx.lineTo(ox + Math.cos(ang + 0.13) * len, Math.sin(ang + 0.13) * len)
+          ctx.closePath()
+          ctx.fill()
+        })
+        ctx.globalAlpha = 1
+        ctx.globalCompositeOperation = 'source-over'
+      }
+      if (mode === 'rock' && frame < 380) {
+        // Fire sparks shooting up from the stage.
+        for (let s = 0; s < 3; s++) parts.push({ kind: 'ember', x: R(0, w), y: h + 10, vx: R(-1.5, 1.5), vy: R(-14, -6), r: R(5, 12), c: ['#FFF3B0', '#FFD23F', '#FF9F1C', '#FF4D00'][s % 4], g: 0.12, life: 70, max: 70 })
+      }
+
+      let alive = mode === 'lasers' || BEAMS ? frame < 380 : 0
       for (const p of parts) {
         if (p.delay > 0) {
           p.delay--
@@ -156,13 +332,13 @@ function Effects({ mode, colors }) {
           continue
         }
         p.vy += p.g || 0
-        p.x += p.vx
+        p.x += p.vx + (p.sw ? Math.sin(frame / 18 + p.ph) * p.sw : 0)
         p.y += p.vy
         if (p.kind === 'f' || p.kind === 'flame') {
           p.vx *= p.kind === 'flame' ? 0.92 : 0.97
           p.vy *= p.kind === 'flame' ? 0.92 : 0.97
         }
-        if (p.y > h + 30) continue
+        if ((p.vy > 0 && p.y > h + 60) || p.y < -h * 2) continue
         ctx.fillStyle = p.c
         ctx.globalAlpha = p.max ? Math.max(0, p.life / p.max) : 1
         if (p.kind === 'px') {
@@ -175,6 +351,12 @@ function Effects({ mode, colors }) {
           ctx.beginPath()
           ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
           ctx.fill()
+        } else if (SHAPES[p.kind]) {
+          ctx.save()
+          ctx.translate(p.x, p.y)
+          ctx.rotate((p.rot += p.spin || 0))
+          SHAPES[p.kind](ctx, p)
+          ctx.restore()
         } else if (p.kind === 'c') {
           ctx.save()
           ctx.translate(p.x, p.y)
@@ -204,19 +386,6 @@ function Effects({ mode, colors }) {
     return () => cancelAnimationFrame(raf)
   }, [mode, colors])
   return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 3 }} />
-}
-
-function Crest({ src, house, size = 420, style }) {
-  const [broken, setBroken] = useState(false)
-  if (src && !broken) {
-    return <img src={src} alt="" onError={() => setBroken(true)} style={{ width: size, height: size * 1.1, objectFit: 'contain', display: 'block', ...style }} />
-  }
-  return (
-    <svg width={size * 0.72} height={size * 0.84} viewBox="0 0 120 140" aria-hidden="true" style={style}>
-      <path d="M10 8h100v60c0 38-26 58-50 68C36 126 10 106 10 68z" fill={house.bg} stroke={house.edge} strokeWidth="6" />
-      <text x="60" y="84" textAnchor="middle" fontSize="48" fontWeight="800" fill={house.edge}>{house.name[0]}</text>
-    </svg>
-  )
 }
 
 // ---------- the four looks ----------
@@ -406,6 +575,7 @@ const BACKDROP = {
   eighties: 'linear-gradient(180deg, #12002b 0%, #3a0ca3 45%, #12002b 70%)',
   race: '#2b2b2b',
   hero: '#120806',
+  ...THEME_BACKDROP,
 }
 
 export default function Celebration() {
@@ -447,7 +617,7 @@ export default function Celebration() {
     // (window.__celebrationStyle forces one, for testing.)
     const style = STYLES.includes(window.__celebrationStyle) ? window.__celebrationStyle : pick(STYLES.filter((s) => s !== lastStyle))
     lastStyle = style
-    const words = { pixel: PIXEL_WORDS, eighties: EIGHTIES_WORDS, race: RACE_WORDS, hero: HERO_WORDS }[style] || COMIC_WORDS
+    const words = { pixel: PIXEL_WORDS, eighties: EIGHTIES_WORDS, race: RACE_WORDS, hero: HERO_WORDS, ...THEME_WORDS }[style] || COMIC_WORDS
     setLook({ id: current.id, style, crest: list.length ? pick(list) : null, word: pick(words) })
     const t = setTimeout(() => setQueue((q) => q.slice(1)), SHOW_MS)
     return () => clearTimeout(t)
@@ -459,13 +629,13 @@ export default function Celebration() {
   const chore = chores.find((c) => c.id === current.chore_id)
   const t = house || { name: person?.name || 'the family', bg: person?.color || '#7F0909', edge: '#FFFFFF', text: '#FFFFFF', fx: [person?.color || '#F1B400', '#FFFFFF', '#F1B400', '#FFD34D', '#FFFFFF'] }
   const props = { t, pts: current.points, crest: house ? look.crest : null, who: [person?.name, chore?.title || current.chore_title].filter(Boolean).join(' · '), word: look.word }
-  const View = { banner: Banner, lasers: Lasers, comic: Comic, magic: Magic, pixel: Pixel, eighties: Eighties, race: Race, hero: Hero }[look.style]
-  const fx = { banner: 'banner', lasers: 'lasers', magic: 'magic', pixel: 'pixel', race: 'race', hero: 'hero' }[look.style]
+  const View = { banner: Banner, lasers: Lasers, comic: Comic, magic: Magic, pixel: Pixel, eighties: Eighties, race: Race, hero: Hero, ...THEME_VIEWS }[look.style]
+  const fx = look.style === 'comic' || look.style === 'eighties' ? null : look.style
   const comicBg = look.style === 'comic' ? { backgroundImage: `radial-gradient(${t.fx[1]} 22%, transparent 24%)`, backgroundSize: '34px 34px', backgroundColor: t.fx[3] } : {}
 
   return (
     <div onClick={() => setQueue((q) => q.slice(1))} style={{ position: 'fixed', inset: 0, zIndex: 200, background: BACKDROP[look.style], ...comicBg, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-      <style>{KEYFRAMES}</style>
+      <style>{KEYFRAMES + THEME_KEYFRAMES}</style>
       <View key={current.id} {...props} />
       {fx && <Effects key={`fx-${current.id}`} mode={fx} colors={t.fx} />}
     </div>
