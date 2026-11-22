@@ -26,7 +26,7 @@ export const HUB_BLOCK_LABELS = {
   waste: 'Garbage and Recycling',
   onthisday: 'On This Day (photos)',
   ink: 'Ink (draw or write)',
-  joke: 'Joke of the Hour',
+  joke: 'Giggle Break',
 }
 
 // Size (S, M, L, XL) is a window's height; width (quarter, half, full) is

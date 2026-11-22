@@ -497,7 +497,7 @@ export function JokeBlock() {
     <>
       <button type="button" {...hold} onClick={() => joke.punchline && setShown(reveal ? null : joke.hour)} style={{ all: 'unset', cursor: 'pointer', display: 'block', height: '100%', WebkitUserSelect: 'none', userSelect: 'none' }}>
         <div style={box({ gap: 10 })}>
-          <Title right={joke.punchline ? (reveal ? 'Tap to hide' : 'Tap for the answer') : ''}>Joke of the Hour</Title>
+          <Title right={joke.punchline ? (reveal ? 'Tap to hide' : 'Tap for the answer') : ''}>Giggle Break</Title>
           <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.25 }}>{joke.setup}</div>
           {joke.punchline && (
             <div style={{ fontSize: 24, lineHeight: 1.25, color: reveal ? C.rust : C.muted, fontWeight: reveal ? 800 : 500, transition: 'color 300ms ease' }}>
@@ -510,7 +510,7 @@ export function JokeBlock() {
         open={asking}
         scale={2}
         title="Never show this joke again?"
-        detail="It's taken out of the Joke of the Hour for good, and a new joke shows."
+        detail="It's taken out of Giggle Break for good, and a new joke shows."
         confirmLabel="Hide It"
         onCancel={() => setAsking(false)}
         onConfirm={async () => {

@@ -1,4 +1,4 @@
-// Family-friendly jokes for the Joke of the Hour window. Kept in the app (no
+// Family-friendly jokes for the Giggle Break window. Kept in the app (no
 // outside joke service), so every one is safe for the kids. [setup, punchline]
 export const JOKES = [
   ['Why did the scarecrow win an award?', 'He was outstanding in his field.'],
@@ -105,11 +105,14 @@ export const JOKES = [
 
 const gcd = (a, b) => (b ? gcd(b, a % b) : a)
 
-// The joke for a given hour from a pool of { key, setup, punchline } (same all
-// hour, everywhere; a new one each hour, every joke once before any repeats).
+// A new joke every half hour (on the hour and half past).
+export const JOKE_MINUTES = 30
+
+// The joke for the current half hour from a pool of { key, setup, punchline }
+// (the same everywhere; every joke once before any repeats).
 export function jokeOfTheHour(pool, now = new Date()) {
   if (!pool.length) return null
-  const hours = Math.floor(now.getTime() / 3600000)
+  const hours = Math.floor(now.getTime() / (JOKE_MINUTES * 60000))
   // Step through the pool with a stride that shares no factor with its size.
   let stride = 389
   while (gcd(stride, pool.length) !== 1) stride += 2
