@@ -39,6 +39,8 @@ const HERO_WORDS = ['MISSION COMPLETE', 'NAILED IT', 'HERO OF THE DAY', 'BOOM. D
 const COMIC_WORDS = ['KAPOW!', 'BAM!', 'WHAM!', 'ZAP!', 'BOOM!', 'POW!', 'SHAZAM!']
 const SHOW_MS = 6500
 
+// Read at page load: the wall's router may tidy the address before members load.
+const DEMO = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('celebrate') : null
 let crestList = null // loaded once from /crests/index.json
 let lastStyle = null
 const pick = (a) => a[Math.floor(Math.random() * a.length)]
@@ -601,7 +603,7 @@ export default function Celebration() {
   const demoDone = useRef(false)
   useEffect(() => {
     if (demoDone.current || !members.length) return undefined
-    const want = new URLSearchParams(window.location.search).get('celebrate')
+    const want = DEMO
     if (!want) return undefined
     demoDone.current = true
     const people = members.filter((m) => m.house)
