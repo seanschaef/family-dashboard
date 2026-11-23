@@ -38,6 +38,18 @@ export function AuthProvider({ children }) {
       setSession(data.session)
       setLoading(false)
       if (!data.session) wallSignIn()
+      // On the wall, a stored sign-in can be dead (revoked elsewhere) while
+      // still looking valid here; check it with the server and replace it.
+      else if (IS_WALL) {
+        setTimeout(async () => {
+          const { error } = await supabase.auth.getUser()
+          if (error) {
+            await supabase.auth.signOut({ scope: 'local' })
+            lastWallSignIn = 0
+            wallSignIn()
+          }
+        }, 0)
+      }
     })
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
