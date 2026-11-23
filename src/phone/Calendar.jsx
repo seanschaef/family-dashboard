@@ -121,7 +121,7 @@ export default function Calendar() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 24, fontWeight: 800 }}>{periodTitle(view, anchor)}</div>
         <Link to="/app/calendars" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>
-          Feeds
+          Calendars ›
         </Link>
       </div>
 

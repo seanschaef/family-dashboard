@@ -33,7 +33,6 @@ export const PHONE_NAV = [
   { key: 'groceries', label: 'Groceries', to: '/app/groceries', icon: 'cart' },
   { key: 'meals', label: 'Meals', to: '/app/meals', icon: 'utensils' },
   { key: 'chores', label: 'Chores', to: '/app/chores', icon: 'check' },
-  { key: 'photos', label: 'Photos', to: '/app/photos', icon: 'photos' },
   { key: 'settings', label: 'Settings', to: '/app/settings', icon: 'gear' },
 ]
 

@@ -11,7 +11,7 @@ export const PERSON_BLOCK_LABELS = {
   jobs: 'Jobs (big tiles and stars)',
   reminders: 'Reminders',
   birthday: 'Birthday Countdown',
-  widget: 'Widget (set under Wall widgets)',
+  widget: 'Widget (weather, countdown, note…)',
   photo: 'Photos',
 }
 

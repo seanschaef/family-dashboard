@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMembers } from '../lib/members.jsx'
 import { useChoreLogs, useChores } from '../lib/chores.js'
+import { useFamilyTable } from '../lib/db.js'
 import { Crest, THEME_STYLES, THEME_WORDS, THEME_BACKDROP, THEME_KEYFRAMES, THEME_VIEWS, GOLF_HOLE, IRISH_POT } from './CelebrationThemes.jsx'
 import { THEME2_STYLES, THEME2_WORDS, THEME2_BACKDROP, THEME2_KEYFRAMES, THEME2_VIEWS, THEME2_SHAPES, THEME2_FX } from './CelebrationThemes2.jsx'
 
@@ -603,6 +604,12 @@ export default function Celebration() {
   const { members, byKey } = useMembers()
   const { rows: logs } = useChoreLogs()
   const { rows: chores } = useChores()
+  // Settings › The Wall › Celebrations (on/off, no-points chores, styles in
+  // the mix, and "Play on the wall").
+  const { rows: settingsRows } = useFamilyTable('wall_settings', { select: 'id, celebrations_on, celebrate_no_points, celebration_styles_off, celebration_preview, celebration_preview_at' })
+  const cfg = settingsRows[0] || {}
+  const cfgRef = useRef(cfg)
+  cfgRef.current = cfg
   const seen = useRef(null)
   const [queue, setQueue] = useState([])
   const [look, setLook] = useState(null) // { id, style, crest, word }
@@ -635,6 +642,23 @@ export default function Celebration() {
     return () => clearTimeout(t)
   }, [])
 
+  // "Play on the wall" from the phone: plays once each time the request time
+  // changes (requests already there when the wall loaded, or older than two
+  // minutes, are ignored).
+  const lastPreview = useRef(undefined)
+  useEffect(() => {
+    if (!settingsRows.length) return
+    const at = cfg.celebration_preview_at || null
+    if (lastPreview.current === undefined) { lastPreview.current = at; return }
+    if (!at || at === lastPreview.current) return
+    lastPreview.current = at
+    if (Date.now() - new Date(at).getTime() > 2 * 60000) return
+    const all = membersRef.current
+    const people = all.filter((m) => m.house)
+    const m = pick(people.length ? people : all)
+    if (m) setQueue((q) => [...q, { id: `play-${at}`, member_key: m.key, points: 10, chore_title: 'Preview', style: STYLES.includes(cfg.celebration_preview) ? cfg.celebration_preview : null }])
+  }, [settingsRows]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // New chore_logs with points (not ones already there when the wall loaded,
   // and not old ones arriving late) join the queue.
   useEffect(() => {
@@ -646,7 +670,9 @@ export default function Celebration() {
     const fresh = logs.filter((l) => !seen.current.has(l.id))
     fresh.forEach((l) => seen.current.add(l.id))
     // Every new tick celebrates, points or not (old ticks arriving late don't).
-    const worth = fresh.filter((l) => !l.created_at || Date.now() - new Date(l.created_at).getTime() < 3 * 60000)
+    const c = cfgRef.current
+    if (c.celebrations_on === false) return
+    const worth = fresh.filter((l) => (!l.created_at || Date.now() - new Date(l.created_at).getTime() < 3 * 60000) && (c.celebrate_no_points !== false || (l.points || 0) > 0))
     if (worth.length) setQueue((q) => [...q, ...worth])
   }, [logs])
 
@@ -656,7 +682,10 @@ export default function Celebration() {
     const person = byKey(current.member_key)
     const list = (crestList || FALLBACK_CRESTS)[person?.house] || []
     // (window.__celebrationStyle forces one, for testing.)
-    const style = current.style || (STYLES.includes(window.__celebrationStyle) ? window.__celebrationStyle : null) || pick(STYLES.filter((s) => s !== lastStyle))
+    const offList = cfgRef.current.celebration_styles_off || []
+    const mix = STYLES.filter((s) => !offList.includes(s))
+    const pool = mix.length ? mix : STYLES
+    const style = current.style || (STYLES.includes(window.__celebrationStyle) ? window.__celebrationStyle : null) || pick(pool.length > 1 ? pool.filter((s) => s !== lastStyle) : pool)
     lastStyle = style
     const words = { pixel: PIXEL_WORDS, eighties: EIGHTIES_WORDS, race: RACE_WORDS, hero: HERO_WORDS, ...THEME_WORDS, ...THEME2_WORDS }[style] || COMIC_WORDS
     setLook({ id: current.id, style, crest: list.length ? pick(list) : null, word: pick(words), cheer: pick(CHEERS), cheerBig: pick(CHEER_BIG) })

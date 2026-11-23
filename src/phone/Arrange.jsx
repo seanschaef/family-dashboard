@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { C } from '../theme.js'
-import { PhoneHeader } from './parts.jsx'
 import { useMembers } from '../lib/members.jsx'
 import {
   normalizeHubLayout,
@@ -19,15 +18,18 @@ import {
   ROW_UNIT,
 } from '../wall/hubLayout.js'
 import { PERSON_BLOCK_LABELS, normalizePersonLayout, personApproxHeight } from '../wall/personLayout.js'
+import { PageHeader } from './ui.jsx'
+import { WidgetEditor } from './Widgets.jsx'
+import { LiveWall } from './WallPreview.jsx'
 
 // Where each window's own content is set up (opened from Arrange).
 const WINDOW_SETTINGS = {
-  photo: ['/app/photos', 'Photos: Choose Folders'],
-  onthisday: ['/app/photos', 'Photos: Choose Folders'],
-  calendar: ['/app/calendars', 'Calendar Links and Colours'],
-  legend: ['/app/calendars', 'Calendar Links and Colours'],
-  today: ['/app/calendars', 'Calendar Links and Colours'],
-  nextup: ['/app/calendars', 'Calendar Links and Colours'],
+  photo: ['/app/photos', 'Photos'],
+  onthisday: ['/app/photos', 'Photos'],
+  calendar: ['/app/calendars', 'Calendars'],
+  legend: ['/app/calendars', 'Calendars'],
+  today: ['/app/calendars', 'Calendars'],
+  nextup: ['/app/calendars', 'Calendars'],
   dinner: ['/app/meals', 'Meals'],
   mealsweek: ['/app/meals', 'Meals'],
   groceries: ['/app/groceries', 'Groceries'],
@@ -38,13 +40,12 @@ const WINDOW_SETTINGS = {
   points: ['/app/rewards', 'Rewards & Points'],
   goals: ['/app/rewards', 'Rewards: Who Is Saving for What'],
   birthdays: ['/app/dates', 'Important Dates'],
-  birthday: ['/app/settings', 'Birthdays (Settings › People)'],
+  birthday: ['/app/settings/people', 'Birthdays (People)'],
   notes: ['/app/notes', 'Family Notes'],
   ink: ['/app/ink', 'Ink'],
   waste: ['/app/waste', 'Garbage and Recycling Days'],
   reminders: ['/app/today', 'Reminders (Today)'],
-  widget: ['/app/widgets', 'Wall Widgets'],
-  header: ['/app/settings', 'Family Name (Greeting)'],
+  header: ['/app/settings/family', 'Family Name (Greeting)'],
 }
 const INTERVALS = [0, 5, 10, 15, 20, 30, 60] // 0 = manual (swipe or tap to change)
 const TRANSITIONS = [
@@ -277,6 +278,9 @@ export default function Arrange() {
   // Which page: the family hub, or one person's page (?who=<member key>).
   const [params, setParams] = useSearchParams()
   const who = params.get('who') || 'hub'
+  // Arrange (drag the windows) or Live view (the real wall page, as saved).
+  const view = params.get('view') === 'live' ? 'live' : 'design'
+  const setView = (v) => setParams((prev) => { const n = new URLSearchParams(prev); if (v === 'live') n.set('view', 'live'); else n.delete('view'); return n })
   const person = who === 'hub' ? null : members.find((m) => m.key === who)
   const labels = person ? PERSON_BLOCK_LABELS : HUB_BLOCK_LABELS
   const short = (id) => labels[id].replace(/ \(.*\)$/, '')
@@ -354,29 +358,41 @@ export default function Arrange() {
   if (!pageKey) {
     return (
       <>
-        <PhoneHeader title="Arrange the Wall" subtitle="Drag, resize, combine and hide windows" />
+        <PageHeader title="Layout" subtitle="Windows on the hub and each person’s page" />
         <div style={{ fontSize: 15, color: C.muted }}>{members.length ? 'That person isn’t in the family any more.' : 'Loading…'}</div>
-        <Link to="/app/arrange" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Arrange the Family Hub ›</Link>
+        <Link to="/app/arrange" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Family Hub layout ›</Link>
       </>
     )
   }
 
   return (
     <>
-      <PhoneHeader title="Arrange the Wall" subtitle="Drag, resize, combine and hide windows" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
+      <PageHeader title="Layout" subtitle="Windows on the hub and each person’s page" />
 
       {/* Which page to arrange */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {[{ key: 'hub', name: 'Family Hub', color: C.family }, ...members].map((m) => {
           const active = who === m.key
           return (
-            <button key={m.key} type="button" aria-pressed={active} onClick={() => setParams(m.key === 'hub' ? {} : { who: m.key })} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', height: 36, padding: '0 14px', display: 'inline-flex', alignItems: 'center', background: active ? m.color : C.card, color: active ? '#FFFFFF' : C.ink, border: `2px solid ${active ? m.color : C.border}`, borderRadius: 999, fontSize: 14, fontWeight: 700 }}>
+            <button key={m.key} type="button" aria-pressed={active} onClick={() => setParams(() => { const n = new URLSearchParams(); if (m.key !== 'hub') n.set('who', m.key); if (view === 'live') n.set('view', 'live'); return n })} style={{ all: 'unset', cursor: 'pointer', boxSizing: 'border-box', height: 36, padding: '0 14px', display: 'inline-flex', alignItems: 'center', background: active ? m.color : C.card, color: active ? '#FFFFFF' : C.ink, border: `2px solid ${active ? m.color : C.border}`, borderRadius: 999, fontSize: 14, fontWeight: 700 }}>
               {m.key === 'hub' ? m.name : `${m.name}'s Page`}
             </button>
           )
         })}
       </div>
 
+      <div role="tablist" aria-label="Arrange or live view" style={{ display: 'flex', background: C.cream, border: `2px solid ${C.border}`, borderRadius: 999, padding: 3, alignSelf: 'flex-start' }}>
+        {[['design', 'Arrange'], ['live', 'Live view']].map(([v, l]) => (
+          <button key={v} type="button" role="tab" aria-selected={view === v} onClick={() => { if (v === 'live' && dirty && !window.confirm('Live view shows the saved wall. Leave your unsaved changes for now?')) return; setView(v) }} style={{ all: 'unset', cursor: 'pointer', padding: '7px 16px', borderRadius: 999, fontSize: 14, fontWeight: 700, background: view === v ? C.meals : 'transparent', color: view === v ? '#FFF' : C.ink }}>{l}</button>
+        ))}
+      </div>
+
+      {view === 'live' ? (
+        <div style={{ alignSelf: 'center', width: 'min(480px, 100%)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <LiveWall src={person ? `/wall/member/${person.key}` : '/wall/hub'} />
+          <div style={{ fontSize: 13, color: C.muted }}>The real {person ? `${person.name}’s page` : 'Family Hub'} as it’s saved, with live data. Switch to Arrange to change it.</div>
+        </div>
+      ) : (<>
       {/* Preview and the selected window's settings side by side when the
           screen is wide enough (laptop, tablet); stacked on a phone. */}
       <div style={{ alignSelf: 'center', width: 'min(1000px, calc(100vw - 40px))', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
@@ -443,6 +459,13 @@ export default function Arrange() {
                   <Pick key={sec} active={(b.seconds || 8) === sec} disabled={!canEdit} onClick={() => update(b.id, { seconds: sec })}>{sec < 60 ? `${sec}s` : `${sec / 60} min`}</Pick>
                 ))}
               </div>
+            </>
+          )}
+
+          {person && (b.group || [b.id]).includes('widget') && (
+            <>
+              <div style={rowLabel}>Widget shows</div>
+              <WidgetEditor member={person} disabled={!canEdit} />
             </>
           )}
 
@@ -544,7 +567,7 @@ export default function Arrange() {
       </div>
 
       {canEdit && !wide && saveBar}
-      <Link to="/app/wall-preview" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>Wall Preview ›</Link>
+      </>)}
     </>
   )
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { C, FAMILY_COLOR } from '../theme.js'
-import { PhoneHeader } from './parts.jsx'
+import { PageHeader, ColorField } from './ui.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import { listCalendars, addCalendar, removeCalendar, syncCalendars, updateCalendar } from '../lib/calendars.js'
@@ -36,36 +36,9 @@ function OwnerPicker({ value, onChange, members }) {
 }
 
 // Colour: "Person's colour" (null, follows the owner), any colour from the
-// picker, or one tap on a colour already in use (other calendars, people).
+// picker, or one tap on a colour already in use (the shared ColorField).
 function ColorPicker({ value, onChange, autoColor, used = [] }) {
-  const current = value || autoColor || '#2F6A9E'
-  const norm = (c) => String(c || '').toLowerCase()
-  const recent = [...new Set(used.filter(Boolean).map(norm))].filter((c) => c !== norm(value)).slice(0, 14)
-  const swatch = (col, selected, size = 28) => ({ all: 'unset', cursor: 'pointer', width: size, height: size, borderRadius: size / 2, background: col, boxShadow: selected ? `0 0 0 3px ${C.cream}, 0 0 0 5px ${col}` : `inset 0 0 0 1px rgba(0,0,0,0.12)`, flexShrink: 0, display: 'inline-block' })
-  const pill = (active) => ({ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: active ? C.ink : C.muted, border: `2px solid ${active ? C.ink : C.border}`, borderRadius: 999, padding: '6px 14px 6px 6px', position: 'relative', overflow: 'hidden' })
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button type="button" onClick={() => onChange(null)} aria-pressed={!value} style={{ all: 'unset', ...pill(!value) }}>
-          <span style={swatch(autoColor || '#B0A89E', false, 24)} />
-          Person&apos;s colour
-        </button>
-        <label style={pill(!!value)}>
-          <span style={swatch(current, false, 24)} />
-          {value ? 'Custom colour' : 'Pick a colour'}
-          <input type="color" aria-label="Pick a colour" value={current} onChange={(e) => onChange(e.target.value)} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
-        </label>
-      </div>
-      {recent.length > 0 && (
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: C.muted }}>Already used:</span>
-          {recent.map((col) => (
-            <button key={col} type="button" aria-label={`Use colour ${col}`} onClick={() => onChange(col)} style={swatch(col, false)} />
-          ))}
-        </div>
-      )}
-    </div>
-  )
+  return <ColorField value={value} onChange={onChange} auto={autoColor || '#B0A89E'} used={used} />
 }
 
 const ownersOf = (cal) => (cal.person_keys?.length ? cal.person_keys : cal.person_key ? [cal.person_key] : [])
@@ -194,7 +167,7 @@ export default function Calendars() {
 
   return (
     <>
-      <PhoneHeader title="Calendar Links" subtitle="Private ICS feeds · read-only" />
+      <PageHeader title="Calendars" subtitle="Linked calendars, who they belong to, colours" />
 
       <div style={{ fontSize: 14, color: C.muted }}>
         Paste the private ICS link from Google Calendar or Outlook. Events are

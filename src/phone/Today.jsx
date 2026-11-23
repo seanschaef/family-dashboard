@@ -17,11 +17,10 @@ function firstName(me, user) {
   return local ? local.charAt(0).toUpperCase() + local.slice(1) : 'there'
 }
 
-const linkBtn = { all: 'unset', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: C.tealText }
 
 export default function Today() {
   const now = useNow()
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const { me, setMe, members, nameFor } = useMembers()
   const [scope, setScope] = useState('me')
   const T = todayISO()
@@ -125,13 +124,14 @@ export default function Today() {
       </PhoneCard>
 
 
-      <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', fontSize: 14, paddingTop: 4 }}>
-        <Link to="/app/notes" style={{ color: C.tealText, fontWeight: 700 }}>Family Notes</Link>
-        <Link to="/app/ink" style={{ color: C.tealText, fontWeight: 700 }}>Ink</Link>
-        <Link to="/app/calendars" style={{ color: C.tealText, fontWeight: 700 }}>Calendar Links</Link>
-        <Link to="/app/wall-display" style={{ color: C.tealText, fontWeight: 700 }}>Wall Display</Link>
-        <Link to="/app/widgets" style={{ color: C.tealText, fontWeight: 700 }}>Wall Widgets</Link>
-        <button type="button" onClick={() => signOut()} style={{ ...linkBtn, color: C.muted, marginLeft: 'auto' }}>Sign out</button>
+      {/* Quick ways to put something on the wall (settings live under Settings). */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        {[['/app/notes', 'Write a note', 'Short message on the wall'], ['/app/ink', 'Draw on the wall', 'Ink board']].map(([to, title, sub]) => (
+          <Link key={to} to={to} style={{ flex: 1, textDecoration: 'none', background: C.tealTint, borderRadius: 16, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 15, fontWeight: 800, color: C.tealText }}>{title} ›</span>
+            <span style={{ fontSize: 12, color: C.muted }}>{sub}</span>
+          </Link>
+        ))}
       </div>
     </>
   )

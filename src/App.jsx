@@ -19,16 +19,17 @@ import Chores from './phone/Chores.jsx'
 import Photos from './phone/Photos.jsx'
 import Calendars from './phone/Calendars.jsx'
 import WallDisplay from './phone/WallDisplay.jsx'
-import Widgets from './phone/Widgets.jsx'
 import Rewards from './phone/Rewards.jsx'
 import Settings from './phone/Settings.jsx'
-import WallPreview from './phone/WallPreview.jsx'
 import Arrange from './phone/Arrange.jsx'
 import Accounts from './phone/Accounts.jsx'
 import Dates from './phone/Dates.jsx'
 import Notes from './phone/Notes.jsx'
 import Waste from './phone/Waste.jsx'
 import Ink from './phone/Ink.jsx'
+import SettingsPeople from './phone/SettingsPeople.jsx'
+import SettingsFamily from './phone/SettingsFamily.jsx'
+import Celebrations from './phone/Celebrations.jsx'
 
 // On the Pi we set VITE_DEVICE_MODE=wall so the root boots straight to the wall.
 const DEVICE_MODE = import.meta.env.VITE_DEVICE_MODE
@@ -82,10 +83,14 @@ export default function App() {
         <Route path="photos" element={<Photos />} />
         <Route path="calendars" element={<Calendars />} />
         <Route path="wall-display" element={<WallDisplay />} />
-        <Route path="widgets" element={<Widgets />} />
+        {/* Old addresses: Wall Widgets and Wall Preview now live in Layout (Arrange). */}
+        <Route path="widgets" element={<Navigate to="/app/arrange" replace />} />
         <Route path="rewards" element={<Rewards />} />
         <Route path="settings" element={<Settings />} />
-        <Route path="wall-preview" element={<WallPreview />} />
+        <Route path="settings/people" element={<SettingsPeople />} />
+        <Route path="settings/family" element={<SettingsFamily />} />
+        <Route path="settings/celebrations" element={<Celebrations />} />
+        <Route path="wall-preview" element={<Navigate to="/app/arrange?view=live" replace />} />
         <Route path="arrange" element={<Arrange />} />
         <Route path="accounts" element={<Accounts />} />
         <Route path="dates" element={<Dates />} />

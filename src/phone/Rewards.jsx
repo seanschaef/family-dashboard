@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Avatar from '../components/Avatar.jsx'
 import { C } from '../theme.js'
-import { PhoneHeader } from './parts.jsx'
+import { PageHeader } from './ui.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { checkPin } from '../lib/pin.js'
@@ -109,7 +109,7 @@ export default function Rewards() {
 
   return (
     <>
-      <PhoneHeader title="Rewards & Points" subtitle="Earn points with chores, spend them on rewards" />
+      <PageHeader title="Rewards & Points" subtitle="Earn points with chores, spend them on rewards" backTo="/app/chores" backLabel="Chores" />
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {members.map((m) => (

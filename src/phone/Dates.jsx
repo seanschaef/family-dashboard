@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { C, MEMBER_PALETTE } from '../theme.js'
-import { PhoneHeader } from './parts.jsx'
+import { PageHeader, ColorField } from './ui.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { useImportantDates, addImportantDate, removeImportantDate, DATE_KINDS, dateCountdown, countdownText } from '../lib/dates.js'
@@ -19,7 +19,7 @@ function Chip({ active, color = C.meals, children, onClick }) {
 
 export default function Dates() {
   const { configured } = useAuth()
-  const { petName } = useMembers()
+  const { petName, members } = useMembers()
   const { rows: dates } = useImportantDates()
 
   const [title, setTitle] = useState('')
@@ -51,12 +51,32 @@ export default function Dates() {
 
   return (
     <>
-      <PhoneHeader title="Important Dates" subtitle="Counted down on the hub" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
+      <PageHeader title="Important Dates" subtitle="Counted down on the hub" />
 
       <div style={{ fontSize: 14, color: C.muted }}>
         Birthdays of people who aren&apos;t in the family list, {petName ? `${petName}'s` : 'the pet’s'} birthday,
-        anniversaries and other dates. Family members&apos; own birthdays come from Settings › People.
+        anniversaries and other dates.
       </div>
+
+      {/* Family birthdays come from People: shown here so every date is in one list. */}
+      {members.some((m) => m.birthday) && (
+        <div style={{ background: C.card, border: `2px solid ${C.border}`, borderRadius: 14, padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: 15, fontWeight: 800 }}>Family Birthdays</div>
+            <Link to="/app/settings/people" style={{ fontSize: 13, fontWeight: 700, color: C.tealText }}>Edit in People ›</Link>
+          </div>
+          {members.filter((m) => m.birthday).map((m) => {
+            const c = dateCountdown({ date: m.birthday, kind: 'birthday', year_known: true })
+            return (
+              <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
+                <span style={{ width: 12, height: 12, borderRadius: 6, background: m.color, flexShrink: 0 }} />
+                <span style={{ fontWeight: 700 }}>{m.name}</span>
+                <span style={{ color: C.muted }}>{new Date(m.birthday + 'T00:00:00').toLocaleDateString('en-CA', { month: 'long', day: 'numeric' })}{c ? ` · ${countdownText({ ...c, kind: 'birthday' })}` : ''}</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -93,10 +113,8 @@ export default function Dates() {
         )}
         <div>
           <div style={label}>Dot colour (optional)</div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 6 }}>
-            {MEMBER_PALETTE.map((col) => (
-              <button key={col} type="button" aria-label={`Colour ${col}`} aria-pressed={color === col} onClick={() => setColor(color === col ? null : col)} style={{ all: 'unset', cursor: 'pointer', width: 26, height: 26, borderRadius: 13, background: col, boxShadow: color === col ? `0 0 0 3px ${C.cream}, 0 0 0 5px ${col}` : 'none' }} />
-            ))}
+          <div style={{ marginTop: 6 }}>
+            <ColorField value={color} onChange={setColor} auto={null} autoLabel="Automatic" used={[...members.map((m) => m.color), ...dates.map((d) => d.color)]} />
           </div>
         </div>
         {status && <div style={{ fontSize: 14, color: status.ok ? C.tealText : C.danger }}>{status.text}</div>}

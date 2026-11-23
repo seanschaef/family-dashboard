@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { C } from '../theme.js'
-import { PhoneHeader } from './parts.jsx'
+import { PageHeader } from './ui.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import { useMembers } from '../lib/members.jsx'
 import {
@@ -121,7 +121,7 @@ export default function Photos() {
 
   return (
     <>
-      <PhoneHeader title="Photos" subtitle="Folders from your home NAS" />
+      <PageHeader title="Photos" subtitle="Collections from your home NAS, and where they show" />
 
       <div style={{ background: C.tealTint, borderRadius: 16, padding: 14, fontSize: 14, color: C.ink }}>
         Each collection points at a folder on your NAS. Route it to a person, a season, or a time of day. Photos stay on the NAS and only show on the wall.

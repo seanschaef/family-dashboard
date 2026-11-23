@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { C } from '../theme.js'
-import { PhoneHeader } from './parts.jsx'
+import { PageHeader } from './ui.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { useNow } from '../lib/time.js'
 import { useNotes, addNote, removeNote, liveNotes, noteAge } from '../lib/notes.js'
@@ -58,7 +58,7 @@ export default function Notes() {
 
   return (
     <>
-      <PhoneHeader title="Family Notes" subtitle="Short messages for the wall" />
+      <PageHeader title="Family Notes" subtitle="Short messages for the wall" backTo="/app/today" backLabel="Back" />
       <form onSubmit={post} style={{ display: 'flex', flexDirection: 'column', gap: 10, background: C.card, border: `2px solid ${C.border}`, borderRadius: 16, padding: 14 }}>
         <textarea aria-label="Note" value={text} maxLength={280} rows={3} placeholder="e.g. Practice moved to 6:30 tonight" onChange={(e) => setText(e.target.value)} style={{ font: 'inherit', fontSize: 16, padding: 10, borderRadius: 10, border: `2px solid ${C.border}`, background: C.cream, color: C.ink, resize: 'vertical' }} />
         <div style={{ fontSize: 12, fontWeight: 700, color: C.muted }}>Show on the wall for</div>

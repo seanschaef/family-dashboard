@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { C } from '../theme.js'
-import { PhoneHeader } from './parts.jsx'
+import { PageHeader } from './ui.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { listAccounts, createAccount, resetPassword, setAccountAdmin, setAccountMember, deleteAccount } from '../lib/adminUsers.js'
@@ -185,7 +185,7 @@ export default function Accounts() {
   if (!isAdmin) {
     return (
       <>
-        <PhoneHeader title="Accounts" />
+        <PageHeader title="Logins" />
         <div style={{ fontSize: 15, color: C.muted }}>Only an admin can manage logins.</div>
         <Link to="/app/settings" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>‹ Back to Settings</Link>
       </>
@@ -194,7 +194,7 @@ export default function Accounts() {
 
   return (
     <>
-      <PhoneHeader title="Accounts" subtitle="Who Can Sign In" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
+      <PageHeader title="Logins" subtitle="Who can sign in, passwords and parents" />
 
       {error && <div style={{ background: C.dangerTint, color: C.danger, borderRadius: 12, padding: 12, fontSize: 14 }}>{error}</div>}
 

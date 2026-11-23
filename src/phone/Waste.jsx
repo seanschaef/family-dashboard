@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { C } from '../theme.js'
-import { PhoneHeader } from './parts.jsx'
+import { PageHeader } from './ui.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { streamsOf, upcomingPickups, dayWord } from '../lib/waste.js'
 
@@ -32,7 +32,7 @@ export default function Waste() {
 
   return (
     <>
-      <PhoneHeader title="Garbage and Recycling" subtitle="Pickup days for the wall" action={<Link to="/app/settings" style={{ fontSize: 14, fontWeight: 700, color: C.tealText }}>‹ Settings</Link>} />
+      <PageHeader title="Garbage and Recycling" subtitle="Pickup days for the wall" />
       <div style={{ fontSize: 13, color: C.muted }}>
         For each one, enter any pickup date you know (from the City&apos;s collection calendar or the Waste Wise app) and how often it comes. Nothing is looked up online.
       </div>

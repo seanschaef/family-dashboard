@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { C } from '../theme.js'
-import { PhoneHeader } from './parts.jsx'
+import { PageHeader } from './ui.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import { getWallSettings, saveWallSettings, DEFAULT_WALL_SETTINGS } from '../lib/wallSettings.js'
 import { sunTimes, sunText } from '../lib/sun.js'
@@ -52,7 +52,7 @@ export default function WallDisplay() {
 
   return (
     <>
-      <PhoneHeader title="Wall Display" subtitle="Screen off at night, dark colours" />
+      <PageHeader title="Screen" subtitle="When the wall is on, and its night colours" />
 
       <div style={{ fontSize: 14, color: C.muted }}>
         Outside these hours the wall&apos;s monitor powers off, and it comes back

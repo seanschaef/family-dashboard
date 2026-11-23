@@ -1,246 +1,127 @@
 import { useEffect, useState } from 'react'
-import Avatar from '../components/Avatar.jsx'
-import { squareImage } from '../lib/images.js'
-import { Link } from 'react-router-dom'
-import { C, MEMBER_PALETTE } from '../theme.js'
-import { PhoneHeader } from './parts.jsx'
+import { C } from '../theme.js'
 import { useAuth } from '../lib/auth.jsx'
 import { useMembers } from '../lib/members.jsx'
 import { useTheme } from '../lib/theme.jsx'
-import { hashPin } from '../lib/pin.js'
+import { listCalendars } from '../lib/calendars.js'
+import { usePhotoCollections } from '../lib/photos.js'
+import { useImportantDates } from '../lib/dates.js'
+import { streamsOf } from '../lib/waste.js'
+import { getWallSettings } from '../lib/wallSettings.js'
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js'
+import { ALL_CELEBRATION_STYLES } from '../lib/celebrationStyles.js'
+import { PageHeader, Section, RowList, NavRow } from './ui.jsx'
 
-const PALETTE = MEMBER_PALETTE
-const ROLES = [
-  { label: 'Parent', value: 'parent' },
-  { label: 'Teen', value: 'teen' },
-  { label: 'Child', value: 'child' },
-]
-const input = { font: 'inherit', fontSize: 16, padding: '10px 12px', borderRadius: 12, border: `2px solid ${C.border}`, background: C.card, color: C.ink, width: '100%', boxSizing: 'border-box' }
-const card = { background: C.card, border: `2px solid ${C.border}`, borderRadius: 18, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }
-const label = { fontSize: 13, fontWeight: 700, color: C.muted }
+// Settings home. Four groups, each row showing where things stand:
+//   Me                    who you are on this phone, light/dark, sign out
+//   Family                people, family details, logins (parents)
+//   The Wall              layout, screen schedule, celebrations
+//   What the Wall Shows   calendars, photos, important dates, garbage days
+// Everyday things (notes, ink, reminders) live on Today, not here.
+
+const clock = (hhmm) => {
+  if (!hhmm) return ''
+  const [h, m] = hhmm.split(':').map(Number)
+  const ap = h >= 12 ? 'pm' : 'am'
+  const h12 = h % 12 || 12
+  return m ? `${h12}:${String(m).padStart(2, '0')} ${ap}` : `${h12} ${ap}`
+}
+const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
 function Chip({ active, color = C.meals, children, onClick }) {
   return (
-    <button type="button" onClick={onClick} style={{ all: 'unset', cursor: 'pointer', background: active ? color : C.card, color: active ? '#FFFFFF' : C.ink, border: active ? 'none' : `2px solid ${C.border}`, borderRadius: 999, padding: '7px 13px', fontSize: 14, fontWeight: 600 }}>
+    <button type="button" aria-pressed={active} onClick={onClick} style={{ all: 'unset', cursor: 'pointer', background: active ? color : C.card, color: active ? '#FFFFFF' : C.ink, border: `2px solid ${active ? color : C.border}`, borderRadius: 999, padding: '7px 13px', fontSize: 14, fontWeight: 600 }}>
       {children}
     </button>
   )
 }
 
-// Tap the circle to choose a photo (camera or library); it's cropped square
-// and shrunk on the phone before saving. "Remove photo" goes back to the initial.
-function PhotoPicker({ m, canEdit, onPatch }) {
-  const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState('')
-  async function pick(e) {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    setBusy(true)
-    setErr('')
-    try {
-      await onPatch({ avatar: await squareImage(file) })
-    } catch (x) {
-      setErr(x.message || 'Couldn’t use that picture.')
-    }
-    setBusy(false)
-  }
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
-      <label style={{ cursor: canEdit ? 'pointer' : 'default', position: 'relative', display: 'block', opacity: busy ? 0.5 : 1 }} title={canEdit ? 'Change photo' : undefined}>
-        <Avatar member={m} size={48} />
-        {canEdit && <span style={{ position: 'absolute', right: -4, bottom: -4, width: 20, height: 20, borderRadius: 10, background: C.card, border: `2px solid ${C.border}`, fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.ink }}>+</span>}
-        {canEdit && <input type="file" accept="image/*" onChange={pick} style={{ display: 'none' }} />}
-      </label>
-      {canEdit && m.avatar && <button type="button" onClick={() => onPatch({ avatar: null })} style={{ all: 'unset', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: C.muted }}>Remove</button>}
-      {err && <span style={{ fontSize: 11, color: C.danger, maxWidth: 90 }}>{err}</span>}
-    </div>
-  )
-}
-
-function MemberRow({ m, canEdit, isAdmin, onPatch, onRemove }) {
-  const [name, setName] = useState(m.name)
-  useEffect(() => setName(m.name), [m.name])
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <PhotoPicker m={m} canEdit={canEdit} onPatch={onPatch} />
-        <input aria-label="Name" value={name} disabled={!canEdit} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() && name !== m.name && onPatch({ name: name.trim() })} style={{ ...input, opacity: canEdit ? 1 : 0.6 }} />
-        {isAdmin && (
-          <button type="button" onClick={onRemove} style={{ all: 'unset', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.danger, flexShrink: 0 }}>Remove</button>
-        )}
-      </div>
-      {canEdit && (
-        <>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            {PALETTE.map((col) => (
-              <button key={col} type="button" aria-label={`colour ${col}`} onClick={() => onPatch({ color: col })} style={{ all: 'unset', cursor: 'pointer', width: 26, height: 26, borderRadius: 13, background: col, boxShadow: m.color === col ? `0 0 0 3px ${C.cream}, 0 0 0 5px ${col}` : 'none' }} />
-            ))}
-            <label style={{ cursor: 'pointer', width: 26, height: 26, borderRadius: 13, border: `2px dashed ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }} title="Custom colour">
-              <span aria-hidden="true" style={{ fontSize: 16, color: C.muted, lineHeight: 1 }}>+</span>
-              <input type="color" aria-label="Custom colour" value={m.color || '#7B4B8A'} onChange={(e) => onPatch({ color: e.target.value })} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
-            </label>
-            {!PALETTE.includes(m.color) && <span style={{ width: 26, height: 26, borderRadius: 13, background: m.color, boxShadow: `0 0 0 3px ${C.cream}, 0 0 0 5px ${m.color}` }} />}
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {ROLES.map((r) => (
-              <Chip key={r.value} active={m.role === r.value} color={m.color} onClick={() => onPatch({ role: r.value })}>{r.label}</Chip>
-            ))}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={label}>Birthday</span>
-            <input type="date" aria-label="Birthday" value={m.birthday || ''} onChange={(e) => onPatch({ birthday: e.target.value || null })} style={{ ...input, width: 'auto' }} />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={label}>House</span>
-            <select aria-label="House" value={m.house || ''} onChange={(e) => onPatch({ house: e.target.value || null })} style={{ ...input, width: 'auto' }}>
-              <option value="">None (uses their name)</option>
-              <option value="gryffindor">Gryffindor</option>
-              <option value="hufflepuff">Hufflepuff</option>
-              <option value="ravenclaw">Ravenclaw</option>
-              <option value="slytherin">Slytherin</option>
-            </select>
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-// Admins set a parent PIN. The wall asks for it to undo a chore that someone
-// else completed (so kids can't un-tick a parent's chore and claim the stars).
-function ParentPin({ familyId, hasPin, onSave }) {
-  const [pin, setPin] = useState('')
-  const [msg, setMsg] = useState('')
-  const valid = /^\d{4,6}$/.test(pin)
-  return (
-    <div style={card}>
-      <div style={{ fontSize: 16, fontWeight: 800 }}>Parent PIN</div>
-      <div style={{ fontSize: 13, color: C.muted }}>
-        The wall asks for it to undo a chore someone else completed. {hasPin ? 'A PIN is set.' : 'No PIN yet: until there is one, only the person who did a chore can undo it, right after ticking it.'}
-      </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input aria-label="New parent PIN" type="password" inputMode="numeric" autoComplete="new-password" placeholder="4 to 6 digits" value={pin} onChange={(e) => { setPin(e.target.value.replace(/\D/g, '').slice(0, 6)); setMsg('') }} style={{ ...input, width: 'auto', flexGrow: 1 }} />
-        <button type="button" disabled={!valid} onClick={async () => { await onSave(await hashPin(familyId, pin)); setPin(''); setMsg('PIN saved') }} style={{ all: 'unset', cursor: valid ? 'pointer' : 'default', background: C.meals, color: '#FFF', borderRadius: 12, padding: '10px 16px', fontSize: 14, fontWeight: 700, opacity: valid ? 1 : 0.5 }}>{hasPin ? 'Change' : 'Set'}</button>
-      </div>
-      {hasPin && <button type="button" onClick={async () => { await onSave(null); setMsg('PIN removed') }} style={{ all: 'unset', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.danger, alignSelf: 'flex-start' }}>Remove PIN</button>}
-      {msg && <div style={{ fontSize: 13, color: C.tealText }}>{msg}</div>}
-    </div>
-  )
-}
-
-function SaveToast({ at }) {
-  const [show, setShow] = useState(false)
-  useEffect(() => {
-    if (!at) return undefined
-    setShow(true)
-    const t = setTimeout(() => setShow(false), 1800)
-    return () => clearTimeout(t)
-  }, [at])
-  if (!show) return null
-  return (
-    <div style={{ position: 'sticky', top: 0, alignSelf: 'center', background: C.tealText, color: '#FFFFFF', borderRadius: 999, padding: '6px 16px', fontSize: 13, fontWeight: 700, zIndex: 5, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>Saved ✓</div>
-  )
-}
-
 export default function Settings() {
   const { user, signOut, configured } = useAuth()
-  const { members, familyName, familyId, petName, me, setMe, isAdmin, updateFamily, addMember, updateMember, removeMember, parentPinHash } = useMembers()
-  const [fam, setFam] = useState(familyName)
-  const [pet, setPet] = useState(petName)
-  const [savedAt, setSavedAt] = useState(0)
-  useEffect(() => setFam(familyName), [familyName])
-  useEffect(() => setPet(petName), [petName])
-
-  const flash = () => setSavedAt(Date.now())
-  const saveFamily = async (p) => { await updateFamily(p); flash() }
-  const saveMember = async (id, p) => { await updateMember(id, p); flash() }
-  const canEdit = (m) => isAdmin || m.id === me?.id
+  const { members, familyName, petName, me, setMe, isAdmin, wasteSchedule, parentPinHash } = useMembers()
   const { pref, setPref } = useTheme()
+  const { rows: collections } = usePhotoCollections()
+  const { rows: dates } = useImportantDates()
+  const [calCount, setCalCount] = useState(null)
+  const [wall, setWall] = useState(null)
+  const [celeb, setCeleb] = useState(null)
+
+  useEffect(() => {
+    let live = true
+    listCalendars().then((l) => live && setCalCount(l.length)).catch(() => {})
+    getWallSettings().then((w) => live && setWall(w)).catch(() => {})
+    if (isSupabaseConfigured) {
+      supabase.from('wall_settings').select('celebrations_on, celebration_styles_off').limit(1).maybeSingle().then(({ data }) => live && setCeleb(data || {}))
+    }
+    return () => { live = false }
+  }, [])
+
+  const screen = wall
+    ? !wall.display_enabled
+      ? 'Always on'
+      : wall.on_time === wall.weekend_on_time && wall.off_time === wall.weekend_off_time
+        ? `On ${clock(wall.on_time)} to ${clock(wall.off_time)}`
+        : `Weekdays ${clock(wall.on_time)} to ${clock(wall.off_time)} · weekends ${clock(wall.weekend_on_time)} to ${clock(wall.weekend_off_time)}`
+    : ''
+  const celebSummary = celeb
+    ? celeb.celebrations_on === false
+      ? 'Off'
+      : `On · ${ALL_CELEBRATION_STYLES.length - (celeb.celebration_styles_off || []).length} of ${ALL_CELEBRATION_STYLES.length} styles`
+    : ''
+  const streams = streamsOf(wasteSchedule).filter((s) => s.on && s.next)
+  const activeCollections = collections.filter((c) => c.active !== false)
 
   return (
     <>
-      <PhoneHeader title="Settings" subtitle={isAdmin ? 'You Are an Admin' : 'Your Account'} />
-      <SaveToast at={savedAt} />
+      <PageHeader title="Settings" subtitle={familyName && familyName !== 'family' ? `The ${familyName} family` : 'Family Dashboard'} back={false} />
 
-      <div style={card}>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>You</div>
-        <div style={label}>Which person are you?</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {members.map((m) => (
-            <Chip key={m.id} active={me?.id === m.id} color={m.color} onClick={() => setMe(m.id)}>{m.name}</Chip>
-          ))}
-        </div>
-        <div style={{ fontSize: 13, color: C.muted }}>{user?.email}</div>
-        <button type="button" onClick={signOut} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.tealText }}>Sign out</button>
-      </div>
-
-      <div style={card}>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>Appearance</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {[
-            ['sun', 'Sunset to sunrise'],
-            ['auto', 'Match device'],
-            ['light', 'Light'],
-            ['dark', 'Dark'],
-          ].map(([v, l]) => (
-            <Chip key={v} active={pref === v} onClick={() => setPref(v)}>{l}</Chip>
-          ))}
-        </div>
-        <div style={{ fontSize: 12, color: C.muted }}>Just this device. The wall has its own night-time schedule under Wall display.</div>
-      </div>
-
-      <div style={card}>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>Important Dates</div>
-        <Link to="/app/dates" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Important Dates: Birthdays, Anniversaries and More ›</Link>
-        <div style={{ fontSize: 12, color: C.muted }}>Counted down on the hub with the family&apos;s birthdays.</div>
-      </div>
-
-      {isAdmin && <ParentPin familyId={familyId} hasPin={!!parentPinHash} onSave={(h) => updateFamily({ parent_pin_hash: h })} />}
-
-      {isAdmin && (
-        <div style={card}>
-          <div style={{ fontSize: 16, fontWeight: 800 }}>Accounts</div>
-          <Link to="/app/accounts" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Manage Logins ›</Link>
-          <div style={{ fontSize: 12, color: C.muted }}>Create logins, reset passwords, link a login to a person, make someone an admin.</div>
-        </div>
-      )}
-
-      <div style={card}>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>Family</div>
-        {!isAdmin && <div style={{ fontSize: 13, color: C.muted }}>Only an admin can change these.</div>}
+      <Section title="Me">
         <div>
-          <div style={label}>Family name</div>
-          <input aria-label="Family name" value={fam} disabled={!isAdmin} onChange={(e) => setFam(e.target.value)} onBlur={() => fam.trim() && fam !== familyName && saveFamily({ name: fam.trim() })} style={{ ...input, opacity: isAdmin ? 1 : 0.6 }} />
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Shown on the hub greeting: “Good morning, {fam || 'family'}!”</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.muted, marginBottom: 6 }}>On this phone I am</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {members.map((m) => (
+              <Chip key={m.id} active={me?.id === m.id} color={m.color} onClick={() => setMe(m.id)}>{m.name}</Chip>
+            ))}
+          </div>
         </div>
         <div>
-          <div style={label}>Pet name</div>
-          <input aria-label="Pet name" value={pet} disabled={!isAdmin} onChange={(e) => setPet(e.target.value)} onBlur={() => pet !== petName && saveFamily({ pet_name: pet.trim() })} style={{ ...input, opacity: isAdmin ? 1 : 0.6 }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: C.muted, marginBottom: 6 }}>Dark mode on this phone</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[['sun', 'Sunset to sunrise'], ['auto', 'Match phone'], ['light', 'Always light'], ['dark', 'Always dark']].map(([v, l]) => (
+              <Chip key={v} active={pref === v} onClick={() => setPref(v)}>{l}</Chip>
+            ))}
+          </div>
         </div>
-      </div>
-
-      <div style={card}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 16, fontWeight: 800 }}>People</div>
-          {isAdmin && (
-            <button type="button" onClick={async () => { await addMember({ name: 'New person', color: PALETTE[members.length % PALETTE.length], role: 'child' }); flash() }} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.tealText }}>+ Add</button>
-          )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+          <span style={{ fontSize: 13, color: C.muted, overflowWrap: 'anywhere' }}>{user?.email}{isAdmin ? ' · Parent' : ''}</span>
+          <button type="button" onClick={signOut} style={{ all: 'unset', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: C.tealText, flexShrink: 0 }}>Sign out</button>
         </div>
-        {!isAdmin && <div style={{ fontSize: 13, color: C.muted }}>You can edit your own details. An admin edits everyone.</div>}
-        {members.map((m) => (
-          <MemberRow key={m.id} m={m} canEdit={canEdit(m)} isAdmin={isAdmin} onPatch={(p) => saveMember(m.id, p)} onRemove={async () => { await removeMember(m.id); flash() }} />
-        ))}
-      </div>
+      </Section>
 
-      <div style={card}>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>Wall Display</div>
-        <Link to="/app/wall-preview" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Wall Preview ›</Link>
-        <Link to="/app/arrange" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Arrange the Wall ›</Link>
-        <Link to="/app/wall-display" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Wall Display: Screen Schedule and Dark Mode ›</Link>
-        <Link to="/app/notes" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Family Notes ›</Link>
-        <Link to="/app/waste" style={{ fontSize: 15, fontWeight: 700, color: C.tealText }}>Garbage and Recycling ›</Link>
-      </div>
+      <Section title="Family">
+        <RowList>
+          <NavRow to="/app/settings/people" title="People" summary={`${plural(members.length, 'person', 'people')} · names, colours, photos, birthdays, houses`} />
+          <NavRow to="/app/settings/family" title="Family Details" summary={[familyName && familyName !== 'family' ? familyName : null, petName ? `Pet: ${petName}` : null, isAdmin ? (parentPinHash ? 'PIN set' : 'No PIN') : null].filter(Boolean).join(' · ')} />
+          {isAdmin && <NavRow to="/app/accounts" title="Logins" summary="Who can sign in, passwords, parents" locked />}
+        </RowList>
+      </Section>
+
+      <Section title="The Wall">
+        <RowList>
+          <NavRow to="/app/arrange" title="Layout" summary="The hub and each person’s page: windows, sizes, live view" />
+          <NavRow to="/app/wall-display" title="Screen" summary={screen || 'On and off times, night colours'} />
+          <NavRow to="/app/settings/celebrations" title="Celebrations" summary={celebSummary || 'When a chore is ticked'} />
+        </RowList>
+      </Section>
+
+      <Section title="What the Wall Shows">
+        <RowList>
+          <NavRow to="/app/calendars" title="Calendars" summary={calCount == null ? 'Linked calendars and colours' : calCount ? `${plural(calCount, 'calendar')} linked` : 'None linked yet'} />
+          <NavRow to="/app/photos" title="Photos" summary={activeCollections.length ? `${plural(activeCollections.length, 'collection')} from the NAS` : 'Choose folders from the NAS'} />
+          <NavRow to="/app/dates" title="Important Dates" summary={dates.length ? `${plural(dates.length, 'date')} plus everyone’s birthdays` : 'Birthdays, anniversaries and more'} />
+          <NavRow to="/app/waste" title="Garbage and Recycling" summary={streams.length ? streams.map((s) => s.name).join(', ') : 'Pickup days'} />
+        </RowList>
+      </Section>
 
       {!configured && <div style={{ fontSize: 13, color: C.muted }}>Demo mode: changes are not saved.</div>}
     </>
