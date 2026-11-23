@@ -437,11 +437,6 @@ export default function Arrange() {
 
           {b.id === 'photo' && (
             <>
-              <div style={rowLabel}>Photo</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <Pick active={b.fit !== 'contain'} disabled={!canEdit} onClick={() => update(b.id, { fit: 'cover' })}>Fill (crop)</Pick>
-                <Pick active={b.fit === 'contain'} disabled={!canEdit} onClick={() => update(b.id, { fit: 'contain' })}>Fit (whole photo)</Pick>
-              </div>
               <div style={rowLabel}>Change photo every</div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {PHOTO_SECONDS.map((sec) => (

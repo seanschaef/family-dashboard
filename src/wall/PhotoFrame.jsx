@@ -25,7 +25,8 @@ function shuffle(a) {
 // seasonal and time-of-day collections); a member key = that person's page.
 // Images come from the Pi's NAS agent; in the unconfigured demo it shows sample
 // frames, and on a real deployment with no agent yet it shows a gentle hint.
-export default function PhotoFrame({ memberKey = null, height = 380, radius = 36, fit = 'cover', seconds = SECONDS }) {
+// eslint-disable-next-line no-unused-vars
+export default function PhotoFrame({ memberKey = null, height = 380, radius = 36, fit = 'contain', seconds = SECONDS }) {
   const { rows: collections } = usePhotoCollections()
   const [images, setImages] = useState([])
   const [idx, setIdx] = useState(0)
@@ -84,9 +85,9 @@ export default function PhotoFrame({ memberKey = null, height = 380, radius = 36
     )
   }
 
-  // fit 'contain' shows the whole photo; the leftover space gets a soft,
-  // blurred copy of the same photo instead of bars.
-  const contain = fit === 'contain'
+  // Always the whole photo (never cropped); the leftover space gets a soft,
+  // blurred copy of the same photo instead of bars. (`fit` is ignored now.)
+  const contain = true
   return (
     <>
     <div style={{ ...frame, cursor: 'pointer' }} onClick={() => setFull(idx)} role="button" aria-label="Show this photo full screen">

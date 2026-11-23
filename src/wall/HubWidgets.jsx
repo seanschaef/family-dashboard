@@ -413,7 +413,9 @@ export function OnThisDayBlock() {
   const ago = now.getFullYear() - p.year
   return (
     <div style={{ position: 'relative', height: '100%', borderRadius: 28, overflow: 'hidden', background: C.ink }}>
-      <img src={p.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      {/* Whole photo, never cropped; a blurred copy fills the leftover space. */}
+      <img src={p.url} alt="" aria-hidden="true" style={{ position: 'absolute', inset: -20, width: 'calc(100% + 40px)', height: 'calc(100% + 40px)', objectFit: 'cover', filter: 'blur(24px) brightness(0.8)' }} />
+      <img src={p.url} alt="" style={{ position: 'relative', width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
       <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '28px 22px 16px', background: 'linear-gradient(transparent, rgba(0,0,0,0.65))', color: '#FFFFFF' }}>
         <div style={{ fontSize: 22, fontWeight: 800 }}>
           {p.exact ? 'On This Day' : 'This Week'} · {ago} {ago === 1 ? 'year' : 'years'} ago
