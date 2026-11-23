@@ -168,6 +168,32 @@ const server = createServer((req, res) => {
     return
   }
 
+  // A fresh Supabase session for the wall's browser, so the kiosk can sign
+  // itself back in after being signed out (it can't type a password). Only
+  // answers requests from the Pi itself; tokens are never logged.
+  if (url.pathname === '/wall-session') {
+    const ip = req.socket.remoteAddress || ''
+    const local = ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1'
+    const origin = req.headers.origin || ''
+    const okOrigin = !origin || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+    const headers = { 'Access-Control-Allow-Origin': origin && okOrigin ? origin : 'null', 'Cache-Control': 'no-store', 'Content-Type': 'application/json' }
+    if (!local || !okOrigin) {
+      res.writeHead(403, headers)
+      res.end('{"error":"local only"}')
+      return
+    }
+    wallSession()
+      .then((s) => {
+        res.writeHead(s ? 200 : 503, headers)
+        res.end(JSON.stringify(s || { error: 'wall login not set up' }))
+      })
+      .catch(() => {
+        res.writeHead(502, headers)
+        res.end('{"error":"wall login failed"}')
+      })
+    return
+  }
+
   if (url.pathname === '/health') {
     res.writeHead(200, { ...cors, 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ ok: true, root: ROOT, exists: existsSync(ROOT) }))
@@ -239,6 +265,19 @@ async function supabaseClient(env) {
   if (error) throw new Error('wall login failed: ' + error.message)
   client = c
   return c
+}
+
+// A new session for the wall's browser (separate from the agent's own client).
+async function wallSession() {
+  const env = { ...process.env, ...parseEnvFile(join(REPO, '.env.local')) }
+  const { VITE_SUPABASE_URL: url, VITE_SUPABASE_ANON_KEY: key, WALL_EMAIL: email, WALL_PASSWORD: password } = env
+  if (!url || !key || !email || !password) return null
+  const { createClient } = createRequire(join(REPO, 'package.json'))('@supabase/supabase-js')
+  const c = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
+  const { data, error } = await c.auth.signInWithPassword({ email, password })
+  if (error || !data.session) throw new Error('wall login failed')
+  console.log('[photo agent] gave the wall a fresh session')
+  return { access_token: data.session.access_token, refresh_token: data.session.refresh_token }
 }
 
 async function publishFolders() {
