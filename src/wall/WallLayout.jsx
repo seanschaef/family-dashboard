@@ -5,6 +5,7 @@ import { C } from '../theme.js'
 import { useWallNightTheme } from '../lib/theme.jsx'
 import NightScreen from './NightScreen.jsx'
 import Celebration from './Celebration.jsx'
+import { useDbOffline } from '../lib/offlineCache.js'
 
 const FRAME_W = 1080
 const FRAME_H = 1920
@@ -18,6 +19,7 @@ export default function WallLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [scale, setScale] = useState(1)
+  const dbOffline = useDbOffline()
   useWallNightTheme() // dark at night, per the schedule set on the phone
 
   // Scale the fixed 1080x1920 frame to fit whatever viewport we are on.
@@ -92,6 +94,7 @@ export default function WallLayout() {
             display: 'flex',
             flexDirection: 'column',
             gap: 24,
+            position: 'relative',
           }}
         >
           {/* Page content takes the space left above the nav and can never push
@@ -102,6 +105,12 @@ export default function WallLayout() {
           <div style={{ flexShrink: 0 }}>
             <WallNav />
           </div>
+          {/* While the database isn't answering, the wall shows its saved copy. */}
+          {dbOffline && (
+            <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', padding: '6px 16px', borderRadius: 999, background: C.card, border: `1px solid ${C.border}`, color: C.muted, fontSize: 17, fontWeight: 600, zIndex: 5, whiteSpace: 'nowrap' }}>
+              Can't reach the database · showing saved info
+            </div>
+          )}
           {/* Points celebration: on top of every wall page. */}
           <Celebration />
         </div>

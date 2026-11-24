@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase, isSupabaseConfigured } from './supabase.js'
 import { C } from '../theme.js'
+import { readCache, writeCache, isOutage, reportDb } from './offlineCache.js'
 
 // The household roster lives in the database (public.members). This provider
 // loads it once per session. When Supabase is not configured (local dev, or
@@ -17,31 +18,45 @@ const MembersContext = createContext(null)
 const SAMPLE_PET = 'Buddy' // generic placeholder for the public demo only
 
 export function MembersProvider({ children }) {
-  const [members, setMembers] = useState(isSupabaseConfigured ? [] : SAMPLE_MEMBERS)
-  const [familyName, setFamilyName] = useState('family') // generic until loaded
-  const [familyId, setFamilyId] = useState(null)
-  const [petName, setPetName] = useState(isSupabaseConfigured ? '' : SAMPLE_PET)
-  const [wallLayout, setWallLayout] = useState(null)
-  const [parentPinHash, setParentPinHash] = useState(null)
-  const [wasteSchedule, setWasteSchedule] = useState(null)
+  // The wall starts from its saved copy, so a database outage shows the real
+  // family (as last seen), never the sample one.
+  const saved = isSupabaseConfigured ? readCache('roster') : undefined
+  const savedFam = saved?.family
+  const [members, setMembers] = useState(isSupabaseConfigured ? saved?.members ?? [] : SAMPLE_MEMBERS)
+  const [familyName, setFamilyName] = useState(savedFam?.name || 'family') // generic until loaded
+  const [familyId, setFamilyId] = useState(savedFam?.id ?? null)
+  const [petName, setPetName] = useState(isSupabaseConfigured ? savedFam?.pet_name || '' : SAMPLE_PET)
+  const [wallLayout, setWallLayout] = useState(savedFam?.wall_layout || null)
+  const [parentPinHash, setParentPinHash] = useState(savedFam?.parent_pin_hash || null)
+  const [wasteSchedule, setWasteSchedule] = useState(savedFam?.waste_schedule || null)
   const [myMemberId, setMyMemberId] = useState(isSupabaseConfigured ? null : 'sm2')
   const [isAdmin, setIsAdmin] = useState(!isSupabaseConfigured)
   const [mustChangePassword, setMustChangePassword] = useState(false)
-  const [loading, setLoading] = useState(isSupabaseConfigured)
+  const [loading, setLoading] = useState(isSupabaseConfigured && !saved?.members?.length)
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
     let active = true
+    let retry = null
     async function load() {
-      const [{ data, error }, fam, { data: userData }] = await Promise.all([
+      clearTimeout(retry)
+      const [res, fam, { data: userData }] = await Promise.all([
         supabase.from('members').select('id, key, name, color, role, birthday, sort_order, widget_type, widget_config, page_layout, goal_reward_id, avatar, house').order('sort_order', { ascending: true }),
         supabase.from('families').select('id, name, pet_name, wall_layout, parent_pin_hash, waste_schedule').limit(1).maybeSingle(),
         supabase.auth.getUser(),
       ])
       if (!active) return
-      // Fall back to placeholders only if the query failed (e.g. signed out).
-      if (error || !data) setMembers(SAMPLE_MEMBERS)
-      else if (data.length) setMembers(data)
+      const { data, error } = res
+      // A failed load keeps what's on screen (never the sample family) and
+      // tries again in 30 seconds.
+      if (error || fam?.error) {
+        if (isOutage(res) || isOutage(fam)) reportDb(false)
+        retry = setTimeout(load, 30000)
+      } else {
+        reportDb(true)
+        if (data?.length) setMembers(data)
+        if (data?.length && fam?.data) writeCache('roster', { members: data, family: fam.data })
+      }
       if (fam?.data) {
         setFamilyId(fam.data.id)
         if (fam.data.name) setFamilyName(fam.data.name)
@@ -77,6 +92,7 @@ export function MembersProvider({ children }) {
     })
     return () => {
       active = false
+      clearTimeout(retry)
       supabase.removeChannel(channel)
       authSub.subscription.unsubscribe()
     }

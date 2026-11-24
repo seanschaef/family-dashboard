@@ -3,28 +3,51 @@ import { useLocation } from 'react-router-dom'
 import { isSupabaseConfigured } from './supabase.js'
 import { useMembers } from './members.jsx'
 import { listEvents } from './calendars.js'
+import { readCacheGroup, writeCacheLimited } from './offlineCache.js'
 import { sampleEvents } from '../data/sampleEvents.js'
 
 // Event colours come from the members roster via useMembers().colorFor.
 
+// The saved events (wall only) that fall in a range, from any saved range.
+function savedEvents(fromMs, toMs) {
+  const seen = new Set()
+  return readCacheGroup('events')
+    .flat()
+    .filter((e) => {
+      const t = new Date(e.starts_at).getTime()
+      if (seen.has(e.id) || t < fromMs || t > toMs) return false
+      seen.add(e.id)
+      return true
+    })
+    .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at))
+}
+
 // Events for a date range. Live from Supabase when configured, otherwise the
 // sample set so the calendar is reviewable now.
 export function useEvents(from, to) {
-  const [events, setEvents] = useState([])
-  const [loading, setLoading] = useState(true)
   const fromMs = from.getTime()
   const toMs = to.getTime()
+  const cacheKey = `events|${fromMs}|${toMs}`
+  const [events, setEvents] = useState(() => savedEvents(fromMs, toMs))
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
+    let retry = null
     async function load() {
       setLoading(true)
       if (isSupabaseConfigured) {
         try {
           const rows = await listEvents({ from: from.toISOString(), to: to.toISOString() })
           if (active) setEvents(rows)
+          writeCacheLimited('events', cacheKey, rows, 10)
         } catch {
-          if (active) setEvents([])
+          // Database not answering: show the saved copy for this range (if
+          // any) and try again in a minute.
+          if (active) {
+            setEvents(savedEvents(fromMs, toMs))
+            retry = setTimeout(load, 60000)
+          }
         }
       } else {
         const all = sampleEvents().filter((e) => {
@@ -38,6 +61,7 @@ export function useEvents(from, to) {
     load()
     return () => {
       active = false
+      clearTimeout(retry)
     }
     // from/to are compared by timestamp; see fromMs/toMs below.
     // eslint-disable-next-line react-hooks/exhaustive-deps

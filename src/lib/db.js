@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase, isSupabaseConfigured } from './supabase.js'
+import { readCache, writeCache, isOutage, reportDb } from './offlineCache.js'
 
 // Generic family-scoped table hook. RLS already limits rows to the signed-in
 // user's family. When Supabase is not configured (public demo / local dev
@@ -54,19 +55,26 @@ if (typeof window !== 'undefined') {
 }
 
 export function useFamilyTable(table, { select = '*', order, sample = [] } = {}) {
-  const [rows, setRows] = useState(isSupabaseConfigured ? [] : sample)
-  const [loading, setLoading] = useState(isSupabaseConfigured)
   const orderCol = order?.column
   const orderAsc = order?.ascending ?? true
+  const cacheKey = `${table}|${select}|${orderCol || ''}|${orderAsc}`
+  const [rows, setRows] = useState(() => (isSupabaseConfigured ? readCache(cacheKey) ?? [] : sample))
+  const [loading, setLoading] = useState(isSupabaseConfigured)
 
   const load = useCallback(async () => {
     if (!isSupabaseConfigured) return
     let q = supabase.from(table).select(select)
     if (orderCol) q = q.order(orderCol, { ascending: orderAsc })
-    const { data, error } = await q
-    if (!error) setRows(data ?? [])
+    const res = await q
+    // On an error, keep what's on screen (or the saved copy) and try again on
+    // the next 30-second check.
+    if (!res.error) {
+      setRows(res.data ?? [])
+      writeCache(cacheKey, res.data ?? [])
+      reportDb(true)
+    } else if (isOutage(res)) reportDb(false)
     setLoading(false)
-  }, [table, select, orderCol, orderAsc])
+  }, [table, select, orderCol, orderAsc, cacheKey])
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
