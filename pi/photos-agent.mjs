@@ -301,7 +301,14 @@ async function publishFolders() {
 
 const publish = () =>
   publishFolders().catch((e) => {
-    client = null // force a fresh sign-in next time
+    // Sign in again only if the sign-in itself is the problem. (It used to do
+    // this on every failure, e.g. each 2 minutes of a Supabase outage, and the
+    // dropped clients kept refreshing their tokens: hundreds of sessions.)
+    if (/jwt|login|auth|401|403/i.test(e.message || '') && client) {
+      client.auth.stopAutoRefresh()
+      client.auth.signOut({ scope: 'local' }).catch(() => {})
+      client = null
+    }
     console.error('[photos-agent] folder publish failed:', e.message)
   })
 publish()
