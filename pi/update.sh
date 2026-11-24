@@ -35,3 +35,9 @@ if systemctl --user is-enabled family-wall.service >/dev/null 2>&1; then
 else
   echo "Rebuilt. Restart the kiosk to pick up changes."
 fi
+
+# The photo/session agent runs from the repo too; restart it for its changes.
+if systemctl --user is-enabled family-photos.service >/dev/null 2>&1; then
+  systemctl --user restart family-photos.service
+  echo "Restarted family-photos.service"
+fi
