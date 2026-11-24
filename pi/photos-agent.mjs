@@ -16,6 +16,7 @@ import { createServer } from 'node:http'
 import { readdirSync, existsSync, readFileSync, statSync, createReadStream, openSync, readSync, closeSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join, resolve, sep, extname } from 'node:path'
+import { startApiWatchdog } from './api-watchdog.mjs'
 
 const HOME = homedir()
 const PORT = Number(process.env.PHOTO_AGENT_PORT || 8787)
@@ -313,3 +314,9 @@ const publish = () =>
   })
 publish()
 setInterval(publish, PUBLISH_EVERY_MS)
+
+// Backup: restart Supabase if its API jams (see api-watchdog.mjs).
+startApiWatchdog({
+  getEnv: () => ({ ...process.env, ...parseEnvFile(join(REPO, '.env.local')) }),
+  stateFile: join(HOME, '.config', 'family-wall', 'api-restart-at'),
+})

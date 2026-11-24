@@ -227,3 +227,23 @@ restarts `family-wall.service`.
   to the hub after inactivity.
 - `kiosk.sh` serves the build on `localhost:4173` (`npm run serve:wall`) and
   opens Chromium against it.
+
+## Supabase API watchdog (optional backup)
+
+Supabase's API (PostgREST 14.18) can jam: every request fails with
+"Timed out acquiring connection from connection pool" until the project is
+restarted. The photo agent checks the API every minute. After 5 minutes of
+that error it restarts the project through Supabase's Management API, at most
+once an hour. An internet outage at home doesn't count as a jam.
+
+To turn it on, add a personal access token (supabase.com/dashboard/account/tokens)
+to `~/family-dashboard/.env.local` on the Pi:
+
+```
+SUPABASE_ACCESS_TOKEN=sbp_...
+```
+
+No restart is needed; the agent reads the file when it acts. Without the token
+it only logs. See what it did with
+`journalctl --user-unit family-photos.service | grep api-watchdog`.
+
