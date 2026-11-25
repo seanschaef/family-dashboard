@@ -1,4 +1,5 @@
-import { useFamilyTable, insertRow, updateRow, deleteRow, deleteWhere } from './db.js'
+import { useEffect, useState } from 'react'
+import { useFamilyTable, insertRow, updateRow, deleteRow, deleteWhere, todayISO } from './db.js'
 import { supabase, isSupabaseConfigured } from './supabase.js'
 
 // Monday of the current week as YYYY-MM-DD, and the 7 day ISO strings.
@@ -168,7 +169,20 @@ export const SAMPLE_GROCERIES = [
   { id: 'g6', label: 'Dog food', section: 'Household', added_by_member_key: 'm1', source: 'manual', done: false },
 ]
 
-export const useGroceries = () => useFamilyTable('grocery_items', { order: { column: 'created_at' }, sample: SAMPLE_GROCERIES })
+// Ticked items stay on the list (ticked) until midnight Edmonton time, then
+// clear. The database deletes them hourly (cron job clear-checked-groceries);
+// screens hide them right at midnight so nothing lingers until that runs.
+const edmontonDay = (ts) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Edmonton' }).format(new Date(ts))
+export function useGroceries() {
+  const res = useFamilyTable('grocery_items', { order: { column: 'created_at' }, sample: SAMPLE_GROCERIES })
+  const [today, setToday] = useState(todayISO)
+  useEffect(() => {
+    const t = setInterval(() => setToday(todayISO()), 60000)
+    return () => clearInterval(t)
+  }, [])
+  const rows = res.rows.filter((it) => !(it.done && it.done_at && edmontonDay(it.done_at) < today))
+  return { ...res, rows }
+}
 // "3 apples", "apples x3", "apples ×3" -> { label: 'apples', qty: 3 }.
 export function parseQty(text) {
   const t = String(text || '').trim()
