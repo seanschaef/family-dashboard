@@ -73,7 +73,8 @@ function nextStyle(pool) {
   let last = null
   try {
     const saved = JSON.parse(localStorage.getItem(DECK_KEY) || '{}')
-    deck = (saved.deck || []).filter((s) => pool.includes(s))
+    // A changed mix (new styles, or some switched on/off) starts a fresh round.
+    deck = saved.mix === [...pool].sort().join() ? (saved.deck || []).filter((s) => pool.includes(s)) : []
     last = saved.last || null
   } catch { /* no storage: still shuffles per page load */ }
   if (!deck.length) {
@@ -86,7 +87,7 @@ function nextStyle(pool) {
     if (deck.length > 1 && deck[0] === last) deck.push(deck.shift())
   }
   const style = deck.shift()
-  try { localStorage.setItem(DECK_KEY, JSON.stringify({ deck, last: style })) } catch { /* ignore */ }
+  try { localStorage.setItem(DECK_KEY, JSON.stringify({ deck, last: style, mix: [...pool].sort().join() })) } catch { /* ignore */ }
   return style
 }
 
