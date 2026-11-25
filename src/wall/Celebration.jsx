@@ -37,16 +37,16 @@ const HOUSES = {
 }
 const FALLBACK_CRESTS = { gryffindor: ['/crests/gryffindor.webp'], hufflepuff: ['/crests/hufflepuff.webp'], ravenclaw: ['/crests/ravenclaw.webp'], slytherin: ['/crests/slytherin.png'] }
 const STYLES = ['banner', 'lasers', 'comic', 'magic', 'pixel', 'eighties', 'race', 'hero', ...THEME_STYLES, ...THEME2_STYLES, ...THEME3_STYLES, ...THEME4_STYLES]
-const PIXEL_WORDS = ['LEVEL UP!', 'HIGH SCORE!', 'POWER UP!', '1UP!', 'BONUS!']
-const EIGHTIES_WORDS = ['RADICAL!', 'TOTALLY TUBULAR!', 'GNARLY!', 'BODACIOUS!', 'AWESOME!']
-const RACE_WORDS = ['VICTORY LAP!', 'CHECKERED FLAG!', 'POLE POSITION!', 'FIRST PLACE!']
-const HERO_WORDS = ['MISSION COMPLETE', 'NAILED IT', 'HERO OF THE DAY', 'BOOM. DONE.']
-const COMIC_WORDS = ['KAPOW!', 'BAM!', 'WHAM!', 'ZAP!', 'BOOM!', 'POW!', 'SHAZAM!']
+const PIXEL_WORDS = ['LEVEL UP!', 'HIGH SCORE!', 'POWER UP!', '1UP!', 'BONUS!', 'COMBO x10!', 'NEW RECORD!', 'BOSS DEFEATED!', 'PERFECT RUN!', 'STAGE CLEAR!', 'EXTRA LIFE!', 'GAME ON!']
+const EIGHTIES_WORDS = ['RADICAL!', 'TOTALLY TUBULAR!', 'GNARLY!', 'BODACIOUS!', 'AWESOME!', 'RAD TO THE MAX!', 'MOST EXCELLENT!', 'FAR OUT!', 'WICKED!', 'TOTALLY RAD!', 'CHILL!', 'STELLAR!']
+const RACE_WORDS = ['VICTORY LAP!', 'CHECKERED FLAG!', 'POLE POSITION!', 'FIRST PLACE!', 'GREEN FLAG!', 'FASTEST LAP!', 'PIT STOP PERFECT!', 'PODIUM FINISH!', 'FULL SPEED!', 'CHAMPION!', 'LIGHTS OUT!']
+const HERO_WORDS = ['MISSION COMPLETE', 'NAILED IT', 'HERO OF THE DAY', 'BOOM. DONE.', 'TARGET ACQUIRED', 'NO SWEAT', 'CASE CLOSED', 'SAVED THE DAY', 'UNSTOPPABLE', 'LEGEND', 'TOO EASY']
+const COMIC_WORDS = ['KAPOW!', 'BAM!', 'WHAM!', 'ZAP!', 'BOOM!', 'POW!', 'KABLAM!', 'THWACK!', 'ZOWIE!', 'KER-SPLAT!', 'BIFF!', 'WHOOSH!']
 const SHOW_MS = 6500
 // A chore worth no points still gets the full show, with a cheer instead of
 // a score. {h} is the house (or the person's name if they have no house).
-const CHEERS = ['No points, but good job anyway!', 'Keep trying, {h}!', 'Work hard, {h}!', 'No points, all heart!', 'Every bit counts, {h}!', 'Way to go, {h}!']
-const CHEER_BIG = ['YAY!', 'WOO!', 'NICE!']
+const CHEERS = ['No points, but good job anyway!', 'Keep trying, {h}!', 'Work hard, {h}!', 'No points, all heart!', 'Every bit counts, {h}!', 'Way to go, {h}!', 'Helping out counts, {h}!', 'Thanks for pitching in, {h}!', 'That was kind, {h}!', 'Teamwork, {h}!', 'Doing it for the family!', 'Small job, big help!']
+const CHEER_BIG = ['YAY!', 'WOO!', 'NICE!', 'YES!', 'BOOM!', 'WOW!', 'YEAH!']
 
 // Read at page load: the wall's router may tidy the address before members load.
 // Kept in sessionStorage too, so it survives the wall reloading itself onto a

@@ -18,16 +18,16 @@ import { whoStyle, circleCrest, outlined } from './CelebrationThemes3.jsx'
 export const THEME4_STYLES = ['astronaut', 'aquanaut', 'lumberjack', 'ballroom', 'cowboys', 'nurses', 'lawyers', 'toilet', 'babies', 'barbers']
 
 export const THEME4_WORDS = {
-  astronaut: ['LIFTOFF!', 'ONE GIANT LEAP!', 'OUT OF THIS WORLD!', 'MISSION COMPLETE!', 'TO THE MOON!'],
-  aquanaut: ['DEEP DIVE!', 'FIN-TASTIC!', 'TREASURE FOUND!', 'OFF THE DEEP END!', 'SEA-RIOUSLY GOOD!'],
-  lumberjack: ['TIMBER!', 'CHOP CHOP!', 'AXE-CELLENT!', 'SPLIT DECISION!', 'WOOD YOU LOOK AT THAT!'],
-  ballroom: ['Perfect Ten!', 'Bravo!', 'Dazzling!', 'What Footwork!', 'Encore!'],
-  cowboys: ['YEE-HAW!', 'GIDDY UP!', 'ROOTIN’ TOOTIN’!', 'BEST IN THE WEST!', 'HOWDY, PARTNER!'],
-  nurses: ['VITALS: AWESOME!', 'TOP-NOTCH CARE!', 'STAT!', 'NURSE APPROVED!', 'HEALTHY HUSTLE!'],
-  lawyers: ['CASE CLOSED!', 'OBJECTION OVERRULED!', 'VERDICT: AWESOME!', 'MOTION GRANTED!', 'ORDER IN THE COURT!'],
-  toilet: ['FLUSHED WITH SUCCESS!', 'ROYAL FLUSH!', 'NUMBER ONE!', 'POTTY PARTY!', 'SQUEAKY CLEAN!'],
-  babies: ['GOO GOO GA GA!', 'BIG KID MOVE!', 'BABY STEPS!', 'WAH-HOO!', 'NAP TIME EARNED!'],
-  barbers: ['FRESH CUT!', 'LOOKING SHARP!', 'CLEAN FADE!', 'SNIP SNIP!', 'TOP OF THE CHOPS!'],
+  astronaut: ['LIFTOFF!', 'ONE GIANT LEAP!', 'OUT OF THIS WORLD!', 'MISSION COMPLETE!', 'TO THE MOON!', 'ALL SYSTEMS GO!', 'BLAST OFF!', 'ZERO GRAVITY!', 'STELLAR!', 'ORBIT ACHIEVED!', 'COSMIC!'],
+  aquanaut: ['DEEP DIVE!', 'FIN-TASTIC!', 'TREASURE FOUND!', 'OFF THE DEEP END!', 'SEA-RIOUSLY GOOD!', 'O-FISH-ALLY AWESOME!', 'WHALE DONE!', 'CLAM-TASTIC!', 'BUBBLE TROUBLE!', 'DEEP SEA HERO!', 'JAWSOME!'],
+  lumberjack: ['TIMBER!', 'CHOP CHOP!', 'AXE-CELLENT!', 'SPLIT DECISION!', 'WOOD YOU LOOK AT THAT!', 'TREE-MENDOUS!', 'LOG JAM!', 'BRANCHING OUT!', 'SAWSOME!', 'BARK OF APPROVAL!', 'OAK-AY!'],
+  ballroom: ['Perfect Ten!', 'Bravo!', 'Dazzling!', 'What Footwork!', 'Encore!', 'Magnificent!', 'Elegant!', 'Showstopper!', 'Shall We Dance?', 'Graceful!', 'Standing Ovation!'],
+  cowboys: ['YEE-HAW!', 'GIDDY UP!', 'ROOTIN’ TOOTIN’!', 'BEST IN THE WEST!', 'HOWDY, PARTNER!', 'SHERIFF APPROVED!', 'LASSOED IT!', 'HIGH NOON!', 'RIDE ’EM!', 'TOP HAND!', 'WANTED: MORE OF THIS!'],
+  nurses: ['VITALS: AWESOME!', 'TOP-NOTCH CARE!', 'STAT!', 'NURSE APPROVED!', 'HEALTHY HUSTLE!', 'HEART OF GOLD!', 'PULSE: POUNDING!', 'CODE AWESOME!', 'ALL BETTER!', 'GOOD AS NEW!', 'PRESCRIPTION: PRAISE!'],
+  lawyers: ['CASE CLOSED!', 'OBJECTION OVERRULED!', 'VERDICT: AWESOME!', 'MOTION GRANTED!', 'ORDER IN THE COURT!', 'SUSTAINED!', 'ALL RISE!', 'NO FURTHER QUESTIONS!', 'JUDGMENT FOR YOU!', 'RULED IN YOUR FAVOUR!', 'COSTS AWARDED!', 'AFFIDAVIT OF AWESOME!'],
+  toilet: ['FLUSHED WITH SUCCESS!', 'ROYAL FLUSH!', 'NUMBER ONE!', 'POTTY PARTY!', 'SQUEAKY CLEAN!', 'BOWL-D MOVE!', 'GO WITH THE FLOW!', 'THRONE ROOM!', 'WIPE OUT!', 'PLUNGER POWER!', 'LOO-TASTIC!'],
+  babies: ['GOO GOO GA GA!', 'BIG KID MOVE!', 'BABY STEPS!', 'WAH-HOO!', 'NAP TIME EARNED!', 'BOTTLE’S UP!', 'PEEKABOO!', 'DIAPER DANDY!', 'BABY GENIUS!', 'TINY BUT MIGHTY!', 'CUTIE PATOOTIE!'],
+  barbers: ['FRESH CUT!', 'LOOKING SHARP!', 'CLEAN FADE!', 'SNIP SNIP!', 'TOP OF THE CHOPS!', 'SHEAR GENIUS!', 'HAIR-RAISING!', 'CUT ABOVE!', 'LINED UP!', 'NEXT, PLEASE!', 'TRIMMED TO PERFECTION!'],
 }
 
 export const THEME4_BACKDROP = {

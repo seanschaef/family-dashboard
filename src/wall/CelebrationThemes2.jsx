@@ -15,14 +15,14 @@ import { Crest } from './CelebrationThemes.jsx'
 export const THEME2_STYLES = ['ninja', 'glam', 'dogs', 'atomic', 'robots', 'turbo', 'mountain', 'zombies']
 
 export const THEME2_WORDS = {
-  ninja: ['HI-YAH!', 'NINJA STRIKE!', 'SHELL YEAH!', 'STEALTH MODE!', 'SENSEI APPROVED!'],
-  glam: ['Fabulous!', 'Totally Iconic!', 'Dream Big!', 'Sparkle On!', 'You Did It!'],
-  dogs: ['PAWSOME!', 'WOOF WOOF!', 'GOOD PUP!', 'WHO’S A GOOD HELPER?', 'TAIL WAGS!'],
-  atomic: ['KA-BOOOM!', 'ATOMIC!', 'MEGATON!', 'NUCLEAR!', 'BLAST OFF!'],
-  robots: ['TASK COMPLETE', 'BEEP BOOP!', 'SYSTEM UPGRADE', 'MISSION LOGGED', 'POWER LEVEL UP'],
-  turbo: ['TURBO!', 'FULL THROTTLE!', 'NITRO BOOST!', 'ZOOM ZOOM!', 'SPEED DEMON!'],
-  mountain: ['SUMMIT!', 'PEAK PERFORMANCE!', 'TOP OF THE WORLD!', 'YOU MADE IT!', 'NEW HEIGHTS!'],
-  zombies: ['BRAAAINS!', 'IT’S ALIVE!', 'ZOMBIE APPROVED!', 'GRAVE JOB!', 'UNDEAD-ICATED!'],
+  ninja: ['HI-YAH!', 'NINJA STRIKE!', 'SHELL YEAH!', 'STEALTH MODE!', 'SENSEI APPROVED!', 'SWIFT AND SILENT!', 'BLACK BELT!', 'NINJA VANISH!', 'KARATE CHOP!', 'DOJO MASTER!', 'SNEAK ATTACK!'],
+  glam: ['Fabulous!', 'Totally Iconic!', 'Dream Big!', 'Sparkle On!', 'You Did It!', 'Gorgeous!', 'Runway Ready!', 'Pretty Powerful!', 'Shine Bright!', 'So Chic!', 'Living the Dream!'],
+  dogs: ['PAWSOME!', 'WOOF WOOF!', 'GOOD PUP!', 'WHO’S A GOOD HELPER?', 'TAIL WAGS!', 'FETCH!', 'BEST IN SHOW!', 'TOP DOG!', 'BARK-TASTIC!', 'TREAT TIME!', 'RUFF-ERIFIC!'],
+  atomic: ['KA-BOOOM!', 'ATOMIC!', 'MEGATON!', 'NUCLEAR!', 'BLAST OFF!', 'CHAIN REACTION!', 'FULL POWER!', 'SUPERCHARGED!', 'EXPLOSIVE!', 'FUSION!', 'GLOWING!'],
+  robots: ['TASK COMPLETE', 'BEEP BOOP!', 'SYSTEM UPGRADE', 'MISSION LOGGED', 'POWER LEVEL UP', 'DOES NOT COMPUTE!', '100% EFFICIENT', 'BATTERY FULL', 'DOWNLOAD DONE', 'ROBO-RIFIC!', 'PROTOCOL: AWESOME'],
+  turbo: ['TURBO!', 'FULL THROTTLE!', 'NITRO BOOST!', 'ZOOM ZOOM!', 'SPEED DEMON!', 'LOOP DE LOOP!', 'PEDAL TO THE METAL!', 'TOP SPEED!', 'BURNOUT!', 'NEW LAP RECORD!', 'VROOOOM!'],
+  mountain: ['SUMMIT!', 'PEAK PERFORMANCE!', 'TOP OF THE WORLD!', 'YOU MADE IT!', 'NEW HEIGHTS!', 'ON TOP!', 'PEAK BAGGER!', 'CLIMB ON!', 'SKY HIGH!', 'BASE CAMP TO SUMMIT!', 'ALPINE ACE!'],
+  zombies: ['BRAAAINS!', 'IT’S ALIVE!', 'ZOMBIE APPROVED!', 'GRAVE JOB!', 'UNDEAD-ICATED!', 'SPOOKTACULAR!', 'BOO-YAH!', 'DEAD GOOD!', 'RISE UP!', 'FANG-TASTIC!', 'GHOUL-D JOB!'],
 }
 
 export const THEME2_BACKDROP = {

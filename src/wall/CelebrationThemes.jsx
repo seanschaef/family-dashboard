@@ -14,14 +14,14 @@ import { useState } from 'react'
 export const THEME_STYLES = ['macho', 'construction', 'hawaii', 'soccer', 'golf', 'kpop', 'irish', 'rock']
 
 export const THEME_WORDS = {
-  macho: ['OHHH YEAH!', 'DIG IT!', 'THE CHAMP IS HERE!', 'FROM THE TOP ROPE!', 'BODY SLAM!'],
-  construction: ['JOB DONE!', 'BUILT TOUGH!', 'NAILED IT!', 'WORK ZONE CLEAR!', 'HARD HAT HERO!'],
-  hawaii: ['Aloha!', 'Mahalo!', "Surf's Up!", 'Hang Loose!'],
-  soccer: ['GOOOOAL!', 'TOP CORNER!', 'BACK OF THE NET!', 'WHAT A STRIKE!'],
-  golf: ['Hole in One!', 'Birdie!', 'Eagle!', 'Albatross!', 'Right Down the Middle!'],
-  kpop: ['DAEBAK!', 'FIGHTING!', 'SARANGHAE!', 'ENCORE!', 'SLAY!'],
-  irish: ['SLÁINTE!', "LUCK O' THE IRISH!", "TOP O' THE MORNIN'!", 'GRAND JOB!', 'BRILLIANT!'],
-  rock: ['ROCK ON!', 'ENCORE!', 'LEGENDARY!', 'TURN IT UP!', 'ROCK STAR!'],
+  macho: ['OHHH YEAH!', 'DIG IT!', 'THE CHAMP IS HERE!', 'FROM THE TOP ROPE!', 'BODY SLAM!', 'CREAM OF THE CROP!', 'FLEX TIME!', 'PIN! 1-2-3!', 'TAG TEAM TRIUMPH!', 'MAIN EVENT!', 'NEW CHAMPION!', 'SNAP INTO IT!'],
+  construction: ['JOB DONE!', 'BUILT TOUGH!', 'NAILED IT!', 'WORK ZONE CLEAR!', 'HARD HAT HERO!', 'SOLID WORK!', 'BUILT TO LAST!', 'LEVEL AND PLUMB!', 'HEAVY LIFTING!', 'TOP OUT!', 'SITE INSPECTED!', 'FOREMAN APPROVED!'],
+  hawaii: ['Aloha!', 'Mahalo!', "Surf's Up!", 'Hang Loose!', 'Shaka!', 'Island Vibes!', 'Paradise Found!', 'Lei It On Me!', 'Tiki Time!', 'Sunny Days!', 'Big Kahuna!'],
+  soccer: ['GOOOOAL!', 'TOP CORNER!', 'BACK OF THE NET!', 'WHAT A STRIKE!', 'BICYCLE KICK!', 'HAT TRICK!', 'GOLDEN BOOT!', 'WORLD CLASS!', 'GAME WINNER!', 'CLEAN SHEET!', 'PLAYER OF THE MATCH!'],
+  golf: ['Hole in One!', 'Birdie!', 'Eagle!', 'Albatross!', 'Right Down the Middle!', 'On the Green!', 'Sunk It!', 'Fore-midable!', 'Tee-rific!', 'Under Par!', 'Clubhouse Leader!'],
+  kpop: ['DAEBAK!', 'FIGHTING!', 'SARANGHAE!', 'ENCORE!', 'SLAY!', 'ICONIC!', 'VISUAL KING!', 'FAN SERVICE!', 'COMEBACK!', 'STAGE PRESENCE!', 'NUMBER ONE!'],
+  irish: ['SLÁINTE!', "LUCK O' THE IRISH!", "TOP O' THE MORNIN'!", 'GRAND JOB!', 'BRILLIANT!', 'POT OF GOLD!', 'FOUR-LEAF LUCK!', 'JIG TIME!', 'CRACKING JOB!', 'DEADLY!', 'SHAMROCK STAR!'],
+  rock: ['ROCK ON!', 'ENCORE!', 'LEGENDARY!', 'TURN IT UP!', 'ROCK STAR!', 'SHRED IT!', 'HEADLINER!', 'SOLD OUT!', 'CRANK IT TO 11!', 'MOSH PIT!', 'AIR GUITAR!', 'WORLD TOUR!'],
 }
 
 export const THEME_BACKDROP = {
