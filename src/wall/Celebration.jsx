@@ -668,6 +668,7 @@ export default function Celebration() {
       const people = all.filter((m) => m.house)
       const m = pick(people.length ? people : all)
       if (m) setQueue((q) => [...q, { id: `demo-${Date.now()}`, member_key: m.key, points: 10, chore_title: 'Preview', style: STYLES.includes(DEMO) ? DEMO : null }])
+      window.dispatchEvent(new Event('wall-wake'))
     }, 6000)
     return () => clearTimeout(t)
   }, [])
@@ -687,6 +688,7 @@ export default function Celebration() {
     const people = all.filter((m) => m.house)
     const m = pick(people.length ? people : all)
     if (m) setQueue((q) => [...q, { id: `play-${at}`, member_key: m.key, points: 10, chore_title: 'Preview', style: STYLES.includes(cfg.celebration_preview) ? cfg.celebration_preview : null }])
+    window.dispatchEvent(new Event('wall-wake'))
   }, [settingsRows]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // New chore_logs with points (not ones already there when the wall loaded,

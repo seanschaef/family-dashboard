@@ -45,6 +45,18 @@ export default function NightScreen() {
     }
   }, [])
 
+  // A celebration preview (?celebrate=… or "Play on the wall" from the phone)
+  // wakes the screen like a tap, so it can be seen at night. Real chore ticks
+  // don't: the screen stays dark overnight.
+  useEffect(() => {
+    const onWake = () => {
+      setWakeUntil(Date.now() + WAKE_MS)
+      setNow(new Date())
+    }
+    window.addEventListener('wall-wake', onWake)
+    return () => window.removeEventListener('wall-wake', onWake)
+  }, [])
+
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 15000)
     return () => clearInterval(id)
