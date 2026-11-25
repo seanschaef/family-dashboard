@@ -40,6 +40,41 @@ export const CELEBRATION_GROUPS = [
       ['zombies', 'Zombies', 'Graveyard, hands and bats'],
     ],
   },
+  {
+    title: 'Sports and Outdoors',
+    styles: [
+      ['football', 'Football', 'Goalposts and TOUCHDOWN!'],
+      ['hockey', 'Hockey', 'Puck in the net, goal light'],
+      ['surfing', 'Surfing', 'A curling wave and a board'],
+      ['waves', 'Waves', 'Rolling sea and a life ring'],
+      ['sun', 'Sun', 'Big sun and sunglasses'],
+      ['snow', 'Snow', 'A snowman and snowflakes'],
+      ['sheep', 'Sheep', 'A sheep jumping the fence'],
+      ['wakeup', 'Waking Up', 'Sunrise and an alarm clock'],
+    ],
+  },
+  {
+    title: 'Monsters and Explorers',
+    styles: [
+      ['monster', 'Monster Movie', 'Black-and-white creature feature'],
+      ['kaiju', 'Giant Monster', 'A giant lizard over the city'],
+      ['astronaut', 'Astronaut', 'Helmet, planet and a rocket'],
+      ['aquanaut', 'Aquanaut', 'Diving helmet, fish and bubbles'],
+    ],
+  },
+  {
+    title: 'Jobs and Fun',
+    styles: [
+      ['lumberjack', 'Lumberjack', 'Plaid, a log and TIMBER!'],
+      ['cowboys', 'Cowboys', 'Desert and a WANTED poster'],
+      ['ballroom', 'Ballroom', 'Spotlights and perfect 10s'],
+      ['nurses', 'Nurses', 'Heart monitor and a stethoscope'],
+      ['lawyers', 'Lawyers', 'Gavel, scales and Exhibit A'],
+      ['barbers', 'Barbers', 'Barber poles and scissors'],
+      ['babies', 'Babies', 'ABC blocks and a rattle'],
+      ['toilet', 'Toilet', 'Flushed with success!'],
+    ],
+  },
 ]
 
 export const ALL_CELEBRATION_STYLES = CELEBRATION_GROUPS.flatMap((g) => g.styles.map(([id]) => id))
