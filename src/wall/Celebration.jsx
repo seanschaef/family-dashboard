@@ -60,8 +60,33 @@ function readDemo() {
 }
 const DEMO = typeof window !== 'undefined' ? readDemo() : null
 let crestList = null // loaded once from /crests/index.json
-let lastStyle = null
 const pick = (a) => a[Math.floor(Math.random() * a.length)]
+
+// Styles come from a shuffled deck: every style in the mix plays once before
+// any repeats (plain random kept landing on the same few). The deck is saved in
+// the wall's storage so a reload doesn't start it over.
+const DECK_KEY = 'celebration-deck'
+function nextStyle(pool) {
+  let deck = []
+  let last = null
+  try {
+    const saved = JSON.parse(localStorage.getItem(DECK_KEY) || '{}')
+    deck = (saved.deck || []).filter((s) => pool.includes(s))
+    last = saved.last || null
+  } catch { /* no storage: still shuffles per page load */ }
+  if (!deck.length) {
+    deck = [...pool]
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[deck[i], deck[j]] = [deck[j], deck[i]]
+    }
+    // Don't start a new round with the style that ended the last one.
+    if (deck.length > 1 && deck[0] === last) deck.push(deck.shift())
+  }
+  const style = deck.shift()
+  try { localStorage.setItem(DECK_KEY, JSON.stringify({ deck, last: style })) } catch { /* ignore */ }
+  return style
+}
 
 // Canvas shapes for the themed effects, drawn around (0, 0) at size p.r.
 function heart(ctx, cx, cy, r) {
@@ -676,7 +701,7 @@ export default function Celebration() {
     if (worth.length) setQueue((q) => [...q, ...worth])
   }, [logs])
 
-  // Each celebration: pick its style (not the same as last time) and crest.
+  // Each celebration: its style (next from the shuffled deck) and crest.
   useEffect(() => {
     if (!current) return undefined
     const person = byKey(current.member_key)
@@ -685,8 +710,7 @@ export default function Celebration() {
     const offList = cfgRef.current.celebration_styles_off || []
     const mix = STYLES.filter((s) => !offList.includes(s))
     const pool = mix.length ? mix : STYLES
-    const style = current.style || (STYLES.includes(window.__celebrationStyle) ? window.__celebrationStyle : null) || pick(pool.length > 1 ? pool.filter((s) => s !== lastStyle) : pool)
-    lastStyle = style
+    const style = current.style || (STYLES.includes(window.__celebrationStyle) ? window.__celebrationStyle : null) || nextStyle(pool)
     const words = { pixel: PIXEL_WORDS, eighties: EIGHTIES_WORDS, race: RACE_WORDS, hero: HERO_WORDS, ...THEME_WORDS, ...THEME2_WORDS }[style] || COMIC_WORDS
     setLook({ id: current.id, style, crest: list.length ? pick(list) : null, word: pick(words), cheer: pick(CHEERS), cheerBig: pick(CHEER_BIG) })
     const t = setTimeout(() => setQueue((q) => q.slice(1)), SHOW_MS)
