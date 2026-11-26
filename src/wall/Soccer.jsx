@@ -7,7 +7,7 @@ import { C } from '../theme.js'
 // needs `frame-ancestors` to include the wall's address (http://localhost:4173
 // on the Pi) and it must not send `X-Frame-Options: SAMEORIGIN`. Until then
 // Chromium shows a "refused to connect" placeholder in the frame.
-const SOCCER_URL = import.meta.env.VITE_SOCCER_URL || 'https://www.managesoccer.com/'
+const SOCCER_URL = import.meta.env.VITE_SOCCER_URL || 'https://www.kickabout.ca/'
 
 export default function Soccer() {
   return (
